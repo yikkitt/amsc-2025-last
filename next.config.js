@@ -20,6 +20,21 @@ const nextConfig = {
   images: {
     domains: [],
   },
+  webpack: (config, { isServer }) => {
+    // Only apply this configuration for browser builds, not server builds
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+        stream: false,
+        path: false,
+      };
+    }
+    return config;
+  },
 }
 
 module.exports = nextConfig 

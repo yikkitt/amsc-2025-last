@@ -6,7 +6,6 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import Image from 'next/image'
 import UserDataContainer from '@/components/UserDataContainer'
 import { PdfButton } from '@/components/ui/PdfButton'
-import { EmailService } from '@/lib/email/sendgrid'
 
 interface FasciaNameFormProps {
   userData?: {
@@ -62,9 +61,22 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
       // Store submitted data for PDF generation
       setSubmittedData(formData);
 
-      // Send email notification to admin
+      // Send email notification via API route
       try {
-        await EmailService.sendAdminNotification(formData, 1);
+        const response = await fetch('/api/send-notification', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            formData,
+            formType: 1
+          }),
+        });
+        
+        if (!response.ok) {
+          console.error('Failed to send email notification:', await response.text());
+        }
       } catch (emailError) {
         console.error('Error sending admin notification:', emailError);
         // Continue even if email fails
