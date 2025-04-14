@@ -1,0 +1,304 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import UserDataContainer from '@/components/UserDataContainer'
+
+interface OrderItem {
+  id: string
+  description: string
+  printableSize: string
+  unitPrice: number
+  quantity: number
+  image: string
+  unit: string
+}
+
+interface PrintingOrderFormProps {
+  userData?: {
+    company_name: string
+    booth_number: string
+    contact_person?: string
+    address?: string
+    postcode?: string
+    state?: string
+    country?: string
+    tel?: string
+    fax?: string
+    email?: string
+  } | null
+}
+
+export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) {
+  const router = useRouter()
+  const supabase = createClientComponentClient()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([
+    { id: '301', description: 'Digital Inkjet Print on Internal System Panel - Poles will be visible', printableSize: '950mm x 2350mmH', unitPrice: 450, quantity: 0, image: '/products/digital-inkjet.jpg', unit: 'panel' },
+    { id: '302', description: 'Digital Print on Compressed Foam Panel - Poles will not be visible', printableSize: '1000mm x 2440mmH', unitPrice: 550, quantity: 0, image: '/products/compressed-foam.jpg', unit: 'panel' },
+    { id: '303', description: 'Inkjet Sticker on Information Desk', printableSize: 'Front: 950mm x 670mmH', unitPrice: 350, quantity: 0, image: '/products/inkjet-desk.jpg', unit: 'pc' },
+    { id: '304', description: 'Compress Foam on Information Desk', printableSize: 'Front: 1030mm x 750mmH\nSide: 535mm x 750mmH', unitPrice: 500, quantity: 0, image: '/products/foam-desk.jpg', unit: 'set' },
+    { id: '305', description: 'Inkjet Sticker on Low Showcase', printableSize: '950mm x 950mmH', unitPrice: 350, quantity: 0, image: '/products/inkjet-showcase.jpg', unit: 'pc' },
+    { id: '306', description: 'Inkjet Sticker on High Showcase', printableSize: 'Front: 950mm x 890mmH\nTop: 950mm x 2100mmH', unitPrice: 500, quantity: 0, image: '/products/inkjet-high-showcase.jpg', unit: 'pc' },
+    { id: '307', description: 'Inkjet Sticker on Curve Counter', printableSize: '1533mm x 890mmH', unitPrice: 550, quantity: 0, image: '/products/inkjet-curve.jpg', unit: 'pc' },
+    { id: '308', description: 'Pull-up Banner with Aluminium Stand', printableSize: '800mm x 2000mmH', unitPrice: 400, quantity: 0, image: '/products/pullup-banner.jpg', unit: 'pc' },
+  ])
+
+  const handleQuantityChange = (id: string, value: number) => {
+    setOrderItems(items =>
+      items.map(item =>
+        item.id === id ? { ...item, quantity: Math.max(0, value) } : item
+      )
+    )
+  }
+
+  const calculateSubTotal = () => {
+    return orderItems.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0)
+  }
+
+  const calculateSurcharge = () => {
+    // 50% surcharge for late orders
+    return calculateSubTotal() * 0.5
+  }
+
+  const calculateGrandTotal = () => {
+    return calculateSubTotal() + calculateSurcharge()
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    try {
+      const selectedItems = orderItems.filter(item => item.quantity > 0)
+      const { error } = await supabase.from('form_submissions').insert({
+        form_type: 5,
+        company_data: {
+          company_name: userData?.company_name || '',
+          booth_number: userData?.booth_number || '',
+        },
+        items: selectedItems,
+        subtotal: calculateSubTotal(),
+        surcharge: calculateSurcharge(),
+        grand_total: calculateGrandTotal(),
+        auth_details: {
+          name: '',
+          designation: '',
+          date: new Date().toISOString(),
+        }
+      })
+
+      if (error) throw error
+      router.refresh()
+    } catch (error) {
+      console.error('Error submitting form:', error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-md">
+      {/* Form Header */}
+      <div className="text-center mb-8 border-b border-gray-200 pb-6">
+        <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 5</h1>
+        <h2 className="text-xl font-semibold mb-4">PRINTING ORDER FORM</h2>
+        <p className="text-gray-600 mb-2">DEADLINE: September 2, 2024</p>
+        <h3 className="text-lg font-semibold mb-2">REGIONAL CONFERENCE OF DERMATOLOGY 2024</h3>
+        <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
+      </div>
+
+      {/* User Data Container */}
+      <UserDataContainer userData={userData} />
+
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Order Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
+            <thead>
+              <tr className="bg-blue-50">
+                <th className="border border-gray-300 p-2 text-left">CODE</th>
+                <th className="border border-gray-300 p-2 text-left">IMAGE</th>
+                <th className="border border-gray-300 p-2 text-left">ITEMS</th>
+                <th className="border border-gray-300 p-2 text-left">PRINTABLE SIZE</th>
+                <th className="border border-gray-300 p-2 text-right">UNIT PRICE (MYR)</th>
+                <th className="border border-gray-300 p-2 text-center">QTY</th>
+                <th className="border border-gray-300 p-2 text-right">TOTAL PRICE (MYR)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orderItems.map((item) => (
+                <tr key={item.id}>
+                  <td className="border border-gray-300 p-2">{item.id}</td>
+                  <td className="border border-gray-300 p-2 relative">
+                    <div className="relative group w-14 h-14 cursor-pointer">
+                      <img 
+                        src={item.image} 
+                        alt={item.description}
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          // Fall back to a generic image or placeholder if the image fails to load
+                          e.currentTarget.src = "https://via.placeholder.com/100x100?text=No+Image";
+                          e.currentTarget.onerror = null; // Prevent infinite fallback loop
+                        }}
+                      />
+                      <div className="absolute top-0 left-0 w-0 h-0 bg-white opacity-0 group-hover:opacity-100 group-hover:w-48 group-hover:h-48 transition-all duration-200 z-10 overflow-hidden rounded shadow-lg">
+                        <img 
+                          src={item.image} 
+                          alt={item.description} 
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            // Fall back to a generic image or placeholder if the image fails to load
+                            e.currentTarget.src = "https://via.placeholder.com/200x200?text=No+Image";
+                            e.currentTarget.onerror = null; // Prevent infinite fallback loop
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="border border-gray-300 p-2">{item.description}</td>
+                  <td className="border border-gray-300 p-2 whitespace-pre-line">{item.printableSize}</td>
+                  <td className="border border-gray-300 p-2 text-right">{item.unitPrice.toFixed(2)}/{item.unit}</td>
+                  <td className="border border-gray-300 p-2">
+                    <input
+                      type="number"
+                      min="0"
+                      value={item.quantity}
+                      onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
+                      className="w-20 text-center border border-gray-300 rounded p-1 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    />
+                  </td>
+                  <td className="border border-gray-300 p-2 text-right">
+                    {(item.unitPrice * item.quantity).toFixed(2)}
+                  </td>
+                </tr>
+              ))}
+              <tr>
+                <td colSpan={6} className="border border-gray-300 p-2 text-right font-bold">Sub Total</td>
+                <td className="border border-gray-300 p-2 text-right">{calculateSubTotal().toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td colSpan={5} className="border border-gray-300 p-2 text-center italic text-sm text-gray-600">
+                  Order made after deadline is subjected to 50% surcharge
+                </td>
+                <td className="border border-gray-300 p-2 text-right font-medium">Surcharge (50%):</td>
+                <td className="border border-gray-300 p-2 text-right">{calculateSurcharge().toFixed(2)}</td>
+              </tr>
+              <tr className="font-bold">
+                <td colSpan={6} className="border border-gray-300 p-2 text-right">Grand Total</td>
+                <td className="border border-gray-300 p-2 text-right">{calculateGrandTotal().toFixed(2)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Please Note Section */}
+        <div className="space-y-2 bg-blue-50 p-4 rounded-lg">
+          <h4 className="font-semibold text-blue-700 mb-4">PLEASE NOTE:</h4>
+          <ol className="list-decimal list-inside space-y-2 text-gray-700 ml-4">
+            <li>Kindly send in the final artwork in AI format / high resolution PDF as well as the same copy in JPEG for reference.</li>
+            <li>All artwork must be provided 2 week before the event date.</li>
+            <li>Any cancellation after the deadline will be charged 50% on the item priced. 100% cancellation fee will be charged for order cancelled after deadline.</li>
+            <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be accompanied by this Order Form. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-6, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 8010655824, Bank Swift Code: CIBBMYKL</li>
+            <li>Late order: 50% surcharge will be charged for any late orders received after the deadline 16 June 2024, while orders received on site will be subject to a 50% surcharge.</li>
+          </ol>
+        </div>
+
+        {/* Authorization Section */}
+        <div className="mb-8">
+          <p className="mb-6 text-center text-gray-700">Please retain a copy for your record & return this form via email to:</p>
+          
+          <div className="mb-8 text-center bg-gray-50 py-4 rounded-lg">
+            <h5 className="font-bold text-blue-600 mb-2">BLUE CIRCLE PLUS SDN BHD</h5>
+            <p className="mb-1">Attn: Mr. Francis Chan / Ms. YJ Hoh</p>
+            <p className="mb-1">Email: francis@bcpgroup.com.my</p>
+            <p className="mb-1">or yijie@bcpgroup.com.my</p>
+            <p>Tel: +6011-2327 9795 / +6016-263 1150</p>
+          </div>
+
+          <div className="border border-gray-200 rounded-lg p-6 shadow-sm">
+            <h5 className="font-bold mb-4 text-blue-600">Authorized Representative Applying:</h5>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Name</label>
+                  <input type="text" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Designation</label>
+                  <input type="text" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">Company</label>
+                <input 
+                  type="text" 
+                  className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  defaultValue={userData?.company_name || ''}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">Booth No</label>
+                <input 
+                  type="text" 
+                  className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  defaultValue={userData?.booth_number || ''}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">Address</label>
+                <textarea className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" rows={3} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Tel</label>
+                  <input type="tel" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Fax</label>
+                  <input type="tel" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">Email</label>
+                <input type="email" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Signature</label>
+                  <input type="text" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Date</label>
+                  <input 
+                    type="date" 
+                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    defaultValue={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Form Actions */}
+        <div className="flex justify-center space-x-6">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="px-8 py-3 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          >
+            {isSubmitting ? 'Submitting...' : 'Submit Form'}
+          </button>
+        </div>
+      </form>
+    </div>
+  )
+} 
