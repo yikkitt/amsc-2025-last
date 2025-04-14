@@ -20,7 +20,7 @@ A web application for AMSC 2025 exhibitors to view information, submit forms, an
 ## Deployment
 
 The application is deployed on Vercel:
-[AMSC 2025 Exhibitor Manual](https://amsc-2025.vercel.app)
+[AMSC 2025 Exhibitor Manual](https://amsc-2025-last.vercel.app)
 
 ## Getting Started
 
@@ -34,8 +34,8 @@ The application is deployed on Vercel:
 
 1. Clone the repository
    ```bash
-   git clone https://github.com/yourusername/amsc-2025.git
-   cd amsc-2025
+   git clone https://github.com/yikkitt/amsc-2025-last.git
+   cd amsc-2025-last
    ```
 
 2. Install dependencies
