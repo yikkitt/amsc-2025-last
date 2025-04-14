@@ -119,26 +119,8 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
       // Store submitted data for PDF generation
       setSubmittedData(formData);
 
-      // Send email notification via API route
-      try {
-        const response = await fetch('/api/send-notification', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            formData,
-            formType: 3
-          }),
-        });
-        
-        if (!response.ok) {
-          console.error('Failed to send email notification:', await response.text());
-        }
-      } catch (emailError) {
-        console.error('Error sending admin notification:', emailError);
-        // Continue even if email fails
-      }
+      // Log form submission (instead of sending email)
+      console.log('Form submitted successfully:', formData);
 
       router.refresh();
     } catch (error) {
