@@ -1,5 +1,6 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClientOptions } from '@supabase/supabase-js'
 import { type NextRequest, NextResponse } from 'next/server'
+import { type CookieOptions } from '@supabase/ssr'
 
 // Hardcoded values for deployment safety
 const SUPABASE_URL = 'https://kiotgupdmepdyiscbrmb.supabase.co'
@@ -32,45 +33,74 @@ const supabaseKey = getSupabaseKeyMiddleware()
  */
 export const createMiddlewareClient = (request: NextRequest) => {
   try {
-    const response = NextResponse.next()
-    const cookieStore = request.cookies
-    
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: false,
-        // @ts-ignore - The cookies object is valid for server component usage
-        cookies: {
-          get(name: string) {
-            const cookie = cookieStore.get(name);
-            return cookie?.value;
+    // Create an unmodified response
+    let response = NextResponse.next({
+      request: {
+        headers: request.headers,
+      },
+    })
+
+    // Define cookie methods for Supabase client
+    const cookieOptions: { [key: string]: any } = {
+      get(name: string) {
+        return request.cookies.get(name)?.value
+      },
+      set(name: string, value: string, options: CookieOptions) {
+        // If the cookie is set, update the request and response cookies
+        request.cookies.set({
+          name,
+          value,
+          ...options,
+        })
+        response = NextResponse.next({
+          request: {
+            headers: request.headers,
           },
-          set(name: string, value: string, options: any) {
-            response.cookies.set({
-              name,
-              value,
-              ...options,
-              path: '/',
-              sameSite: 'lax',
-              secure: process.env.NODE_ENV === 'production'
-            });
+        })
+        response.cookies.set({
+          name,
+          value,
+          ...options,
+        })
+      },
+      remove(name: string, options: CookieOptions) {
+        // If the cookie is removed, update the request and response cookies
+        request.cookies.set({
+          name,
+          value: '',
+          ...options,
+        })
+        response = NextResponse.next({
+          request: {
+            headers: request.headers,
           },
-          remove(name: string, options: any) {
-            response.cookies.set({
-              name,
-              value: '',
-              ...options,
-              maxAge: -1,
-              path: '/',
-              sameSite: 'lax',
-              secure: process.env.NODE_ENV === 'production'
-            });
-          },
-        }
-      }
-    });
-    
+        })
+        response.cookies.set({
+          name,
+          value: '',
+          ...options,
+        })
+      },
+    }
+
+    const supabase = createClient(
+      supabaseUrl, 
+      supabaseKey, 
+      {
+        // Pass cookie methods in the options object
+        global: { 
+          fetch: fetch 
+        },
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: false,
+          flowType: 'pkce', // Recommended for SSR
+        },
+        cookies: cookieOptions // Pass the cookie handler object here
+      } as SupabaseClientOptions<"public"> // Cast to SupabaseClientOptions type
+    );
+
     return { supabase, response }
   } catch (error) {
     console.error('Error creating middleware client:', error)
