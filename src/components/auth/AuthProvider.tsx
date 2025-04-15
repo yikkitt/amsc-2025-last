@@ -3,8 +3,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase/config';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseBrowserClient } from '@/lib/supabase/client';
+import { createSupabaseApiClient } from '@/lib/supabase/api';
 
 type UserProfile = {
   company_name: string;
@@ -32,22 +32,13 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Use the appropriate client based on context
+const supabase = getSupabaseBrowserClient(); // For browser interactions like auth state changes
+
 // Function to create an admin client for direct database access
 const createAdminClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-  
-  if (!supabaseUrl || !supabaseServiceKey) {
-    console.error('Missing Supabase admin credentials');
-    return null;
-  }
-  
-  return createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  });
+  // Use the dedicated API client function
+  return createSupabaseApiClient(); 
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -61,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         setLoading(true);
         
+        // Use the browser client for auth operations
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -275,7 +267,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const forgotPassword = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: `${window.location.origin}/auth/reset-password`,
       });
 
@@ -289,7 +281,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const resetPassword = async (password: string) => {
     try {
-      const { error } = await supabase.auth.updateUser({
+      const { data, error } = await supabase.auth.updateUser({
         password,
       });
 

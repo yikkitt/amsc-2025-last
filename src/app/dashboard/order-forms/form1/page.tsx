@@ -1,10 +1,10 @@
-import { createServerComponentClient } from '@/lib/supabase'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import FasciaNameForm from '@/components/forms/form-1-fascia-name'
 import { getUserProfileData } from '@/lib/utils/get-user-data'
 
 export default async function Form1Page() {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createSupabaseServerClient()
   
   // Use getUserProfileData to get complete user profile
   const userData = await getUserProfileData(supabase)

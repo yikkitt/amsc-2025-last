@@ -1,20 +1,13 @@
 import { describe, it, expect, vi } from 'vitest'
-import { calculateLateCharge, submitForm } from '../submitHandler'
-import { createClient } from '@supabase/supabase-js'
+import { render, fireEvent, screen, waitFor } from '@testing-library/react'
+// Use the API client for testing API-like interactions if needed, 
+// or mock the specific functions being tested.
+// For this test, we might not need a full client mock if testing submit logic directly.
+// import { createSupabaseApiClient } from '@/lib/supabase/api'
+import { submitForm } from '@/lib/forms/submitHandler' // Assuming submitHandler uses the API client internally
 
-// Mock Supabase client
-vi.mock('@supabase/supabase-js', () => ({
-  createClient: () => ({
-    from: () => ({
-      insert: () => ({
-        select: () => Promise.resolve({
-          data: [{ id: 1 }],
-          error: null,
-        }),
-      }),
-    }),
-  }),
-}))
+// Mock the actual fetch or db interaction used by submitForm if needed
+// vi.mock('...') 
 
 describe('Form Submission Handler', () => {
   describe('calculateLateCharge', () => {

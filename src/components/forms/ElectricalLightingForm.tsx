@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@/lib/supabase'
+import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import React from 'react'
 import UserDataContainer from '@/components/UserDataContainer'
 import { PdfButton } from '@/components/ui/PdfButton'
@@ -33,7 +33,7 @@ interface ElectricalLightingFormProps {
 
 export default function ElectricalLightingForm({ userData }: ElectricalLightingFormProps) {
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = getSupabaseBrowserClient()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submittedData, setSubmittedData] = useState<any>(null)
   const formRef = useRef<HTMLDivElement>(null)

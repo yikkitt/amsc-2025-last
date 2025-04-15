@@ -1,5 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { createSupabaseApiClient } from '@/lib/supabase/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,44 +50,8 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Get Supabase credentials
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    
-    if (!supabaseUrl || !supabaseKey) {
-      console.error('Missing Supabase configuration - URLs:', {
-        url: supabaseUrl ? 'Set' : 'Missing',
-        key: supabaseKey ? 'Set' : 'Missing'
-      });
-      
-      // Log all environment variables (without values) for debugging
-      const envVars = Object.keys(process.env).filter(key => 
-        key.includes('SUPABASE') || key.includes('NEXT_PUBLIC')
-      );
-      console.log('Available environment variables:', envVars);
-      
-      return NextResponse.json(
-        { error: 'Server configuration error (missing Supabase credentials)' },
-        { status: 500 }
-      );
-    }
-    
-    console.log('Creating Supabase admin client with service role key');
-    
-    // Create admin client with explicit service role key - required for bypassing RLS
-    const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
-    
-    // Log client configuration (without sensitive values)
-    console.log('Supabase admin client created with URL:', supabaseUrl);
-    
-    // Don't try to use admin auth API as it often requires additional permissions
-    // We already have the user ID from the request, and we're inserting into the database directly
-    // which is the primary goal of this endpoint
+    // Use the API client
+    const supabaseAdmin = createSupabaseApiClient();
     
     // Prepare the data for insertion/update
     const userData: UserData = {

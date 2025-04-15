@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createSupabaseApiClient } from '@/lib/supabase/api';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
@@ -66,37 +66,8 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Get Supabase credentials
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    
-    console.log('Supabase configuration:', {
-      urlSet: !!supabaseUrl,
-      keySet: !!supabaseKey,
-      url: supabaseUrl
-    });
-    
-    if (!supabaseUrl || !supabaseKey) {
-      console.error('Missing Supabase configuration');
-      return NextResponse.json(
-        { error: 'Server configuration error (missing Supabase credentials)' },
-        { 
-          status: 500,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-          }
-        }
-      );
-    }
-    
-    // Create admin client with service role key - required for bypassing RLS
-    const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
+    // Use the API client
+    const supabaseAdmin = createSupabaseApiClient()
     
     // Check if we're using a temporary user ID (for demo purposes)
     const isTemporaryUser = requestData.id === '00000000-0000-0000-0000-000000000000';

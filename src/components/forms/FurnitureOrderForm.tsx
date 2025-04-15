@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@/lib/supabase'
+import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import UserDataContainer from '@/components/UserDataContainer'
 
 interface OrderItem {
@@ -31,7 +31,7 @@ interface FurnitureOrderFormProps {
 
 export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps) {
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = getSupabaseBrowserClient()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [orderItems, setOrderItems] = useState<OrderItem[]>([
     { id: '201', description: 'Information Desk', dimension: '1030 x 540 x 760 mm', unitCost: 80.00, quantity: 0, image: '/products/info-desk.jpg' },

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createMiddlewareClient } from './lib/supabase';
+import { createMiddlewareClient } from './lib/supabase/middleware';
 
 export async function middleware(request: NextRequest) {
   const isDevelopment = process.env.NODE_ENV === 'development';

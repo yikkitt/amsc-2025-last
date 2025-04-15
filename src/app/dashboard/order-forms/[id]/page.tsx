@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { createServerComponentClient } from '@/lib/supabase'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import FasciaNameForm from '@/components/forms/form-1-fascia-name'
 import ContractorPassForm from '@/components/forms/ContractorPassForm'
@@ -100,7 +100,7 @@ export default async function OrderFormPage({ params }: { params: { id: string }
     notFound()
   }
 
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createSupabaseServerClient()
   const { data: { session } } = await supabase.auth.getSession()
 
   if (!session) {

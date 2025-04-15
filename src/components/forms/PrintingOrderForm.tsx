@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@/lib/supabase'
+import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import UserDataContainer from '@/components/UserDataContainer'
 
 interface OrderItem {
@@ -32,7 +32,7 @@ interface PrintingOrderFormProps {
 
 export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) {
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = getSupabaseBrowserClient()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [orderItems, setOrderItems] = useState<OrderItem[]>([
     { id: '301', description: 'Digital Inkjet Print on Internal System Panel - Poles will be visible', printableSize: '950mm x 2350mmH', unitPrice: 450, quantity: 0, image: '/products/digital-inkjet.jpg', unit: 'panel' },

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@/lib/supabase'
+import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import UserDataContainer from '@/components/UserDataContainer'
 
 interface PerformanceBondFormProps {
@@ -22,7 +22,7 @@ interface PerformanceBondFormProps {
 
 export default function PerformanceBondForm({ userData }: PerformanceBondFormProps) {
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = getSupabaseBrowserClient()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [squareMetre, setSquareMetre] = useState<string>('')
 

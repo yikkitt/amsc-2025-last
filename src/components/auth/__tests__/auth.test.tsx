@@ -1,18 +1,26 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { LoginForm } from '../LoginForm'
-import { AuthProvider } from '../AuthProvider'
-import { createClient } from '@supabase/supabase-js'
+import { AuthProvider, useAuth } from '@/components/auth/AuthProvider'
+import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import { expect, describe, it, vi, beforeEach } from 'vitest'
 
-// Mock Supabase client
-vi.mock('@supabase/supabase-js', () => ({
-  createClient: vi.fn(() => ({
+// Mock the browser client
+vi.mock('@/lib/supabase/client', () => ({
+  getSupabaseBrowserClient: () => ({
     auth: {
-      signInWithPassword: vi.fn(),
-      getSession: vi.fn(),
-      onAuthStateChange: vi.fn(),
+      getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
+      signInWithPassword: vi.fn().mockResolvedValue({ data: { user: { id: 'test-user' }, session: { access_token: 'test-token' } }, error: null }),
+      signUp: vi.fn().mockResolvedValue({ data: { user: { id: 'new-user' } }, error: null }),
+      signOut: vi.fn().mockResolvedValue({ error: null }),
+      resetPasswordForEmail: vi.fn().mockResolvedValue({ error: null }),
+      updateUser: vi.fn().mockResolvedValue({ data: { user: {} }, error: null })
     },
-  })),
+    // Add mock for `from` if needed by tested components
+    from: vi.fn(() => ({
+      // Mock specific table operations if needed
+    })) 
+  })
 }))
 
 describe('Authentication Flow', () => {
@@ -58,7 +66,7 @@ describe('Authentication Flow', () => {
         error: null,
       })
       
-      const supabase = createClient('', '')
+      const supabase = getSupabaseBrowserClient('', '')
       supabase.auth.signInWithPassword = mockSignIn
       
       render(<LoginForm />)
@@ -85,7 +93,7 @@ describe('Authentication Flow', () => {
         error: { message: 'Invalid credentials' },
       })
       
-      const supabase = createClient('', '')
+      const supabase = getSupabaseBrowserClient('', '')
       supabase.auth.signInWithPassword = mockSignIn
       
       render(<LoginForm />)
@@ -125,7 +133,7 @@ describe('Authentication Flow', () => {
         access_token: 'token',
       }
 
-      const supabase = createClient('', '')
+      const supabase = getSupabaseBrowserClient('', '')
       supabase.auth.getSession = vi.fn().mockResolvedValue({
         data: { session: mockSession },
         error: null,

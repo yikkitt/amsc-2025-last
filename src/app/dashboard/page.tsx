@@ -1,11 +1,12 @@
+import { redirect } from 'next/navigation';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getUserProfileData } from '@/lib/utils/get-user-data';
-import { createServerComponentClient } from '@/lib/supabase'
-import { cookies } from 'next/headers'
 import { Mail, Phone, MapPin } from 'lucide-react'
 import VenueFloorPlan from '@/components/dashboard/VenueFloorPlan'
+import UserDataContainer from '@/components/UserDataContainer';
 
 export default async function DashboardPage() {
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createSupabaseServerClient();
   
   console.log("Dashboard: Fetching user profile data");
   const userData = await getUserProfileData(supabase);

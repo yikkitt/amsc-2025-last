@@ -1,10 +1,10 @@
-import { createServerComponentClient } from '@/lib/supabase'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import ElectricalLightingForm from '@/components/forms/ElectricalLightingForm'
 import { getUserProfileData } from '@/lib/utils/get-user-data'
 
 export default async function Form3Page() {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createSupabaseServerClient()
   const userData = await getUserProfileData(supabase)
 
   return (

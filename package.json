@@ -6,6 +6,7 @@
     "dev": "node ./node_modules/next/dist/bin/next dev",
     "dev:local": "next dev",
     "dev:watch": "nodemon",
+    "prebuild": "node ./prebuild.js",
     "build": "node ./node_modules/next/dist/bin/next build",
     "start": "node ./node_modules/next/dist/bin/next start",
     "lint": "node ./node_modules/next/dist/bin/next lint",
@@ -14,7 +15,7 @@
     "test:coverage": "vitest run --coverage",
     "clean": "node clean-cache.js",
     "clean:build": "node clean-build.js",
-    "vercel-build": "next build",
+    "vercel-build": "node ./prebuild.js && next build",
     "setup": "node setup-deploy.js",
     "prepare-deploy": "node setup-deploy.js"
   },

@@ -1,15 +1,15 @@
 /// <reference types="vitest" />
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { describe, it, expect, vi } from 'vitest'
-import { createClientComponentClient } from '@/lib/supabase'
-import FasciaNameForm from '../FasciaNameForm'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { getSupabaseBrowserClient } from '@/lib/supabase/client'
+import FasciaNameForm from '@/components/forms/form-1-fascia-name'
 
-vi.mock('@supabase/auth-helpers-nextjs', () => ({
-  createClientComponentClient: () => ({
-    from: () => ({
-      insert: vi.fn().mockResolvedValue({ error: null }),
-    }),
-  }),
+vi.mock('@/lib/supabase/client', () => ({
+  getSupabaseBrowserClient: () => ({
+    from: vi.fn(() => ({
+      insert: vi.fn().mockResolvedValue({ error: null })
+    }))
+  })
 }))
 
 vi.mock('next/navigation', () => ({

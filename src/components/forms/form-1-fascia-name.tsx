@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@/lib/supabase'
+import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import Image from 'next/image'
 import UserDataContainer from '@/components/UserDataContainer'
 import { PdfButton } from '@/components/ui/PdfButton'
@@ -30,7 +30,7 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
   const formRef = useRef<HTMLDivElement>(null)
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = getSupabaseBrowserClient()
 
   // Initialize inputRefs with the correct length (25 boxes)
   useEffect(() => {

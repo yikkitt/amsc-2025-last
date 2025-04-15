@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClientComponentClient } from '@/lib/supabase'
+import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import { FormData } from '@/types/forms'
+import { Session } from '@supabase/supabase-js'
 
 interface FormWrapperProps {
   formId: number
@@ -13,7 +14,7 @@ interface FormWrapperProps {
 export function FormWrapper({ formId, children, onSubmit }: FormWrapperProps) {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [submittedData, setSubmittedData] = useState<FormData | null>(null)
-  const supabase = createClientComponentClient()
+  const supabase = getSupabaseBrowserClient()
 
   useEffect(() => {
     const checkSubmissionStatus = async () => {

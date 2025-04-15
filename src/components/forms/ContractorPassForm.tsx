@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClientComponentClient } from '@/lib/supabase';
+import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import Image from 'next/image'
 import UserDataContainer from '@/components/UserDataContainer';
 
@@ -24,7 +24,7 @@ interface ContractorPassFormProps {
 export default function ContractorPassForm({ userData }: ContractorPassFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = getSupabaseBrowserClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
