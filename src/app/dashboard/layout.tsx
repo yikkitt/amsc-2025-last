@@ -1,7 +1,7 @@
-import type { Metadata } from 'next'
+import { Metadata } from 'next'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation';
-import { createServerComponentClient } from '@/lib/supabase/server';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import PageHeader from '@/components/dashboard/PageHeader'
 import Sidebar from '@/components/layout/Sidebar'
 
@@ -37,7 +37,7 @@ export default async function DashboardLayout({
   
   // Production auth check
   try {
-    const supabase = createServerComponentClient();
+    const supabase = createSupabaseServerClient();
     const { data } = await supabase.auth.getSession();
     
     console.log('Production mode - Session check:', !!data.session);
