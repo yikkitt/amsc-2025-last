@@ -4,7 +4,6 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Session, User } from '@supabase/supabase-js';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
-import { createSupabaseApiClient } from '@/lib/supabase/api';
 
 type UserProfile = {
   company_name: string;
@@ -34,12 +33,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Use the appropriate client based on context
 const supabase = getSupabaseBrowserClient(); // For browser interactions like auth state changes
-
-// Function to create an admin client for direct database access
-const createAdminClient = () => {
-  // Use the dedicated API client function
-  return createSupabaseApiClient(); 
-};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
