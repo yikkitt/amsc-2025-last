@@ -30,39 +30,8 @@ export default async function DashboardLayout({
   console.log('[Layout] Found Supabase auth token cookie:', !!supabaseCookie);
   // --- END SERVER COOKIE DEBUG ---
 
-  // DEVELOPMENT MODE BYPASS - NEVER DO THIS IN PRODUCTION
-  if (process.env.NODE_ENV === 'development') {
-    console.log("Development mode: Skipping auth check");
-    
-    return (
-      <div className="flex min-h-screen">
-        <Sidebar />
-        <div className="flex-1 flex flex-col w-full">
-          <PageHeader />
-          <div className="flex-grow p-6 md:px-12">
-            {children}
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  // Production auth check
-  try {
-    const supabase = createSupabaseServerClient();
-    const { data } = await supabase.auth.getSession();
-    
-    console.log('[Layout] Production mode - Session check:', !!data.session);
-    
-    if (!data.session) {
-      console.log('[Layout] No session detected, redirecting to login...');
-      redirect('/auth/signin');
-    }
-  } catch (error) {
-    console.error('Error checking session:', error);
-    redirect('/auth/signin');
-  }
-  
+  // Middleware should guarantee authentication by this point
+
   return (
     <div className="flex min-h-screen">
       <Sidebar />
