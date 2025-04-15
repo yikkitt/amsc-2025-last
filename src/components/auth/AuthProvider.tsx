@@ -65,7 +65,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setSession(newSession);
             setUser(newSession?.user ?? null);
             
-            // Redirect logic removed from here
+            // Redirect on successful sign-in
+            if (event === 'SIGNED_IN' && newSession) {
+              console.log('Detected SIGNED_IN event, navigating to dashboard...');
+              router.push('/dashboard'); // Use Next.js router
+            }
           }
         );
         
@@ -116,21 +120,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       console.log('Login successful for user ID:', data.user?.id);
       
-      // 4. Set a direct cookie for server recognition
-      if (data.session) {
-        document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=${60*60*24}; SameSite=Lax`;
-        document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/; max-age=${60*60*24*7}; SameSite=Lax`;
-      }
-      
       // 5. Store session in context
       setUser(data.user);
       setSession(data.session);
       
-      // 6. Force redirect to dashboard
-      console.log('Forcing redirect to dashboard...');
-      
-      // Hard reload approach to completely refresh the page state
-      window.location.href = '/dashboard';
+      // Redirect is now handled by onAuthStateChange listener
+      // console.log('Forcing redirect to dashboard...');
+      // window.location.href = '/dashboard';
       
     } catch (error: any) {
       console.error('Error in signIn function:', error);
