@@ -20,6 +20,16 @@ export default async function DashboardLayout({
 }) {
   console.log("Dashboard layout rendering");
   
+  // --- BEGIN SERVER COOKIE DEBUG ---
+  const cookieStore = cookies();
+  const allCookies = cookieStore.getAll();
+  console.log('[Layout] All cookies received by server:', JSON.stringify(allCookies, null, 2));
+  // Default Supabase cookie names often start with sb-
+  // Look for common patterns
+  const supabaseCookie = allCookies.find(cookie => cookie.name.startsWith('sb-') && cookie.name.endsWith('-auth-token'));
+  console.log('[Layout] Found Supabase auth token cookie:', !!supabaseCookie);
+  // --- END SERVER COOKIE DEBUG ---
+
   // DEVELOPMENT MODE BYPASS - NEVER DO THIS IN PRODUCTION
   if (process.env.NODE_ENV === 'development') {
     console.log("Development mode: Skipping auth check");
@@ -42,10 +52,10 @@ export default async function DashboardLayout({
     const supabase = createSupabaseServerClient();
     const { data } = await supabase.auth.getSession();
     
-    console.log('Production mode - Session check:', !!data.session);
+    console.log('[Layout] Production mode - Session check:', !!data.session);
     
     if (!data.session) {
-      console.log('No session detected, redirecting to login...');
+      console.log('[Layout] No session detected, redirecting to login...');
       redirect('/auth/signin');
     }
   } catch (error) {
