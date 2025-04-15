@@ -14,7 +14,7 @@
     "test:coverage": "vitest run --coverage",
     "clean": "node clean-cache.js",
     "clean:build": "node clean-build.js",
-    "vercel-build": "node clean-build.js",
+    "vercel-build": "next build",
     "setup": "node setup-deploy.js",
     "prepare-deploy": "node setup-deploy.js"
   },
