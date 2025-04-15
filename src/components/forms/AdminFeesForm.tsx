@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientComponentClient } from '@/lib/supabase'
 import UserDataContainer from '@/components/UserDataContainer'
 
 interface AdminFeesFormProps {
@@ -69,10 +69,10 @@ export default function AdminFeesForm({ userData }: AdminFeesFormProps) {
     <div className="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-md">
       {/* Form Header */}
       <div className="text-center mb-8 border-b border-gray-200 pb-6">
-        <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 7</h1>
+        <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 6</h1>
         <h2 className="text-xl font-semibold mb-4">NON-OFFICIAL CONTRACTOR FORM (ADMIN FEES)</h2>
-        <p className="text-gray-600 mb-2">DEADLINE: September 2, 2024</p>
-        <h3 className="text-lg font-semibold mb-2">REGIONAL CONFERENCE OF DERMATOLOGY 2024</h3>
+        <p className="text-gray-600 mb-2">DEADLINE: June 30, 2025</p>
+        <h3 className="text-lg font-semibold mb-2">Aesthetic Medicine & Surgery Conference & Exhibition 2025</h3>
         <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
       </div>
 

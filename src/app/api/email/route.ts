@@ -1,43 +1,45 @@
 import { NextResponse } from 'next/server'
-import { EmailService } from '@/lib/email/sendgrid'
-import { getFormSubmissionEmailConfig } from '@/lib/email/config'
-import { FormData } from '@/types/forms'
+import { getFormName } from '@/lib/email/config'
+
+// Simple email logging function
+async function logEmail(to: string, subject: string, text: string) {
+  console.log('Would send email:', { to, subject, text });
+  return true;
+}
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { formData, formType, isPastDeadline } = body as {
-      formData: FormData
-      formType: number
-      isPastDeadline: boolean
-    }
+    const { formData, formType } = body
 
     // Validate required fields
-    if (!formData.email || !formData.company_name || !formType) {
+    if (!formData || !formType) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       )
     }
 
-    // Get email configuration
-    const emailConfig = getFormSubmissionEmailConfig(
-      formData,
+    // Log email sending attempt
+    console.log('Email request received for:', {
       formType,
-      isPastDeadline
-    )
+      formName: getFormName(formType),
+      company: formData.company_name || formData.company_data?.company_name,
+      email: formData.email,
+      date: new Date().toISOString()
+    })
 
-    // Send email
-    const success = await EmailService.sendFormSubmissionEmail(emailConfig)
+    // Simulate sending email (just logs it)
+    await logEmail(
+      formData.email || 'no-email-provided@example.com',
+      `Form Submission: ${getFormName(formType)}`,
+      `Thank you for your submission of the ${getFormName(formType)} form.`
+    );
 
-    if (!success) {
-      return NextResponse.json(
-        { error: 'Failed to send email' },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ 
+      success: true,
+      message: 'Form submission recorded successfully'
+    })
   } catch (error) {
     console.error('Error in email API route:', error)
     return NextResponse.json(

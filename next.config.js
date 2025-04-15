@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const { configureWebpack } = require('./module-resolve');
+
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
@@ -14,12 +16,19 @@ const nextConfig = {
     // your project has TypeScript errors.
     ignoreBuildErrors: true,
   },
-  experimental: {
-    // Enable experimental features if needed
-  },
+  experimental: {},
   images: {
     domains: [],
-  }
+    unoptimized: true, // Add this for Vercel
+  },
+  // Set to 'standalone' to support pages with dynamic server usage (cookies)
+  output: 'standalone',
+  
+  // Add webpack configuration to handle Node.js built-in modules (Webpack 5 compatible)
+  webpack: configureWebpack,
+  
+  // Font optimization settings
+  optimizeFonts: false, // Disable font optimization to prevent Google Fonts requests
 }
 
 module.exports = nextConfig 

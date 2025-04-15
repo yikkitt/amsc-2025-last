@@ -1,8 +1,8 @@
 import { getUserProfileData } from '@/lib/utils/get-user-data';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createServerComponentClient } from '@/lib/supabase'
 import { cookies } from 'next/headers'
 import { Mail, Phone, MapPin } from 'lucide-react'
-import FixProfileButton from './fix-profile'
+import VenueFloorPlan from '@/components/dashboard/VenueFloorPlan'
 
 export default async function DashboardPage() {
   const supabase = createServerComponentClient({ cookies });
@@ -10,8 +10,6 @@ export default async function DashboardPage() {
   console.log("Dashboard: Fetching user profile data");
   const userData = await getUserProfileData(supabase);
   console.log("Dashboard: User data received:", userData ? "Data found" : "No data");
-  
-  const isDataMissing = !userData;
   
   const profile = userData || {
     company_name: 'Not available',
@@ -35,40 +33,14 @@ export default async function DashboardPage() {
     has_address: !!profile.address
   });
 
-  // Check if profile data is missing
-  const isProfileIncomplete = 
-    profile.company_name === 'Not available' || 
-    profile.booth_number === 'Not available' || 
-    profile.contact_person === 'Not available';
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
         <p className="mt-1 text-sm text-gray-600">
           Manage your exhibitor forms and information here.
         </p>
       </div>
-
-      {(isProfileIncomplete || isDataMissing) && (
-        <div className={`${isDataMissing ? "bg-red-50 border-l-4 border-red-400" : "bg-yellow-50 border-l-4 border-yellow-400"} p-4`}>
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className={`h-5 w-5 ${isDataMissing ? "text-red-400" : "text-yellow-400"}`} viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className={`text-sm ${isDataMissing ? "text-red-700" : "text-yellow-700"}`}>
-                {isDataMissing 
-                  ? "Your profile data is missing. Please click the button below to create a demo profile."
-                  : "Your profile information appears to be incomplete. Please click the button below to fix it."}
-              </p>
-              <FixProfileButton />
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <div className="bg-white overflow-hidden shadow rounded-lg">
@@ -229,6 +201,12 @@ export default async function DashboardPage() {
             </div>
           </div>
         </div>
+      </div>
+      
+      {/* Venue Floor Plan Section */}
+      <div className="mt-8">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Event Information</h2>
+        <VenueFloorPlan />
       </div>
     </div>
   )

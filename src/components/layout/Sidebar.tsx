@@ -43,7 +43,6 @@ const appendixItems = [
   { id: 'special-design', name: 'Sample of Special Design Stand Submission', href: '/dashboard/appendix/special-design-sample' },
   { id: 'custom-booth', name: 'Customized Booth Design Guidelines', href: '/dashboard/appendix/custom-booth' },
   { id: 'working-condition', name: 'Working Condition', href: '/dashboard/appendix/working-condition' },
-  { id: 'catalogues', name: 'Catalogues', href: '/dashboard/appendix/catalogues' },
   { id: 'emergency-plan', name: 'KLCC\'s Emergency Response Plan', href: '/dashboard/appendix/emergency-plan' },
   { id: 'vehicle-pass', name: 'Vehicle Pass', href: '/dashboard/appendix/vehicle-pass' },
 ]

@@ -1,4 +1,4 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createServerComponentClient } from '@/lib/supabase'
 import { cookies } from 'next/headers'
 import FasciaNameForm from '@/components/forms/form-1-fascia-name'
 import { getUserProfileData } from '@/lib/utils/get-user-data'

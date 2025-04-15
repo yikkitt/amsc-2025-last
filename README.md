@@ -1,26 +1,55 @@
 # AMSC 2025 Exhibitor Manual
 
-A web application for AMSC 2025 exhibitors to view information, submit forms, and download PDFs of their submissions.
+This is a Next.js application designed to provide a web portal for exhibitors at the AMSC 2025 conference. Exhibitors can register, log in, and manage their exhibition details through this portal.
 
 ## Features
 
-- User authentication system
-- Dashboard with event information
-- Multiple form types for exhibitor submissions
-- PDF generation for form submissions
-- Email notifications for form submissions
+- User authentication (sign up, sign in, password reset)
+- Dashboard with exhibitor information
+- Form submission for various exhibition requirements
+- Document management and uploads
+- Live form validation
+- Responsive design for all devices
 
 ## Tech Stack
 
-- **Frontend**: Next.js, React, Tailwind CSS
-- **Backend**: Supabase (Auth, Database, Storage)
-- **PDF Generation**: jsPDF, html2canvas
-- **Email Service**: SendGrid
+- **Frontend**: Next.js 14, React, Tailwind CSS
+- **Backend**: Next.js API Routes, Supabase
+- **Authentication**: Supabase Auth
+- **Database**: Supabase (PostgreSQL)
+- **Hosting**: Vercel
 
 ## Deployment
 
-The application is deployed on Vercel:
-[AMSC 2025 Exhibitor Manual](https://amsc-2025-last.vercel.app)
+### GitHub Deployment
+
+1. Push your changes to GitHub:
+   ```bash
+   git add .
+   git commit -m "Your commit message"
+   git push origin main
+   ```
+
+2. Make sure your repository contains:
+   - `next.config.js` - Configured for Vercel deployment
+   - `vercel.json` - Containing build and environment settings
+   - `clean-build.js` - Script to clean build artifacts
+   - Custom Supabase client implementation in `src/lib/supabase.ts`
+
+### Vercel Deployment
+
+This project is configured for deployment on Vercel:
+
+1. Connect your GitHub repository to Vercel
+2. Configure the environment variables:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+3. Deploy using the following settings:
+   - Build Command: `npm run vercel-build`
+   - Output Directory: `.next`
+
+See the [VERCEL.md](./VERCEL.md) file for more detailed deployment instructions.
 
 ## Getting Started
 
@@ -34,8 +63,8 @@ The application is deployed on Vercel:
 
 1. Clone the repository
    ```bash
-   git clone https://github.com/yikkitt/amsc-2025-last.git
-   cd amsc-2025-last
+   git clone https://github.com/your-username/amsc-2025-exhibitor-manual.git
+   cd amsc-2025-exhibitor-manual
    ```
 
 2. Install dependencies
@@ -51,8 +80,7 @@ The application is deployed on Vercel:
    NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
    SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
-   SENDGRID_API_KEY=your-sendgrid-api-key
-   ```
+
 
 4. Run the development server
    ```bash

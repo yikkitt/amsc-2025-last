@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClientComponentClient } from '@/lib/supabase';
 import Image from 'next/image'
 import UserDataContainer from '@/components/UserDataContainer';
 
@@ -81,8 +81,8 @@ export default function ContractorPassForm({ userData }: ContractorPassFormProps
       <div className="text-center mb-8 border-b border-gray-200 pb-6">
         <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 2</h1>
         <h2 className="text-xl font-semibold mb-4">CONTRACTOR PASS APPLICATION FORM</h2>
-        <p className="text-gray-600 mb-2">DEADLINE: September 2, 2024</p>
-        <h3 className="text-lg font-semibold mb-2">REGIONAL CONFERENCE OF DERMATOLOGY 2024</h3>
+        <p className="text-gray-600 mb-2">DEADLINE: June 30, 2025</p>
+        <h3 className="text-lg font-semibold mb-2">Aesthetic Medicine & Surgery Conference & Exhibition 2025</h3>
         <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
       </div>
 
@@ -189,7 +189,7 @@ export default function ContractorPassForm({ userData }: ContractorPassFormProps
         <div className="mb-8 bg-blue-50 p-4 rounded-lg">
           <h4 className="font-semibold text-blue-700 mb-4">Important Notes:</h4>
           <ol className="list-decimal list-inside space-y-2 text-gray-700">
-            <li>Each contractor pass is priced at RM 25.00 after the deadline of September 2, 2024.</li>
+            <li>Each contractor pass is priced at RM 25.00 after the deadline of June 30, 2025.</li>
             <li>Official Contractor will not issue any contractor badges during tear down, therefore please ensure that you have order in advance the sufficient number of badges to be used during build up as well as the tear down.</li>
             <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be received by this Order Form. All bank charges must be borne by remitter. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-3, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 800 984924. Bank Swift Code: CIBBMYKL</li>
           </ol>

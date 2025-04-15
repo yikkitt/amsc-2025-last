@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientComponentClient } from '@/lib/supabase'
 import React from 'react'
 import UserDataContainer from '@/components/UserDataContainer'
 import { PdfButton } from '@/components/ui/PdfButton'
@@ -136,8 +136,8 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
       <div className="text-center mb-8 border-b border-gray-200 pb-6">
         <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 3</h1>
         <h2 className="text-xl font-semibold mb-4">ELECTRICAL & LIGHTING ORDER FORM</h2>
-        <p className="text-gray-600 mb-2">DEADLINE: September 2, 2024</p>
-        <h3 className="text-lg font-semibold mb-2">REGIONAL CONFERENCE OF DERMATOLOGY 2024</h3>
+        <p className="text-gray-600 mb-2">DEADLINE: June 30, 2025</p>
+        <h3 className="text-lg font-semibold mb-2">Aesthetic Medicine & Surgery Conference & Exhibition 2025</h3>
         <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
       </div>
 

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientComponentClient } from '@/lib/supabase'
 import Image from 'next/image'
 import UserDataContainer from '@/components/UserDataContainer'
 import { PdfButton } from '@/components/ui/PdfButton'
@@ -26,9 +26,16 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
   const [fasciaName, setFasciaName] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submittedData, setSubmittedData] = useState<any>(null)
+  const [isSubmitted, setIsSubmitted] = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
   const router = useRouter()
   const supabase = createClientComponentClient()
+
+  // Initialize inputRefs with the correct length (25 boxes)
+  useEffect(() => {
+    inputRefs.current = Array(25).fill(null)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -60,11 +67,20 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
 
       // Store submitted data for PDF generation
       setSubmittedData(formData);
+      
+      // Set submitted status to show success message
+      setIsSubmitted(true);
 
       // Log form submission (instead of sending email)
       console.log('Form submitted successfully:', formData);
 
-      router.refresh();
+      // Scroll to top to show the success message
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      // Redirect after a delay
+      setTimeout(() => {
+        router.refresh();
+      }, 3000);
     } catch (error) {
       console.error('Error submitting form:', error)
     } finally {
@@ -72,14 +88,96 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
     }
   }
 
+  // Handle input change and auto-focus to next box
+  const handleInputChange = (index: number, value: string) => {
+    // Only accept letters and numbers
+    if (value && !/^[A-Z0-9]$/.test(value.toUpperCase())) {
+      return;
+    }
+
+    // Update the fasciaName state
+    const newFasciaName = fasciaName.split('');
+    newFasciaName[index] = value.toUpperCase();
+    setFasciaName(newFasciaName.join(''));
+
+    // Focus the next input if a character was entered
+    if (value && index < 24) {
+      setTimeout(() => {
+        inputRefs.current[index + 1]?.focus();
+      }, 10);
+    }
+  }
+
+  // Handle backspace key to move to previous box
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !fasciaName[index]) {
+      // Move to previous input on backspace if current is empty
+      if (index > 0) {
+        setTimeout(() => {
+          inputRefs.current[index - 1]?.focus();
+        }, 10);
+      }
+    } else if (e.key === 'ArrowLeft' && index > 0) {
+      // Move left on left arrow
+      setTimeout(() => {
+        inputRefs.current[index - 1]?.focus();
+      }, 10);
+    } else if (e.key === 'ArrowRight' && index < 24) {
+      // Move right on right arrow
+      setTimeout(() => {
+        inputRefs.current[index + 1]?.focus();
+      }, 10);
+    }
+  }
+
+  // Handle paste to fill multiple boxes
+  const handlePaste = (index: number, e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedText = e.clipboardData.getData('text').toUpperCase();
+    const validChars = pastedText.replace(/[^A-Z0-9]/g, '').slice(0, 25 - index);
+    
+    if (validChars) {
+      const newFasciaName = fasciaName.split('');
+      
+      for (let i = 0; i < validChars.length; i++) {
+        if (index + i < 25) {
+          newFasciaName[index + i] = validChars[i];
+        }
+      }
+      
+      setFasciaName(newFasciaName.join(''));
+      
+      // Focus the box after the last filled box
+      const nextIndex = Math.min(index + validChars.length, 24);
+      setTimeout(() => {
+        inputRefs.current[nextIndex]?.focus();
+      }, 10);
+    }
+  }
+
   return (
     <div ref={formRef} className="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-md">
+      {/* Success Message */}
+      {isSubmitted && (
+        <div className="mb-8 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-center">
+            <svg className="h-6 w-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <h3 className="text-lg font-medium text-green-800">Fascia Name Submitted Successfully!</h3>
+          </div>
+          <p className="mt-2 text-sm text-green-700">
+            Your fascia name "{fasciaName}" has been submitted for booth {userData?.booth_number || ''}. You'll be redirected in a moment.
+          </p>
+        </div>
+      )}
+      
       {/* Form Header */}
       <div className="text-center mb-8 border-b border-gray-200 pb-6">
         <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 1</h1>
         <h2 className="text-xl font-semibold mb-4">FASCIA NAME FORM FOR SHELL SCHEME</h2>
-        <p className="text-gray-600 mb-2">DEADLINE: September 2, 2024</p>
-        <h3 className="text-lg font-semibold mb-2">REGIONAL CONFERENCE OF DERMATOLOGY 2024</h3>
+        <p className="text-gray-600 mb-2">DEADLINE: June 30, 2025</p>
+        <h3 className="text-lg font-semibold mb-2">Aesthetic Medicine & Surgery Conference & Exhibition 2025</h3>
         <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
       </div>
 
@@ -104,18 +202,15 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
               {Array(13).fill(0).map((_, i) => (
                 <input
                   key={i}
+                  ref={el => { inputRefs.current[i] = el }}
                   type="text"
                   maxLength={1}
                   className="w-10 h-10 border border-gray-300 rounded text-center uppercase font-bold focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   value={fasciaName[i] || ''}
-                  onChange={(e) => {
-                    const newValue = e.target.value.toUpperCase();
-                    if (newValue.match(/^[A-Z0-9]?$/)) {
-                      const newFasciaName = fasciaName.split('');
-                      newFasciaName[i] = newValue;
-                      setFasciaName(newFasciaName.join(''));
-                    }
-                  }}
+                  onChange={(e) => handleInputChange(i, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(i, e)}
+                  onPaste={(e) => handlePaste(i, e)}
+                  autoComplete="off"
                 />
               ))}
             </div>
@@ -124,18 +219,15 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
               {Array(12).fill(0).map((_, i) => (
                 <input
                   key={i + 13}
+                  ref={el => { inputRefs.current[i + 13] = el }}
                   type="text"
                   maxLength={1}
                   className="w-10 h-10 border border-gray-300 rounded text-center uppercase font-bold focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   value={fasciaName[i + 13] || ''}
-                  onChange={(e) => {
-                    const newValue = e.target.value.toUpperCase();
-                    if (newValue.match(/^[A-Z0-9]?$/)) {
-                      const newFasciaName = fasciaName.split('');
-                      newFasciaName[i + 13] = newValue;
-                      setFasciaName(newFasciaName.join(''));
-                    }
-                  }}
+                  onChange={(e) => handleInputChange(i + 13, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(i + 13, e)}
+                  onPaste={(e) => handlePaste(i + 13, e)}
+                  autoComplete="off"
                 />
               ))}
             </div>
@@ -185,7 +277,7 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
                     <td className="text-right font-bold">1</td>
                   </tr>
                   <tr className="border-b border-gray-200">
-                    <td className="py-2">LED T5 Tube</td>
+                    <td className="py-2">Fluorescent Tube</td>
                     <td className="text-right font-bold">2</td>
                   </tr>
                   <tr>
@@ -196,6 +288,40 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
               </table>
             </div>
           </div>
+        </div>
+
+        {/* Submit Fascia Name */}
+        <div className="mb-8 text-center">
+          <div className="flex items-center justify-center space-x-4">
+            <button
+              type="button"
+              onClick={() => {
+                // Clear all fascia name inputs
+                setFasciaName('');
+                // Focus the first input
+                setTimeout(() => {
+                  inputRefs.current[0]?.focus();
+                }, 10);
+              }}
+              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              Clear
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting || fasciaName.trim().length === 0}
+              className={`px-4 py-2 rounded-md shadow-sm text-sm font-medium ${
+                isSubmitting || fasciaName.trim().length === 0
+                  ? 'bg-blue-300 text-white cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              }`}
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit Fascia Name'}
+            </button>
+          </div>
+          {fasciaName.trim().length === 0 && (
+            <p className="mt-2 text-sm text-red-600">Please enter your fascia name before submitting</p>
+          )}
         </div>
 
         {/* Authorization Section */}

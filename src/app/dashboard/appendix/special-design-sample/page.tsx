@@ -28,13 +28,54 @@ export default function SpecialDesignSamplePage() {
         
         <div className="mb-8">
           <h2 className="text-xl font-bold mb-4 text-blue-900">Sample Perspective View</h2>
-          <div className="border border-gray-200 p-4 bg-gray-50 rounded-lg text-center">
-            <div className="relative w-full h-[300px] mb-2">
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                <p className="text-gray-500">3D Perspective View Sample</p>
+          <div className="border border-gray-200 p-4 bg-gray-50 rounded-lg">
+            <div className="grid grid-cols-2 gap-4 mb-2">
+              <div className="border border-gray-200 rounded-lg p-2">
+                <div className="relative w-full h-[180px] mb-1">
+                  <Image
+                    src="/images/front-view.png"
+                    alt="Front Views"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+                <p className="text-xs text-gray-600 text-center">Front perspective of the booth</p>
+              </div>
+              <div className="border border-gray-200 rounded-lg p-2">
+                <div className="relative w-full h-[180px] mb-1">
+                  <Image
+                    src="/images/side-view.png"
+                    alt="Side Views"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+                <p className="text-xs text-gray-600 text-center">Side perspective of the booth</p>
+              </div>
+              <div className="border border-gray-200 rounded-lg p-2">
+                <div className="relative w-full h-[180px] mb-1">
+                  <Image
+                    src="/images/back-view.png"
+                    alt="Back Views"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+                <p className="text-xs text-gray-600 text-center">Back perspective of the booth</p>
+              </div>
+              <div className="border border-gray-200 rounded-lg p-2">
+                <div className="relative w-full h-[180px] mb-1">
+                  <Image
+                    src="/images/top-view.png"
+                    alt="Top Views"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+                <p className="text-xs text-gray-600 text-center">Top perspective of the booth</p>
               </div>
             </div>
-            <p className="text-sm text-gray-600">Sample 3D rendering showing different angles of the booth design</p>
+            <p className="text-sm text-gray-600 text-center">Sample 3D renderings showing different angles of the booth design</p>
           </div>
         </div>
         
@@ -42,24 +83,54 @@ export default function SpecialDesignSamplePage() {
           <div>
             <h2 className="text-xl font-bold mb-4 text-blue-900">Sample Floor Plan</h2>
             <div className="border border-gray-200 p-4 bg-gray-50 rounded-lg text-center">
-              <div className="relative w-full h-[200px] mb-2">
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                  <p className="text-gray-500">Floor Plan Sample</p>
+              <div className="relative w-full h-[200px] mb-2 cursor-zoom-in">
+                <div className="group relative w-full h-full">
+                  <Image
+                    src="/images/sample-floor-plan.png"
+                    alt="Floor Plan Sample"
+                    fill
+                    className="object-contain transition-transform duration-300 z-10"
+                  />
+                  <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -inset-1/2 z-20">
+                    <div className="relative w-[100%] h-[100%]">
+                      <Image
+                        src="/images/sample-floor-plan.png"
+                        alt="Floor Plan Sample Enlarged"
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
-              <p className="text-sm text-gray-600">Top view drawing showing dimensions and layout</p>
+              <p className="text-sm text-gray-600">Top view drawing showing dimensions and layout (hover to zoom)</p>
             </div>
           </div>
           
           <div>
             <h2 className="text-xl font-bold mb-4 text-blue-900">Sample Elevation</h2>
             <div className="border border-gray-200 p-4 bg-gray-50 rounded-lg text-center">
-              <div className="relative w-full h-[200px] mb-2">
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                  <p className="text-gray-500">Elevation View Sample</p>
+              <div className="relative w-full h-[200px] mb-2 cursor-zoom-in">
+                <div className="group relative w-full h-full">
+                  <Image
+                    src="/images/elevation.png"
+                    alt="Elevation View Sample"
+                    fill
+                    className="object-contain transition-transform duration-300 z-10"
+                  />
+                  <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 -inset-1/2 z-20">
+                    <div className="relative w-[100%] h-[100%]">
+                      <Image
+                        src="/images/elevation.png"
+                        alt="Elevation View Sample Enlarged"
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
-              <p className="text-sm text-gray-600">Front and side views showing heights and dimensions</p>
+              <p className="text-sm text-gray-600">Front and side views showing heights and dimensions (hover to zoom)</p>
             </div>
           </div>
         </div>

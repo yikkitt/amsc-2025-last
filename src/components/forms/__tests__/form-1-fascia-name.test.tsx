@@ -1,7 +1,7 @@
 /// <reference types="vitest" />
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientComponentClient } from '@/lib/supabase'
 import FasciaNameForm from '../FasciaNameForm'
 
 vi.mock('@supabase/auth-helpers-nextjs', () => ({

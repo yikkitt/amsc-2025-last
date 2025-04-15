@@ -1,30 +1,41 @@
-// This is a dummy implementation that doesn't use SendGrid
-// to avoid build issues with Node.js-specific modules
+/**
+ * Mock SendGrid implementation that doesn't use Node.js modules
+ * This is a placeholder to fix webpack build issues
+ */
 
-import { EmailConfig, EMAIL_SENDER } from './config'
+// Mock email configuration type
+export interface SendGridEmailConfig {
+  to: string;
+  from?: string;
+  subject?: string;
+  html?: string;
+  text?: string;
+  attachments?: any[];
+}
 
-// Email address for form submissions - not used in this implementation
-const ADMIN_EMAIL = 'daniel@bcpgroup.com.my'
+// Default sender information
+export const EMAIL_SENDER = {
+  email: 'noreply@example.com',
+  name: 'AMSC 2025 Exhibitor Manual',
+};
 
-export class EmailService {
-  static async sendTemplateEmail(config: EmailConfig): Promise<boolean> {
-    console.log('Email would be sent with:', config);
-    return true;
-  }
-
-  static async sendFormSubmissionEmail(config: EmailConfig): Promise<boolean> {
-    console.log('Form submission email would be sent with:', config);
-    return true;
-  }
-  
+/**
+ * Mock SendGrid mail service that doesn't require Node.js modules
+ */
+export class SendGridMailService {
   /**
-   * Sends a form submission notification to the admin email
-   * @param formData The form data submitted
-   * @param formType The type of form submitted
-   * @returns Promise resolving to boolean indicating success
+   * Logs email sending attempts without actually sending
+   */
+  static async sendEmail(config: SendGridEmailConfig): Promise<boolean> {
+    console.log('Mock SendGrid would send email:', config);
+    return true;
+  }
+
+  /**
+   * Logs form submission notifications
    */
   static async sendAdminNotification(formData: any, formType: number): Promise<boolean> {
-    console.log('Admin notification would be sent for:', { formType, formData });
+    console.log('Mock SendGrid admin notification for form submission:', { formType, formData });
     return true;
   }
 } 

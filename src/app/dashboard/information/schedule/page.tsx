@@ -31,12 +31,12 @@ export default function ExhibitionSchedulePage() {
               </thead>
               <tbody>
                 <tr>
-                  <td className="border border-gray-300 px-4 py-2 text-sm" rowSpan={2}>Wed 5th Jul 2023<br/>(Build-up Day 1)</td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">0900:00 - 12:00 PM</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm" rowSpan={2}>Wed Aug 6 2025 <br/>(Build-up Day 1)</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">05:00 AM - 12:00 PM</td>
                   <td className="border border-gray-300 px-4 py-2 text-sm">Move-in/Floor Possession by Official Contractor</td>
                 </tr>
                 <tr>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">12:00 PM - 5:00 PM</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">08:00 AM - 6:00 PM</td>
                   <td className="border border-gray-300 px-4 py-2 text-sm">Exhibitors Move-in</td>
                 </tr>
                 <tr>
@@ -65,7 +65,7 @@ export default function ExhibitionSchedulePage() {
               </thead>
               <tbody>
                 <tr>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">Thu, 6th Oct 2024<br/>(Show Day 1)</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">Wed, Aug 6 2025<br/>(Show Day 1)</td>
                   <td className="border border-gray-300 px-4 py-2 text-sm">08:00 AM</td>
                   <td className="border border-gray-300 px-4 py-2 text-sm">Registration / Exhibitors</td>
                 </tr>
@@ -79,17 +79,17 @@ export default function ExhibitionSchedulePage() {
                   <td className="border border-gray-300 px-4 py-2 text-sm">Show Open</td>
                 </tr>
                 <tr>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">Fri, 7th Oct 2024<br/>(Show Day 2)</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">Thu, Aug 7 2025<br/>(Show Day 2)</td>
                   <td className="border border-gray-300 px-4 py-2 text-sm">08:00 AM</td>
                   <td className="border border-gray-300 px-4 py-2 text-sm">Hall Open to Exhibitors</td>
                 </tr>
                 <tr>
                   <td className="border border-gray-300 px-4 py-2 text-sm" rowSpan={2}></td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">09:00 AM - 4:00 PM</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">09:00 AM - 6:00 PM</td>
                   <td className="border border-gray-300 px-4 py-2 text-sm">Show Open</td>
                 </tr>
                 <tr>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">04:00 PM</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">07:00 PM</td>
                   <td className="border border-gray-300 px-4 py-2 text-sm">Hall Closes for Exhibitors</td>
                 </tr>
                 <tr>
@@ -118,8 +118,8 @@ export default function ExhibitionSchedulePage() {
               </thead>
               <tbody>
                 <tr>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">Sat, 7th Oct 2024<br/>(Dismantling)</td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">5:00 PM - 11:00 PM</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">Thu, Aug 7 2025<br/>(Dismantling)</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">6:00 PM - 11:00 PM</td>
                   <td className="border border-gray-300 px-4 py-2 text-sm">Tear down</td>
                 </tr>
                 <tr>

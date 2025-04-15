@@ -1,4 +1,4 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createServerComponentClient } from '@/lib/supabase'
 import { cookies } from 'next/headers'
 import AdminFeesForm from '@/components/forms/AdminFeesForm'
 import { getUserProfileData } from '@/lib/utils/get-user-data'

@@ -3,27 +3,34 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
+    "dev": "node ./node_modules/next/dist/bin/next dev",
+    "dev:local": "next dev",
+    "dev:watch": "nodemon",
+    "build": "node ./node_modules/next/dist/bin/next build",
+    "start": "node ./node_modules/next/dist/bin/next start",
+    "lint": "node ./node_modules/next/dist/bin/next lint",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "clean": "node clean-cache.js",
-    "clean:build": "npm run clean && npm run build"
+    "clean:build": "node clean-build.js",
+    "vercel-build": "node clean-build.js",
+    "setup": "node setup-deploy.js",
+    "prepare-deploy": "node setup-deploy.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
     "@react-pdf/renderer": "^4.3.0",
-    "@supabase/auth-helpers-nextjs": "^0.9.0",
+    "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.4",
+    "@types/google.maps": "^3.58.1",
+    "@vercel/og": "^0.6.8",
     "clsx": "^2.1.1",
     "dotenv": "^16.5.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
     "lucide-react": "^0.487.0",
-    "next": "14.1.0",
+    "next": "^14.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.50.0",
@@ -40,10 +47,35 @@
     "autoprefixer": "^10.4.17",
     "eslint": "^8.56.0",
     "eslint-config-next": "14.1.0",
+    "glob": "^10.3.10",
     "jsdom": "^26.0.0",
+    "null-loader": "^4.0.1",
     "postcss": "^8.4.33",
+    "rimraf": "^5.0.5",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3",
     "vitest": "^3.1.1"
+  },
+  "browser": {
+    "fs": false,
+    "path": false,
+    "os": false,
+    "crypto": false,
+    "stream": false,
+    "buffer": false,
+    "http": false,
+    "https": false,
+    "zlib": false,
+    "util": false,
+    "net": false,
+    "tls": false,
+    "child_process": false
+  },
+  "overrides": {
+    "@supabase/auth-helpers-nextjs": {
+      "@supabase/ssr": "^0.1.0"
+    },
+    "glob": "^10.3.10",
+    "rimraf": "^5.0.5"
   }
 }

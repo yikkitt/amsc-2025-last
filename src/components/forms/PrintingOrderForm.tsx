@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientComponentClient } from '@/lib/supabase'
 import UserDataContainer from '@/components/UserDataContainer'
 
 interface OrderItem {
@@ -40,8 +40,8 @@ export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) 
     { id: '303', description: 'Inkjet Sticker on Information Desk', printableSize: 'Front: 950mm x 670mmH', unitPrice: 350, quantity: 0, image: '/products/inkjet-desk.jpg', unit: 'pc' },
     { id: '304', description: 'Compress Foam on Information Desk', printableSize: 'Front: 1030mm x 750mmH\nSide: 535mm x 750mmH', unitPrice: 500, quantity: 0, image: '/products/foam-desk.jpg', unit: 'set' },
     { id: '305', description: 'Inkjet Sticker on Low Showcase', printableSize: '950mm x 950mmH', unitPrice: 350, quantity: 0, image: '/products/inkjet-showcase.jpg', unit: 'pc' },
-    { id: '306', description: 'Inkjet Sticker on High Showcase', printableSize: 'Front: 950mm x 890mmH\nTop: 950mm x 2100mmH', unitPrice: 500, quantity: 0, image: '/products/inkjet-high-showcase.jpg', unit: 'pc' },
-    { id: '307', description: 'Inkjet Sticker on Curve Counter', printableSize: '1533mm x 890mmH', unitPrice: 550, quantity: 0, image: '/products/inkjet-curve.jpg', unit: 'pc' },
+    { id: '306', description: 'Inkjet Sticker on High Showcase', printableSize: 'Front: 950mm x 890mmH\nTop: 950mm x 2100mmH', unitPrice: 550, quantity: 0, image: '/products/inkjet-high-showcase.jpg', unit: 'pc' },
+    { id: '307', description: 'Inkjet Sticker on Curve Counter', printableSize: '1533mm x 890mmH', unitPrice: 500, quantity: 0, image: '/products/inkjet-curve.jpg', unit: 'pc' },
     { id: '308', description: 'Pull-up Banner with Aluminium Stand', printableSize: '800mm x 2000mmH', unitPrice: 400, quantity: 0, image: '/products/pullup-banner.jpg', unit: 'pc' },
   ])
 
@@ -103,8 +103,8 @@ export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) 
       <div className="text-center mb-8 border-b border-gray-200 pb-6">
         <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 5</h1>
         <h2 className="text-xl font-semibold mb-4">PRINTING ORDER FORM</h2>
-        <p className="text-gray-600 mb-2">DEADLINE: September 2, 2024</p>
-        <h3 className="text-lg font-semibold mb-2">REGIONAL CONFERENCE OF DERMATOLOGY 2024</h3>
+        <p className="text-gray-600 mb-2">DEADLINE: June 30, 2025</p>
+        <h3 className="text-lg font-semibold mb-2">Aesthetic Medicine & Surgery Conference & Exhibition 2025</h3>
         <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
       </div>
 
@@ -200,7 +200,7 @@ export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) 
             <li>All artwork must be provided 2 week before the event date.</li>
             <li>Any cancellation after the deadline will be charged 50% on the item priced. 100% cancellation fee will be charged for order cancelled after deadline.</li>
             <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be accompanied by this Order Form. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-6, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 8010655824, Bank Swift Code: CIBBMYKL</li>
-            <li>Late order: 50% surcharge will be charged for any late orders received after the deadline 16 June 2024, while orders received on site will be subject to a 50% surcharge.</li>
+            <li>Late order: 50% surcharge will be charged for any late orders received after the deadline 30 June 2025, while orders received on site will be subject to a 50% surcharge.</li>
           </ol>
         </div>
 

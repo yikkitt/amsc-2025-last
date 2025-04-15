@@ -75,9 +75,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         const { data: authListener } = supabase.auth.onAuthStateChange(
           (event, newSession) => {
-            console.log('Auth state changed:', event);
+            // Log all events
+            console.log(`Auth state changed: Event - ${event}, Session Exists - ${!!newSession}`);
             setSession(newSession);
             setUser(newSession?.user ?? null);
+            
+            // Redirect logic removed from here
           }
         );
         
@@ -92,32 +95,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     initializeAuth();
-  }, []);
+  }, []); // Remove router from dependency array
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('Attempting sign in with:', { email });
+      console.log('Attempting sign in with email:', email);
       
       // In development mode with mock auth enabled, allow login with any credentials for testing
       if (process.env.NEXT_PUBLIC_USE_MOCK_AUTH === 'true') {
         console.log('Mock authentication enabled: Bypassing authentication');
-        
-        // Set a timeout to simulate network request
         await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Force navigation to dashboard - more reliable than router
-        console.log('Navigating to dashboard...');
-        
-        // Try multiple approaches to ensure the redirect works
-        setTimeout(() => {
-          // Fallback approach - direct page change
-          window.location.href = '/dashboard';
-        }, 100);
-        
+        window.location.href = '/dashboard';
         return;
       }
       
-      // In production or when mock auth is disabled, use Supabase authentication
+      // SIMPLIFIED LOGIN APPROACH
+      console.log('Using simplified login approach...');
+      
+      // 1. Sign out first to clear any existing sessions
+      await supabase.auth.signOut();
+      
+      // 2. Wait a moment to ensure the session is cleared
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // 3. Sign in with password
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password.trim(),
@@ -128,17 +129,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
       
-      console.log('Sign in successful, redirecting to dashboard');
+      console.log('Login successful for user ID:', data.user?.id);
       
-      // Set user and session state
-      if (data && data.user) {
-        setUser(data.user);
-        setSession(data.session);
+      // 4. Set a direct cookie for server recognition
+      if (data.session) {
+        document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=${60*60*24}; SameSite=Lax`;
+        document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/; max-age=${60*60*24*7}; SameSite=Lax`;
       }
       
-      // Ensure we have a clean redirect to dashboard
-      // Using replace instead of push to prevent back button issues
+      // 5. Store session in context
+      setUser(data.user);
+      setSession(data.session);
+      
+      // 6. Force redirect to dashboard
+      console.log('Forcing redirect to dashboard...');
+      
+      // Hard reload approach to completely refresh the page state
       window.location.href = '/dashboard';
+      
     } catch (error: any) {
       console.error('Error in signIn function:', error);
       throw error;
