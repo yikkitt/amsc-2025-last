@@ -5,6 +5,8 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import PageHeader from '@/components/dashboard/PageHeader'
 import Sidebar from '@/components/layout/Sidebar'
 
+export const dynamic = 'force-dynamic'; // Force dynamic rendering for this layout and its children
+
 export const metadata: Metadata = {
   title: 'AMSC 2025 | Dashboard',
   description: 'Exhibitor Manual Dashboard for AMSC 2025',
