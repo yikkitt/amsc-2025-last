@@ -64,6 +64,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.log(`Auth state changed: Event - ${event}, Session Exists - ${!!newSession}`);
             setSession(newSession);
             setUser(newSession?.user ?? null);
+            
+            // On successful sign-in, refresh the current route
+            // The middleware should then detect the session and redirect.
+            if (event === 'SIGNED_IN') {
+              console.log('Detected SIGNED_IN event, refreshing route...');
+              router.refresh(); 
+            }
           }
         );
         
