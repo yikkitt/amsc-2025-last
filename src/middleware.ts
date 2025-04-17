@@ -8,6 +8,7 @@ export async function middleware(request: NextRequest) {
   // Fast path approach - just check cookie existence without complex operations
   try {
     const path = request.nextUrl.pathname;
+    console.log('[MIDDLEWARE DEBUG] Request path:', path);
     
     // Get all cookies at once for better performance
     const cookieStore = request.cookies;
@@ -21,14 +22,17 @@ export async function middleware(request: NextRequest) {
     
     // Quick redirect logic based on path + cookie existence
     if (!hasAuth && path.startsWith('/dashboard')) {
+      console.log('[MIDDLEWARE DEBUG] No auth, redirecting to signin');
       return NextResponse.redirect(new URL('/auth/signin', request.url));
     }
     
     if (hasAuth && (path === '/' || path === '/auth/signin' || path === '/auth/signup')) {
+      console.log('[MIDDLEWARE DEBUG] Has auth, redirecting to dashboard');
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
     
     // For all other routes, continue normally
+    console.log('[MIDDLEWARE DEBUG] Continuing normally');
     return NextResponse.next();
   } catch (error) {
     console.error('[Middleware] Error:', error);
