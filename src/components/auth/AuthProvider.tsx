@@ -125,6 +125,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(data.user);
       setSession(data.session);
 
+      // WORKAROUND: Explicitly set cookies to ensure they're accessible to the server
+      if (data.session) {
+        try {
+          console.log('Setting explicit auth cookies for server access');
+          
+          // Set access token cookie
+          document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=3600; SameSite=Lax`;
+          
+          // Set refresh token cookie
+          if (data.session.refresh_token) {
+            document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/; max-age=2592000; SameSite=Lax`;
+          }
+        } catch (cookieError) {
+          console.error('Error setting explicit cookies:', cookieError);
+        }
+      }
+
       // After successful sign-in, first refresh the route
       // to ensure cookies are set in the browser
       router.refresh();

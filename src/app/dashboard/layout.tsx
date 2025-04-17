@@ -48,6 +48,10 @@ export default async function DashboardLayout({
       error: error ? { message: error.message, name: error.name } : null 
     });
     
+    // Workaround for local development or Vercel preview deployments
+    // Check URL params for auth bypass for testing
+    const isBypassRequested = false; // We can't access URL params in server components without headers
+    
     if (data?.user) {
       console.log('[DASHBOARD LAYOUT] Auth successful! User ID:', data.user.id);
     } else {
@@ -55,7 +59,7 @@ export default async function DashboardLayout({
     }
     
     // Use a conditional for visibility instead of a redirect for debugging
-    if (error || !data?.user) {
+    if ((error || !data?.user) && !isBypassRequested) {
       console.log('[DASHBOARD LAYOUT] Authentication failed - would normally redirect to signin');
       // TEMPORARILY COMMENTED OUT FOR DEBUGGING
       // redirect('/auth/signin');

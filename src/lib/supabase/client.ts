@@ -48,7 +48,41 @@ export const getSupabaseBrowserClient = () => {
       persistSession: true, // Persist session in localStorage
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      storage: window.localStorage, // Explicitly use localStorage
+      storage: {
+        getItem: (key) => {
+          if (typeof window === 'undefined') return null;
+          const value = window.localStorage.getItem(key);
+          return value;
+        },
+        setItem: (key, value) => {
+          if (typeof window === 'undefined') return;
+          window.localStorage.setItem(key, value);
+          
+          // Ensure cookies are set with appropriate domain settings
+          // This is similar to what the Supabase client does internally, but with more permissive settings
+          if (key.includes('access_token') || key.includes('refresh_token')) {
+            // Extract the token from the storage item (usually JSON)
+            try {
+              const parsedValue = JSON.parse(value);
+              const token = parsedValue?.value;
+              if (token) {
+                // Set a cookie with more permissive settings
+                document.cookie = `${key}=${token}; path=/; max-age=31536000; SameSite=Lax`;
+              }
+            } catch (e) {
+              console.error('Error setting cookie manually:', e);
+            }
+          }
+        },
+        removeItem: (key) => {
+          if (typeof window === 'undefined') return;
+          window.localStorage.removeItem(key);
+          // Also remove any cookies we might have set
+          if (key.includes('access_token') || key.includes('refresh_token')) {
+            document.cookie = `${key}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+          }
+        }
+      }
     }
   })
 } 
