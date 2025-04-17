@@ -7,6 +7,9 @@ export default function DebugPage() {
   const [cookies, setCookies] = useState<string[]>([]);
   const [sessionInfo, setSessionInfo] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [apiDebugInfo, setApiDebugInfo] = useState<any>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     // Get all cookies
@@ -36,6 +39,25 @@ export default function DebugPage() {
     fetchSession();
   }, []);
 
+  const fetchApiDebug = async () => {
+    setLoading(true);
+    setApiError(null);
+    
+    try {
+      const response = await fetch('/api/auth-debug');
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setApiDebugInfo(data);
+    } catch (err) {
+      setApiError(String(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const goToDashboard = () => {
     console.log('Debug: Direct navigation to dashboard');
     window.location.href = '/dashboard';
@@ -46,7 +68,7 @@ export default function DebugPage() {
       <h1 className="text-2xl font-bold mb-4">Auth Debug Page</h1>
       
       <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">Cookies:</h2>
+        <h2 className="text-xl font-semibold mb-2">Cookies in Browser:</h2>
         {cookies.length > 0 ? (
           <ul className="bg-gray-100 p-4 rounded">
             {cookies.map((cookie, i) => (
@@ -59,7 +81,7 @@ export default function DebugPage() {
       </div>
 
       <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">Session Info:</h2>
+        <h2 className="text-xl font-semibold mb-2">Browser Session Info:</h2>
         {error ? (
           <div className="bg-red-100 p-4 rounded">
             <p className="text-red-700">Error: {error}</p>
@@ -71,6 +93,27 @@ export default function DebugPage() {
         ) : (
           <p>Loading session info...</p>
         )}
+      </div>
+
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold mb-2">Server Debug Info:</h2>
+        <button 
+          onClick={fetchApiDebug} 
+          className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded mb-4"
+          disabled={loading}
+        >
+          {loading ? 'Loading...' : 'Fetch Server Auth Debug'}
+        </button>
+        
+        {apiError ? (
+          <div className="bg-red-100 p-4 rounded">
+            <p className="text-red-700">API Error: {apiError}</p>
+          </div>
+        ) : apiDebugInfo ? (
+          <pre className="bg-gray-100 p-4 rounded overflow-auto max-h-96">
+            {JSON.stringify(apiDebugInfo, null, 2)}
+          </pre>
+        ) : null}
       </div>
 
       <div className="flex gap-4 mb-6">
