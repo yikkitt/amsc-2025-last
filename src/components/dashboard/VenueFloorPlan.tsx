@@ -26,7 +26,7 @@ export default function VenueFloorPlan() {
           >
             <div className="relative w-full h-[450px] md:h-[450px]">
               <Image
-                src="/images/klcc_floor_plan.png"
+                src="/images/floor-plan.jpg"
                 alt="KLCC Exhibition Hall Layout"
                 fill
                 sizes="(max-width: 768px) 100vw, 60vw"
@@ -87,11 +87,11 @@ export default function VenueFloorPlan() {
               <div className="bg-gray-50 rounded p-4 shadow-sm border border-gray-100 h-auto flex flex-col justify-between">
                 <h4 className="font-semibold text-md mb-2 text-blue-700">Exhibition Area</h4>
                 <p className="text-sm text-gray-600">Ballroom 1 & 2, Level 3</p>
-                <p className="text-sm text-gray-600">Conference Hall 1, 2 & 3, Level 3</p>
+                <p className="text-sm text-gray-600">Banquet Hall, Level 3</p>
               </div>
               <div className="bg-gray-50 rounded p-4 shadow-sm border border-gray-100 h-auto flex flex-col justify-between">
                 <h4 className="font-semibold text-md mb-2 text-blue-700">Conference Room</h4>
-                <p className="text-sm text-gray-600">Banquet Hall, Level 3</p>
+                <p className="text-sm text-gray-600">Conference Hall 1, 2 & 3, Level 3</p>
               </div>
             </div>
           </div>
