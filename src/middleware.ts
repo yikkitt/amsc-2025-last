@@ -20,28 +20,30 @@ export async function middleware(request: NextRequest) {
       const { data, error } = await supabase.auth.getSession();
       
       if (error) {
-        console.error('Error getting session in middleware:', error);
+        console.error('[Middleware] Error getting session:', error);
         return response;
       }
       
       const session = data.session;
-      
-      if (isDevelopment) {
-        console.log('Development mode: Auth session status:', session ? 'Authenticated' : 'Not authenticated');
-        console.log('Session ID:', session?.user?.id || 'None');
-      }
+      const pathname = request.nextUrl.pathname;
+      console.log(`[Middleware] Path: ${pathname}, Session Exists: ${!!session}`);
       
       // Protect dashboard routes - redirect to login if not authenticated
-      if (!session && request.nextUrl.pathname.startsWith('/dashboard')) {
+      if (!session && pathname.startsWith('/dashboard')) {
+        console.log('[Middleware] No session, accessing dashboard. Redirecting to signin...');
         const redirectUrl = new URL('/auth/signin', request.url);
         return NextResponse.redirect(redirectUrl);
       }
       
-      // Redirect from login to dashboard if already logged in
-      if (session && (request.nextUrl.pathname === '/' || 
-                     request.nextUrl.pathname === '/auth/signin')) {
+      // Redirect from login/root to dashboard if already logged in
+      if (session && (pathname === '/' || pathname === '/auth/signin')) {
+        console.log('[Middleware] Session found, accessing root or signin. Redirecting to dashboard...');
         const redirectUrl = new URL('/dashboard', request.url);
         return NextResponse.redirect(redirectUrl);
+      } else if (session) {
+        console.log('[Middleware] Session found, accessing allowed page:', pathname);
+      } else {
+        console.log('[Middleware] No session, accessing allowed page:', pathname);
       }
     } catch (sessionError) {
       console.error('Session retrieval error:', sessionError);
