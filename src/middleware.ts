@@ -5,34 +5,40 @@ import type { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 export async function middleware(request: NextRequest) {
-  // Create response to return at the end
-  const response = NextResponse.next();
-  
   // Add debug header to track middleware execution
+  const response = NextResponse.next();
   response.headers.set('x-middleware-executed', 'true');
-  response.headers.set('x-requested-path', request.nextUrl.pathname);
-
-  // Basic session check using cookies
+  
   try {
-    // Get auth cookie
-    const supabaseCookie = request.cookies.get('sb-access-token')?.value;
-    response.headers.set('x-has-auth-cookie', String(!!supabaseCookie));
-
-    // Simple redirect logic
+    // Get auth cookie - Supabase uses these cookie names by default
+    const hasAccessToken = request.cookies.has('sb-access-token');
+    const hasRefreshToken = request.cookies.has('sb-refresh-token');
+    
+    // Log check in headers
+    response.headers.set('x-has-access-token', String(hasAccessToken));
+    response.headers.set('x-has-refresh-token', String(hasRefreshToken));
+    
+    // Simple redirect logic based on path + cookie existence
     const path = request.nextUrl.pathname;
     
-    // Since we can't verify the cookie server-side without adding complexity,
-    // we'll just use existence of the cookie as a simple check
-    if (!supabaseCookie && path.startsWith('/dashboard')) {
-      const redirectUrl = new URL('/auth/signin', request.url);
-      response.headers.set('x-redirect-reason', 'dashboard-no-cookie');
-      return NextResponse.redirect(redirectUrl);
+    if (!hasAccessToken && !hasRefreshToken && path.startsWith('/dashboard')) {
+      // No session accessing dashboard - redirect to signin
+      return NextResponse.redirect(new URL('/auth/signin', request.url));
     }
+    
+    if ((hasAccessToken || hasRefreshToken) && 
+        (path === '/' || path === '/auth/signin' || path === '/auth/signup')) {
+      // Has session accessing public pages - redirect to dashboard
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+    
+    // For all other routes, don't redirect
+    return response;
   } catch (error) {
-    response.headers.set('x-middleware-error', String(error));
+    console.error('Middleware error:', error);
+    // If anything fails, continue normally
+    return response;
   }
-  
-  return response;
 }
 
 export const config = {
@@ -44,6 +50,6 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*) ',
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 }; 
