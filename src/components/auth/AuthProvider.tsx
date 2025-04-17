@@ -133,7 +133,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // This ensures the cookies have time to be processed
       console.log('Redirecting to dashboard...');
       setTimeout(() => {
-        router.push('/dashboard');
+        // Use direct browser navigation instead of Next.js router
+        console.log('Executing redirect to dashboard...');
+        window.location.href = '/dashboard';
       }, 1500);
     } catch (error: any) {
       console.error('Error in signIn function:', error);

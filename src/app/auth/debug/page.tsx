@@ -36,6 +36,11 @@ export default function DebugPage() {
     fetchSession();
   }, []);
 
+  const goToDashboard = () => {
+    console.log('Debug: Direct navigation to dashboard');
+    window.location.href = '/dashboard';
+  };
+
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Auth Debug Page</h1>
@@ -66,6 +71,21 @@ export default function DebugPage() {
         ) : (
           <p>Loading session info...</p>
         )}
+      </div>
+
+      <div className="flex gap-4 mb-6">
+        <button 
+          onClick={goToDashboard} 
+          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+        >
+          Go to Dashboard Directly
+        </button>
+        <a 
+          href="/dashboard" 
+          className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded inline-block"
+        >
+          Dashboard Link
+        </a>
       </div>
 
       <div>
