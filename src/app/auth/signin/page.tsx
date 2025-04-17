@@ -28,9 +28,9 @@ function SignInContent() {
   }, []);
 
   return (
-    <div className="relative w-full sm:w-3/4 h-40 sm:h-64 mb-4 rounded-lg ring-2 ring-gradient-to-r from-blue-500 to-pink-500">
+    <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg">
       <div className="flex flex-col items-center">
-        <div className="relative w-3/4 h-64 mb-4">
+        <div className="relative w-full h-40 mb-2">
           <Image 
             src="/images/amsc-2025-banner.png" 
             alt="AMSC 2025 Banner"
@@ -42,7 +42,7 @@ function SignInContent() {
       </div>
       
       {registered && (
-        <div className="rounded-md bg-green-50 p-4">
+        <div className="rounded-md bg-green-50 p-4 mb-6">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -60,7 +60,7 @@ function SignInContent() {
       )}
       
       {reset && (
-        <div className="rounded-md bg-green-50 p-4">
+        <div className="rounded-md bg-green-50 p-4 mb-6">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -78,7 +78,7 @@ function SignInContent() {
       )}
       
       {error && (
-        <div className="rounded-md bg-red-50 p-4">
+        <div className="rounded-md bg-red-50 p-4 mb-6">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -103,9 +103,9 @@ function SignInContent() {
 // Loading fallback for Suspense
 function SignInLoading() {
   return (
-    <div className="max-w-xl w-full space-y-6 bg-white p-8 rounded-lg shadow-md">
+    <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg">
       <div className="flex flex-col items-center">
-        <div className="h-64 w-3/4 bg-gray-200 animate-pulse mb-4"></div>
+        <div className="h-40 w-full bg-gray-200 animate-pulse mb-4"></div>
         <div className="h-10 w-3/4 bg-gray-200 animate-pulse mb-2"></div>
         <div className="h-6 w-1/2 bg-gray-200 animate-pulse"></div>
       </div>
@@ -120,7 +120,7 @@ function SignInLoading() {
 
 export default function SigninPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-transparent py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-pink-500 py-12 px-4 sm:px-6 lg:px-8">
       <Suspense fallback={<SignInLoading />}>
         <SignInContent />
       </Suspense>
