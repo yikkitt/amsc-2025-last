@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, Session } from '@supabase/supabase-js';
 
 export default function LoginDebugPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [status, setStatus] = useState('');
-  const [sessionData, setSessionData] = useState(null);
+  const [sessionData, setSessionData] = useState<Session | null>(null);
 
   const createSupabase = () => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -22,7 +22,7 @@ export default function LoginDebugPage() {
     });
   };
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setStatus('Starting login process...');
     
@@ -51,25 +51,31 @@ export default function LoginDebugPage() {
       }
       
       setStatus('Login successful! User ID: ' + data.user?.id);
-      setSessionData(data.session);
-      
-      // Set cookies manually
-      document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=${60*60*24}; SameSite=Lax`;
-      document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/; max-age=${60*60*24*7}; SameSite=Lax`;
-      
-      setStatus('Cookies set. Waiting 2 seconds before redirect...');
-      
-      // Store session in localStorage
-      localStorage.setItem('sb-access-token', data.session.access_token);
-      localStorage.setItem('sb-refresh-token', data.session.refresh_token);
-      
-      // Wait and redirect
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 2000);
+      if (data.session) {
+        setSessionData(data.session);
+
+        // Set cookies manually
+        document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=${60*60*24}; SameSite=Lax`;
+        document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/; max-age=${60*60*24*7}; SameSite=Lax`;
+        
+        setStatus('Cookies set. Waiting 2 seconds before redirect...');
+        
+        // Store session in localStorage
+        localStorage.setItem('sb-access-token', data.session.access_token);
+        localStorage.setItem('sb-refresh-token', data.session.refresh_token);
+        
+        // Wait and redirect
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 2000);
+      }
       
     } catch (err) {
-      setStatus(`Exception: ${err.message}`);
+      let errorMessage = 'An unknown error occurred';
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      setStatus(`Exception: ${errorMessage}`);
       console.error('Login error:', err);
     }
   };
@@ -91,9 +97,15 @@ export default function LoginDebugPage() {
         setSessionData(data.session);
       } else {
         setStatus('No session found');
+        setSessionData(null);
       }
     } catch (err) {
-      setStatus(`Session check error: ${err.message}`);
+      let errorMessage = 'An unknown error occurred during session check';
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      setStatus(`Session check error: ${errorMessage}`);
+      setSessionData(null);
     }
   };
   
