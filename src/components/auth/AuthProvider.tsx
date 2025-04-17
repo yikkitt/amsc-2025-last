@@ -114,13 +114,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       console.log('Login successful for user ID:', data.user?.id);
       
-      // 5. Store session in context
+      // Store session in context - This is the correct way
       setUser(data.user);
       setSession(data.session);
-      
-      // Redirect is now handled by onAuthStateChange listener
-      // console.log('Forcing redirect to dashboard...');
-      // window.location.href = '/dashboard';
+
+      // REMOVE Manual cookie/localStorage setting and redirects
+      // The Supabase client and middleware should handle session persistence.
       
     } catch (error: any) {
       console.error('Error in signIn function:', error);
