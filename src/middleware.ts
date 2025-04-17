@@ -17,15 +17,19 @@ export async function middleware(request: NextRequest) {
     
     // Get the user's session with error handling
     try {
+      console.log(`[Middleware] Attempting getSession for path: ${request.nextUrl.pathname}`);
       const { data, error } = await supabase.auth.getSession();
       
       if (error) {
         console.error('[Middleware] Error getting session:', error);
-        return response;
+        // Log error but still return response to potentially show error page
+        return response; 
       }
       
       const session = data.session;
       const pathname = request.nextUrl.pathname;
+      // Log the raw data object and the determined session status
+      console.log('[Middleware] Raw getSession data:', JSON.stringify(data, null, 2));
       console.log(`[Middleware] Path: ${pathname}, Session Exists: ${!!session}`);
       
       // Protect dashboard routes - redirect to login if not authenticated
@@ -37,16 +41,19 @@ export async function middleware(request: NextRequest) {
       
       // Redirect from login/root to dashboard if already logged in
       if (session && (pathname === '/' || pathname === '/auth/signin')) {
-        console.log('[Middleware] Session found, accessing root or signin. Redirecting to dashboard...');
+        console.log(`[Middleware] Condition MET: Session exists (${!!session}) AND path is root/signin (${pathname}). Redirecting to dashboard...`);
         const redirectUrl = new URL('/dashboard', request.url);
         return NextResponse.redirect(redirectUrl);
-      } else if (session) {
-        console.log('[Middleware] Session found, accessing allowed page:', pathname);
       } else {
-        console.log('[Middleware] No session, accessing allowed page:', pathname);
+        // Log why the redirect condition was NOT met
+        console.log(`[Middleware] Condition NOT MET for redirect to dashboard. Session: ${!!session}, Path: ${pathname}`);
       }
+      
+      // Log final decision if no redirect happened earlier
+      console.log('[Middleware] Proceeding with original response for path:', pathname);
+
     } catch (sessionError) {
-      console.error('Session retrieval error:', sessionError);
+      console.error('[Middleware] Session retrieval error:', sessionError);
     }
     
     // For all other routes, just proceed normally

@@ -27,6 +27,7 @@ function getSupabaseKeyMiddleware(): string {
 
 const supabaseUrl = getSupabaseUrlMiddleware()
 const supabaseKey = getSupabaseKeyMiddleware()
+console.log(`[Supabase MW Client] Using URL: ${supabaseUrl}, Key ends with: ${supabaseKey.slice(-6)}`); // Log config
 
 /**
  * Create a Supabase client for use in middleware
