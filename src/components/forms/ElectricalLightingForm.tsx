@@ -6,6 +6,7 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import React from 'react'
 import UserDataContainer from '@/components/UserDataContainer'
 import { PdfButton } from '@/components/ui/PdfButton'
+import { isPastDeadline } from '@/lib/forms/submitHandler'
 
 interface OrderItem {
   id: string
@@ -82,7 +83,7 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
   }
 
   // Calculate late charge (10% of subtotal) if applicable
-  const isLateOrder = new Date() > new Date('2025-06-30'); // Check if current date is past deadline
+  const isLateOrder = isPastDeadline(); // Use the isPastDeadline function
   const subtotal = calculateTotal();
   const lateCharge = isLateOrder ? subtotal * 0.1 : 0;
 
@@ -262,7 +263,7 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
             <li>All items are on rental basis.</li>
             <li>Exhibitors/Contractors who are bringing in their own light fittings are required to order lighting connections from the Official Electrical Contractor. Power outlets are not to be used for lighting purposes.</li>
             <li>Exhibitors with very sensitive equipment are advised to bring their own stabilizer or UPS for protection of frequency fluctuations as the Organiser shall not be responsible for any damage to the exhibitors' equipment. One socket is for one exhibit only. Multi-point connection is not allowed to prevent the risk of power overload.</li>
-            <li>A <strong>SURCHARGE OF 10%</strong> will be imposed for orders received after June 30, 2025.</li>
+            <li>A <strong>SURCHARGE OF 10%</strong> will be imposed for orders received after September 2, 2024.</li>
             <li>A <strong>SURCHARGE OF 50%</strong> will be imposed for orders received on site or on-site alteration/relocation, and is subject to availability.</li>
             <li>All electrical installations must be undertaken by the Official Contractor.</li>
             <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be received by this Order Form. All bank charges must be borne by remitter. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-3, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 800 984924. Bank Swift Code: CIBBMYKL</li>

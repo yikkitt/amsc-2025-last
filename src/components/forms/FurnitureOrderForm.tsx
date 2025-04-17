@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import UserDataContainer from '@/components/UserDataContainer'
+import { isPastDeadline } from '@/lib/forms/submitHandler'
 
 interface OrderItem {
   id: string
@@ -66,29 +67,55 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
     )
   }
 
-  const calculateTotal = () => {
+  const calculateSubtotal = () => {
     return orderItems.reduce((sum, item) => sum + (item.unitCost * item.quantity), 0)
   }
+
+  const subtotal = calculateSubtotal()
+
+  const isLateOrder = isPastDeadline()
+  const lateCharge = isLateOrder ? subtotal * 0.3 : 0
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    
     try {
-      const selectedItems = orderItems.filter(item => item.quantity > 0)
-      const { error } = await supabase.from('form_submissions').insert({
+      // Filter items with quantity > 0
+      const selectedItems = orderItems
+        .filter(item => item.quantity > 0)
+        .map(item => ({
+          ...item,
+          total: item.quantity * item.unitCost
+        }));
+        
+      if (selectedItems.length === 0) {
+        alert('Please select at least one item before submitting.');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Create form data object
+      const formData = {
         form_type: 4,
         company_data: {
           company_name: userData?.company_name || '',
           booth_number: userData?.booth_number || '',
+          contact_person: userData?.contact_person || '',
+          email: userData?.email || '',
         },
         items: selectedItems,
-        subtotal: calculateTotal(),
+        subtotal: subtotal,
+        late_charge: lateCharge,
+        total: subtotal + lateCharge,
         auth_details: {
           name: '',
           designation: '',
           date: new Date().toISOString(),
         }
-      })
+      };
+
+      const { error } = await supabase.from('form_submissions').insert(formData)
 
       if (error) throw error
       // router.refresh()
@@ -183,7 +210,15 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
               ))}
               <tr className="font-bold bg-gray-50">
                 <td colSpan={6} className="border p-2 text-right">TOTAL COST (RM)</td>
-                <td className="border p-2 text-right">{calculateTotal().toFixed(2)}</td>
+                <td className="border p-2 text-right">{subtotal.toFixed(2)}</td>
+              </tr>
+              <tr className="font-bold bg-gray-50">
+                <td colSpan={6} className="border p-2 text-right">LATE CHARGE (RM)</td>
+                <td className="border p-2 text-right">{lateCharge.toFixed(2)}</td>
+              </tr>
+              <tr className="font-bold bg-gray-50">
+                <td colSpan={6} className="border p-2 text-right">TOTAL COST INCLUDING LATE CHARGE (RM)</td>
+                <td className="border p-2 text-right">{(subtotal + lateCharge).toFixed(2)}</td>
               </tr>
             </tbody>
           </table>
