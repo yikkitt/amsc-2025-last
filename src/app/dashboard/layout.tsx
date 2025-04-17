@@ -1,7 +1,8 @@
+import React from 'react';
 import { Metadata } from 'next'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createServerClient } from '@supabase/ssr';
 import PageHeader from '@/components/dashboard/PageHeader'
 import Sidebar from '@/components/layout/Sidebar'
 
@@ -20,60 +21,80 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  console.log("[DASHBOARD LAYOUT] Dashboard layout rendering");
-  
-  // --- BEGIN SERVER COOKIE DEBUG ---
-  const cookieStore = cookies();
-  const allCookies = cookieStore.getAll();
-  // --- Log statements removed for brevity ---
-  // --- END SERVER COOKIE DEBUG ---
-
-  // More robust auth check
-  const supabase = createSupabaseServerClient();
-  console.log('[DASHBOARD LAYOUT] Supabase server client created');
-  
   try {
-    const { data, error } = await supabase.auth.getUser();
+    console.log('[DASHBOARD LAYOUT] Creating Supabase client');
+    const cookieStore = cookies();
     
-    // Strictly enforce authentication - if there's any issue at all, redirect to signin
-    if (error || !data?.user) {
-      console.log('[DASHBOARD LAYOUT] Authentication failed - redirecting to signin');
-      console.log('[DASHBOARD LAYOUT] Error details:', error);
+    // Log some important cookies first for debugging
+    const accessTokenCookie = cookieStore.get('sb-access-token');
+    const projectAccessTokenCookie = cookieStore.get('sb-kiotgupdmepdyiscbrmb-access-token');
+    const authTokenCookie = cookieStore.get('sb-kiotgupdmepdyiscbrmb-auth-token');
+    
+    console.log('[DASHBOARD LAYOUT] Cookie status:', {
+      hasAccessToken: !!accessTokenCookie,
+      hasProjectAccessToken: !!projectAccessTokenCookie,
+      hasAuthToken: !!authTokenCookie,
+    });
+
+    // Create the Supabase client with the same approach as middleware
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+        },
+      }
+    );
+
+    // Get session - same method as middleware
+    const { data, error: sessionError } = await supabase.auth.getSession();
+    const session = data.session;
+    
+    if (sessionError) {
+      console.error('[DASHBOARD LAYOUT] Session error:', sessionError.message);
+      return (
+        <div className="flex h-screen items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold">Authentication Error</h1>
+            <p>There was a problem verifying your session. Please try signing in again.</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (!session) {
+      console.log('[DASHBOARD LAYOUT] No valid session found, redirecting to sign in');
       redirect('/auth/signin');
     }
-    
-    // Double-check session validity
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData?.session || 
-        !sessionData.session.access_token || 
-        !sessionData.session.user) {
-      console.log('[DASHBOARD LAYOUT] Invalid or expired session - redirecting to signin');
-      redirect('/auth/signin');
-    }
-    
-    console.log('[DASHBOARD LAYOUT] User authenticated, rendering dashboard');
+
+    console.log('[DASHBOARD LAYOUT] Valid session found, user ID:', session.user.id);
 
     return (
       <div className="flex min-h-screen">
         <Sidebar />
         <div className="flex-1 flex flex-col w-full">
           <PageHeader />
-          <div className="flex-grow p-6 md:px-12">
-            {children}
-          </div>
+          <div className="flex-grow p-6 md:px-12">{children}</div>
         </div>
       </div>
     );
-  } catch (dbgError) {
-    console.error('[DASHBOARD LAYOUT] Exception during auth check:', dbgError);
+  } catch (e) {
+    console.error('[DASHBOARD LAYOUT] Unexpected error:', e);
+    
+    // If this is a redirect exception from Next.js, let it propagate
+    if (e instanceof Error && e.message.includes('NEXT_REDIRECT')) {
+      throw e;
+    }
+    
+    // For other errors, show an error UI
     return (
-      <div className="p-8 bg-red-50 min-h-screen">
-        <h1 className="text-2xl font-bold text-red-800 mb-4">Authentication Error</h1>
-        <div className="bg-white p-6 rounded shadow">
-          <h2 className="text-xl font-bold mb-2">Exception during authentication</h2>
-          <pre className="bg-gray-100 p-4 rounded overflow-auto">
-            {JSON.stringify(dbgError, null, 2)}
-          </pre>
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold">Something went wrong</h1>
+          <p>We encountered an unexpected error. Please try refreshing the page.</p>
         </div>
       </div>
     );

@@ -72,16 +72,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             // Only redirect on actual sign-in (not initial load)
             if (event === 'SIGNED_IN' && !isInitialMount.current) {
-              console.log('Sign-in detected but NO redirect - disabling automatic redirect');
+              console.log('Sign-in detected, refreshing with active session');
               
               // Set the user in our state
               setUser(newSession?.user || null);
               
-              // DISABLED: Redirect to dashboard
-              // setTimeout(() => {
-              //   console.log('Timeout complete, redirecting to dashboard');
-              //   router.push('/dashboard');
-              // }, 300); 
+              // Just refresh the current route to ensure cookies are set
+              router.refresh();
             }
           }
         );
@@ -114,16 +111,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       
-      // SIMPLIFIED LOGIN APPROACH
-      console.log('Using simplified login approach...');
-      
-      // 1. Sign out first to clear any existing sessions
+      // First, clear any existing session
       await supabase.auth.signOut();
       
-      // 2. Wait a moment to ensure the session is cleared
+      // Wait briefly to ensure the session is cleared
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      // 3. Sign in with password
+      // Sign in with password
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password.trim(),
@@ -136,62 +130,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       console.log('Login successful for user ID:', data.user?.id);
       
-      // Store session in context - This is the correct way
+      // Store session in context
       setUser(data.user);
       setSession(data.session);
-
-      // WORKAROUND: Explicitly set cookies to ensure they're accessible to the server
+      
       if (data.session) {
+        // Explicitly set cookies for better compatibility
         try {
-          console.log('Setting explicit auth cookies for server access');
+          console.log('Setting explicit auth cookies');
           
-          // Extract project ref from the supabase URL
-          let projectRef = 'unknown';
+          // Get project ref from URL or use default
+          let projectRef = 'kiotgupdmepdyiscbrmb';
           try {
             const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-            // URL format: https://{project-ref}.supabase.co
             const matches = url.match(/https:\/\/(.*?)\.supabase\.co/);
             if (matches && matches[1]) {
               projectRef = matches[1];
-              console.log('Extracted project ref:', projectRef);
             }
           } catch (e) {
             console.error('Error extracting project ref:', e);
           }
           
-          // Set access token cookie with project ref in the name
+          // Set all necessary cookies with appropriate settings
           document.cookie = `sb-${projectRef}-access-token=${data.session.access_token}; path=/; max-age=3600; SameSite=Lax`;
           
-          // Set refresh token cookie with project ref in the name
           if (data.session.refresh_token) {
             document.cookie = `sb-${projectRef}-refresh-token=${data.session.refresh_token}; path=/; max-age=2592000; SameSite=Lax`;
           }
           
-          // Also set auth-token cookie which is used in some configurations
           document.cookie = `sb-${projectRef}-auth-token=${JSON.stringify(data.session)}; path=/; max-age=3600; SameSite=Lax`;
-          
-          // Keep the original simplified cookies too for backward compatibility
-          document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=3600; SameSite=Lax`;
-          if (data.session.refresh_token) {
-            document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/; max-age=2592000; SameSite=Lax`;
-          }
         } catch (cookieError) {
           console.error('Error setting explicit cookies:', cookieError);
         }
       }
-
-      // After successful sign-in, first refresh the route
-      // to ensure cookies are set in the browser
+      
+      // IMPORTANT: Use a two-step navigation process
+      // First, refresh the current route to properly set cookies
       router.refresh();
       
-      // Then explicitly redirect to dashboard after a short delay
-      // This ensures the cookies have time to be processed
-      console.log('Redirecting to dashboard...');
+      // Then wait and use a full page navigation
+      console.log('Login successful, waiting briefly before navigation');
       setTimeout(() => {
-        // Use direct browser navigation instead of Next.js router
-        console.log('Executing redirect to dashboard...');
-        window.location.href = '/dashboard';
-      }, 300); // Reduced from 1500ms to 300ms
+        // Use window.location for a full page refresh that ensures
+        // the server sees all the cookies on the next request
+        window.location.href = '/';
+      }, 500);
     } catch (error: any) {
       console.error('Error in signIn function:', error);
       throw error;

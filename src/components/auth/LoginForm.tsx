@@ -41,11 +41,24 @@ export function LoginForm() {
       const email = data.email.trim();
       const password = data.password.trim();
       
+      // Display debug info in console to help with troubleshooting
+      console.log('Login attempt for email:', email);
+      
       try {
+        // Attempt to sign in with the auth provider
+        console.log('Calling signIn function in AuthProvider...');
         await signIn(email, password);
-        // The redirect should be handled in AuthProvider
-      } catch (signInError) {
+        console.log('signIn function completed successfully');
+        // Redirect is now handled in the AuthProvider
+      } catch (signInError: any) {
         console.error('Sign in error:', signInError);
+        // Log details about the error to help diagnose issues
+        if (signInError.message) {
+          console.error('Error message:', signInError.message);
+        }
+        if (signInError.status) {
+          console.error('Error status:', signInError.status);
+        }
         throw signInError;
       }
     } catch (err: any) {
