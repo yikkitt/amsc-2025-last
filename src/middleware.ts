@@ -24,11 +24,11 @@ export async function middleware(request: NextRequest) {
     console.log('[MIDDLEWARE DEBUG] Has auth cookies:', hasAuth);
     console.log('[MIDDLEWARE DEBUG] All cookie names:', Array.from(cookieStore.getAll()).map(c => c.name));
     
-    // MODIFIED LOGIC: Don't redirect for form pages
-    const isFormPage = path.includes('/order-forms/') || path.includes('/debug-redirect');
+    // No exceptions - always enforce authentication for dashboard routes
+    // const isFormPage = path.includes('/order-forms/') || path.includes('/debug-redirect');
     
     // Quick redirect logic based on path + cookie existence
-    if (!hasAuth && path.startsWith('/dashboard') && !isFormPage) {
+    if (!hasAuth && path.startsWith('/dashboard')) {
       console.log('[MIDDLEWARE DEBUG] No auth, redirecting to signin');
       return NextResponse.redirect(new URL('/auth/signin', request.url));
     }

@@ -82,7 +82,7 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
   }
 
   // Calculate late charge (10% of subtotal) if applicable
-  const isLateOrder = new Date() > new Date('2024-09-02'); // Check if current date is past deadline
+  const isLateOrder = new Date() > new Date('2025-06-30'); // Check if current date is past deadline
   const subtotal = calculateTotal();
   const lateCharge = isLateOrder ? subtotal * 0.1 : 0;
 
@@ -241,7 +241,7 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
               </tr>
               <tr>
                 <td colSpan={4} className="border border-gray-300 p-2 text-center italic">
-                  A SURCHARGE OF 10% will be imposed for orders received after September 2, 2024.
+                  A SURCHARGE OF 10% will be imposed for orders received after June 30, 2025.
                 </td>
                 <td className="border border-gray-300 p-2 text-right font-medium">Late Charge (10%):</td>
                 <td className="border border-gray-300 p-2 text-center">{lateCharge.toFixed(2)}</td>

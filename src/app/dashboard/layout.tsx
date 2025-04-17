@@ -35,9 +35,19 @@ export default async function DashboardLayout({
   try {
     const { data, error } = await supabase.auth.getUser();
     
-    // Use a conditional for visibility instead of a redirect for debugging
-    if ((error || !data?.user)) {
+    // Strictly enforce authentication - if there's any issue at all, redirect to signin
+    if (error || !data?.user) {
       console.log('[DASHBOARD LAYOUT] Authentication failed - redirecting to signin');
+      console.log('[DASHBOARD LAYOUT] Error details:', error);
+      redirect('/auth/signin');
+    }
+    
+    // Double-check session validity
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData?.session || 
+        !sessionData.session.access_token || 
+        !sessionData.session.user) {
+      console.log('[DASHBOARD LAYOUT] Invalid or expired session - redirecting to signin');
       redirect('/auth/signin');
     }
     
