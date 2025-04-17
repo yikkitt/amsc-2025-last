@@ -125,9 +125,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(data.user);
       setSession(data.session);
 
-      // REMOVE Manual cookie/localStorage setting and redirects
-      // The Supabase client and middleware should handle session persistence.
+      // After successful sign-in, first refresh the route
+      // to ensure cookies are set in the browser
+      router.refresh();
       
+      // Then explicitly redirect to dashboard after a short delay
+      // This ensures the cookies have time to be processed
+      console.log('Redirecting to dashboard...');
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 500);
     } catch (error: any) {
       console.error('Error in signIn function:', error);
       throw error;
