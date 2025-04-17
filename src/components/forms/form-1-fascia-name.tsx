@@ -76,11 +76,6 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
 
       // Scroll to top to show the success message
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      
-      // Redirect after a delay
-      setTimeout(() => {
-        router.refresh();
-      }, 3000);
     } catch (error) {
       console.error('Error submitting form:', error)
     } finally {

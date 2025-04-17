@@ -122,7 +122,8 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
       // Log form submission (instead of sending email)
       console.log('Form submitted successfully:', formData);
 
-      router.refresh();
+      // Remove or comment out the router.refresh() call
+      // router.refresh();
     } catch (error) {
       console.error('Error submitting form:', error)
     } finally {

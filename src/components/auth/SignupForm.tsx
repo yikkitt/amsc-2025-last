@@ -112,6 +112,8 @@ export function SignupForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {serverError && <ErrorMessage message={serverError} />}
       
+      <p className="text-sm text-gray-500 italic mb-4">Fields marked with an asterisk (*) are required.</p>
+      
       <h3 className="text-lg font-medium text-gray-900">Company Information</h3>
       <div className="space-y-4">
         <div>

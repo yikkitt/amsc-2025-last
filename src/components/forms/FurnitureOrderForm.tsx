@@ -91,7 +91,7 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
       })
 
       if (error) throw error
-      router.refresh()
+      // router.refresh()
     } catch (error) {
       console.error('Error submitting form:', error)
     } finally {

@@ -67,7 +67,7 @@ export default function ContractorPassForm({ userData }: ContractorPassFormProps
       });
 
       if (error) throw error;
-      router.refresh();
+      // router.refresh();
     } catch (error) {
       console.error('Error submitting form:', error);
     } finally {

@@ -44,7 +44,7 @@ export default function IndemnityLetterForm({ userData }: IndemnityLetterFormPro
       })
 
       if (error) throw error
-      router.refresh()
+      // router.refresh()
     } catch (error) {
       console.error('Error submitting form:', error)
     } finally {
