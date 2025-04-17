@@ -1,60 +1,54 @@
-import { createMiddlewareClient } from '@supabase/ssr'; // Import from official package
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  const isDevelopment = process.env.NODE_ENV === 'development';
+  // Create a simple response first
+  const response = NextResponse.next();
   
-  // Create an unmodified response object before calling the Supabase client
-  const response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  })
+  // Add debug headers to track middleware execution
+  response.headers.set('x-middleware-executed', 'true');
+  response.headers.set('x-requested-path', request.nextUrl.pathname);
 
-  // Create a Supabase client configured to use cookies
-  const supabase = createMiddlewareClient({
-    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  }, {
-    request,
-    response,
-  });
+  // Create Supabase client
+  try {
+    const supabase = createMiddlewareClient({ req: request, res: response });
+    
+    // Mark that we created the client
+    response.headers.set('x-supabase-client-created', 'true');
 
-  const pathname = request.nextUrl.pathname;
-  console.log(`[Middleware SSR] Request for path: ${pathname}`);
+    // Get session (simplified)
+    const { data } = await supabase.auth.getSession();
+    const session = data.session;
+    
+    // Log session status in header
+    response.headers.set('x-session-exists', String(!!session));
 
-  console.log(`[Middleware SSR] Attempting getSession...`);
-  // Refresh session if expired - important!
-  const { data, error } = await supabase.auth.getSession();
-  console.log(`[Middleware SSR] getSession finished. Error: ${!!error}, Session: ${!!data?.session}`);
-
-  if (error) {
-    console.error('[Middleware SSR] Error returned by getSession:', error);
-    // Allow request to proceed but log the error
+    // Simple redirect logic
+    const path = request.nextUrl.pathname;
+    
+    // Redirect to signin if accessing dashboard without session
+    if (!session && path.startsWith('/dashboard')) {
+      const redirectUrl = new URL('/auth/signin', request.url);
+      response.headers.set('x-redirect-reason', 'dashboard-no-session');
+      return NextResponse.redirect(redirectUrl);
+    }
+    
+    // Redirect to dashboard if accessing auth pages with session
+    if (session && (path === '/' || path.startsWith('/auth/'))) {
+      const redirectUrl = new URL('/dashboard', request.url);
+      response.headers.set('x-redirect-reason', 'auth-with-session');
+      return NextResponse.redirect(redirectUrl);
+    }
+    
+    // No redirect needed
+    response.headers.set('x-no-redirect', 'true');
+    return response;
+  } catch (error) {
+    // If anything fails, log in header and continue
+    response.headers.set('x-middleware-error', String(error));
+    return response;
   }
-
-  const session = data?.session;
-  console.log(`[Middleware SSR] Path: ${pathname}, Session Exists: ${!!session}`);
-
-  // Protect dashboard routes
-  if (!session && pathname.startsWith('/dashboard')) {
-    console.log('[Middleware SSR] No session, accessing dashboard. Redirecting to signin...');
-    const redirectUrl = new URL('/auth/signin', request.url);
-    return NextResponse.redirect(redirectUrl);
-  }
-
-  // Redirect from login/root to dashboard if already logged in
-  if (session && (pathname === '/' || pathname === '/auth/signin')) {
-    console.log(`[Middleware SSR] Session exists, accessing root or signin (${pathname}). Redirecting to dashboard...`);
-    const redirectUrl = new URL('/dashboard', request.url);
-    return NextResponse.redirect(redirectUrl);
-  }
-
-  console.log(`[Middleware SSR] No redirect needed for path: ${pathname}, Session: ${!!session}. Proceeding.`);
-
-  // Return the response object, potentially modified by the Supabase client
-  return response;
 }
 
 export const config = {
