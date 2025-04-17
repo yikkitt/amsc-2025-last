@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Session, User } from '@supabase/supabase-js';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
@@ -40,6 +40,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // Track initial mount to identify real sign-ins vs page loads
+  const isInitialMount = useRef(true);
+  
   useEffect(() => {
     async function initializeAuth() {
       try {
@@ -62,24 +65,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           (event, newSession) => {
             // Log all events
             console.log(`Auth state changed: Event - ${event}, Session Exists - ${!!newSession}`);
+            
+            // Update the session and user state
             setSession(newSession);
             setUser(newSession?.user ?? null);
             
-            // Only redirect if this is a true sign-in event, not just a session check on page load
-            if (event === 'SIGNED_IN' && !session) {
-              console.log('New sign-in detected, redirecting to dashboard shortly...');
+            // Only redirect on actual sign-in (not initial load)
+            if (event === 'SIGNED_IN' && !isInitialMount.current) {
+              console.log('True sign-in event detected, redirecting to dashboard');
               
               // Set the user in our state
               setUser(newSession?.user || null);
               
-              // Reduce timeout to 300ms - still giving some time for cookies to sync but much faster
+              // Redirect to dashboard
               setTimeout(() => {
                 console.log('Timeout complete, redirecting to dashboard');
                 router.push('/dashboard');
-              }, 300); // Reduced from 1500ms to 300ms
+              }, 300); 
             }
           }
         );
+        
+        // No longer a first-time mount
+        isInitialMount.current = false;
         
         return () => {
           authListener.subscription.unsubscribe();
@@ -92,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     initializeAuth();
-  }, []); // Remove router from dependency array
+  }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
