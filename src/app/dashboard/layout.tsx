@@ -77,6 +77,34 @@ export default async function DashboardLayout({
               {JSON.stringify(error || 'No error object, but auth check failed', null, 2)}
             </pre>
             
+            <h3 className="font-bold mb-2">Authentication Attempt:</h3>
+            <p className="mb-2">Try directly reading the auth token cookie:</p>
+            {(() => {
+              try {
+                const projectRef = 'kiotgupdmepdyiscbrmb';
+                const authCookie = allCookies.find(c => c.name === `sb-${projectRef}-auth-token`);
+                if (authCookie) {
+                  try {
+                    const authData = JSON.parse(authCookie.value);
+                    return (
+                      <div className="mb-4">
+                        <p className="text-green-700 font-semibold mb-2">Successfully parsed auth token cookie!</p>
+                        <p className="mb-1">Access token exists: {!!authData.access_token ? 'Yes' : 'No'}</p>
+                        <p className="mb-1">Refresh token exists: {!!authData.refresh_token ? 'Yes' : 'No'}</p>
+                        <p className="mb-1">Expires at: {new Date(authData.expires_at * 1000).toLocaleString()}</p>
+                        <p className="mb-1">User ID: {authData.user?.id || 'Not found'}</p>
+                      </div>
+                    );
+                  } catch (e) {
+                    return <p className="text-red-700 mb-4">Error parsing auth cookie: {String(e)}</p>;
+                  }
+                }
+                return <p className="text-red-700 mb-4">Auth token cookie not found</p>;
+              } catch (e) {
+                return <p className="text-red-700 mb-4">Error checking auth token: {String(e)}</p>;
+              }
+            })()}
+            
             <h3 className="font-bold mb-2">Cookies present:</h3>
             <p className="mb-2">Total cookies: {allCookies.length}</p>
             <p className="mb-2">Supabase cookies: {supabaseCookies.length}</p>

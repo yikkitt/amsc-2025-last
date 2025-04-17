@@ -56,8 +56,94 @@ const supabaseKey = getSupabaseKeyServer()
  * Renamed from createServerComponentClient
  */
 export const createSupabaseServerClient = () => {
-  const cookieStore = cookies()
+  const cookieStore = cookies();
+  const projectRef = getProjectRef();
   
+  // Log all cookies for debugging
+  const allCookies = cookieStore.getAll();
+  console.log('[SERVER] All cookies:', allCookies.map(c => c.name));
+  
+  // Directly try to parse the auth token cookie ourselves
+  const authCookie = cookieStore.get(`sb-${projectRef}-auth-token`);
+  
+  if (authCookie) {
+    try {
+      // Try to parse the session JSON and extract the access token directly
+      const sessionData = JSON.parse(authCookie.value);
+      console.log('[SERVER] Successfully parsed auth token cookie. Has access_token:', !!sessionData.access_token);
+      
+      // Create client with directly parsed session
+      const client = createClient(supabaseUrl, supabaseKey, {
+        auth: {
+          persistSession: false, // Don't persist in this context
+          autoRefreshToken: false, // Don't auto refresh, just use the token we have
+          detectSessionInUrl: false,
+          
+          // Initialize with the session from the cookie
+          ...(sessionData && {
+            storage: {
+              getItem: () => JSON.stringify({ data: { session: sessionData } }),
+              setItem: () => {},
+              removeItem: () => {},
+            }
+          })
+        }
+      });
+      
+      // Force set the session in the client
+      if (sessionData?.access_token) {
+        try {
+          // Manually set auth state
+          // @ts-ignore - This is an internal API but it works
+          client.auth.setSession(sessionData);
+          console.log('[SERVER] Manually set session in client');
+        } catch (e) {
+          console.error('[SERVER] Failed to manually set session:', e);
+        }
+      }
+      
+      return client;
+    } catch (e) {
+      console.error('[SERVER] Error parsing auth cookie:', e);
+    }
+  } else {
+    console.log('[SERVER] No auth token cookie found, checking other cookie formats...');
+    
+    // Check if we have the individual token cookies
+    const accessToken = cookieStore.get(`sb-${projectRef}-access-token`)?.value || 
+                        cookieStore.get('sb-access-token')?.value;
+    
+    const refreshToken = cookieStore.get(`sb-${projectRef}-refresh-token`)?.value || 
+                         cookieStore.get('sb-refresh-token')?.value;
+    
+    if (accessToken) {
+      console.log('[SERVER] Found access token cookie');
+      
+      // Create client with directly set tokens
+      const client = createClient(supabaseUrl, supabaseKey, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false, 
+          detectSessionInUrl: false,
+        }
+      });
+      
+      // Manually set the session
+      try {
+        // @ts-ignore - This is an internal API but it works
+        client.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || '',
+        });
+        console.log('[SERVER] Manually set session from token cookies');
+        return client;
+      } catch (e) {
+        console.error('[SERVER] Failed to set access token session:', e);
+      }
+    }
+  }
+  
+  // Fall back to the normal client with cookie handlers
   return createClient(supabaseUrl, supabaseKey, {
     auth: {
       persistSession: true,
@@ -76,8 +162,6 @@ export const createSupabaseServerClient = () => {
             // If not found, try different naming patterns
             // First, check for project-specific cookie naming
             if (name.startsWith('sb-') && name.includes('-auth-')) {
-              const projectRef = getProjectRef();
-              
               // Check for the token in various formats
               if (name.endsWith('-auth-token')) {
                 // Try alternate formats
