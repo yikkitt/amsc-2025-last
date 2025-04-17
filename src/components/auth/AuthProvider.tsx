@@ -68,8 +68,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // On successful sign-in, refresh the current route
             // The middleware should then detect the session and redirect.
             if (event === 'SIGNED_IN') {
-              console.log('Detected SIGNED_IN event, refreshing route...');
-              router.refresh(); 
+              console.log('Sign-in detected, redirecting to dashboard shortly...');
+              
+              // Set the user in our state
+              setUser(newSession?.user || null);
+              
+              // Reduce timeout to 300ms - still giving some time for cookies to sync but much faster
+              setTimeout(() => {
+                console.log('Timeout complete, redirecting to dashboard');
+                router.push('/dashboard');
+              }, 300); // Reduced from 1500ms to 300ms
             }
           }
         );
@@ -176,7 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Use direct browser navigation instead of Next.js router
         console.log('Executing redirect to dashboard...');
         window.location.href = '/dashboard';
-      }, 1500);
+      }, 300); // Reduced from 1500ms to 300ms
     } catch (error: any) {
       console.error('Error in signIn function:', error);
       throw error;
@@ -334,9 +342,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      console.log('Signing out user...');
+      
+      // First, sign out from Supabase
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      router.push('/auth/signin');
+      
+      console.log('Sign out successful, clearing cookies and redirecting to signin page...');
+      
+      // Clear cookies explicitly to ensure proper sign out
+      const projectRef = 'kiotgupdmepdyiscbrmb'; // Your Supabase project ref
+      
+      // Clear all possible Supabase cookies
+      document.cookie = `sb-${projectRef}-access-token=; path=/; max-age=0; SameSite=Lax`;
+      document.cookie = `sb-${projectRef}-refresh-token=; path=/; max-age=0; SameSite=Lax`;
+      document.cookie = `sb-${projectRef}-auth-token=; path=/; max-age=0; SameSite=Lax`;
+      document.cookie = `sb-access-token=; path=/; max-age=0; SameSite=Lax`;
+      document.cookie = `sb-refresh-token=; path=/; max-age=0; SameSite=Lax`;
+      
+      // Reset state
+      setUser(null);
+      setSession(null);
+
+      // Add a short delay to ensure cookies are cleared before redirect
+      setTimeout(() => {
+        // Use window.location.href for a full page refresh and navigation
+        window.location.href = '/auth/signin';
+      }, 100);
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;

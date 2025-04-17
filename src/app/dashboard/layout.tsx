@@ -60,11 +60,12 @@ export default async function DashboardLayout({
     
     // Use a conditional for visibility instead of a redirect for debugging
     if ((error || !data?.user) && !isBypassRequested) {
-      console.log('[DASHBOARD LAYOUT] Authentication failed - would normally redirect to signin');
-      // TEMPORARILY COMMENTED OUT FOR DEBUGGING
-      // redirect('/auth/signin');
+      console.log('[DASHBOARD LAYOUT] Authentication failed - redirecting to signin');
+      // No longer commenting out for debugging
+      redirect('/auth/signin');
       
-      // Instead, show auth debug info
+      // Comment out or remove the debug display
+      /* 
       return (
         <div className="p-8 bg-red-50 min-h-screen">
           <h1 className="text-2xl font-bold text-red-800 mb-4">Authentication Debug</h1>
@@ -117,6 +118,7 @@ export default async function DashboardLayout({
           </div>
         </div>
       );
+      */
     }
   } catch (dbgError) {
     console.error('[DASHBOARD LAYOUT] Exception during auth check:', dbgError);
