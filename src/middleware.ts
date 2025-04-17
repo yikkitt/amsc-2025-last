@@ -9,6 +9,9 @@ export async function middleware(request: NextRequest) {
     // Initialize the Supabase client with the request
     const { supabase, response } = createMiddlewareClient(request);
     
+    // Get pathname early for logging outside inner try
+    const pathname = request.nextUrl.pathname; 
+
     // Verify supabase.auth is properly initialized
     if (!supabase || !supabase.auth) {
       console.error('Middleware error: Supabase or supabase.auth is undefined');
@@ -17,8 +20,10 @@ export async function middleware(request: NextRequest) {
     
     // Get the user's session with error handling
     try {
-      console.log(`[Middleware] Attempting getSession for path: ${request.nextUrl.pathname}`);
+      console.log(`[Middleware] ENTERING getSession try block for path: ${pathname}`);
+      console.log(`[Middleware] Attempting getSession...`);
       const { data, error } = await supabase.auth.getSession();
+      console.log(`[Middleware] getSession FINISHED.`);
       
       if (error) {
         console.error('[Middleware] Error getting session:', error);
@@ -27,7 +32,7 @@ export async function middleware(request: NextRequest) {
       }
       
       const session = data.session;
-      const pathname = request.nextUrl.pathname;
+      // const pathname = request.nextUrl.pathname; // No longer need to define here
       // Log the raw data object and the determined session status
       console.log('[Middleware] Raw getSession data:', JSON.stringify(data, null, 2));
       console.log(`[Middleware] Path: ${pathname}, Session Exists: ${!!session}`);
@@ -53,10 +58,12 @@ export async function middleware(request: NextRequest) {
       console.log('[Middleware] Proceeding with original response for path:', pathname);
 
     } catch (sessionError) {
-      console.error('[Middleware] Session retrieval error:', sessionError);
+      // Log the specific error caught during session retrieval
+      console.error('[Middleware] CAUGHT ERROR in getSession try block:', sessionError);
     }
     
-    // For all other routes, just proceed normally
+    // This log helps see if we exit the inner try...catch normally
+    console.log(`[Middleware] Exiting INNER try...catch for path: ${pathname}. Will return current response.`);
     return response;
   } catch (error) {
     console.error('Middleware error:', error);
