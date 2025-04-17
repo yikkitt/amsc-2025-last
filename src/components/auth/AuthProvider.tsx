@@ -130,10 +130,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           console.log('Setting explicit auth cookies for server access');
           
-          // Set access token cookie
-          document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=3600; SameSite=Lax`;
+          // Extract project ref from the supabase URL
+          let projectRef = 'unknown';
+          try {
+            const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+            // URL format: https://{project-ref}.supabase.co
+            const matches = url.match(/https:\/\/(.*?)\.supabase\.co/);
+            if (matches && matches[1]) {
+              projectRef = matches[1];
+              console.log('Extracted project ref:', projectRef);
+            }
+          } catch (e) {
+            console.error('Error extracting project ref:', e);
+          }
           
-          // Set refresh token cookie
+          // Set access token cookie with project ref in the name
+          document.cookie = `sb-${projectRef}-access-token=${data.session.access_token}; path=/; max-age=3600; SameSite=Lax`;
+          
+          // Set refresh token cookie with project ref in the name
+          if (data.session.refresh_token) {
+            document.cookie = `sb-${projectRef}-refresh-token=${data.session.refresh_token}; path=/; max-age=2592000; SameSite=Lax`;
+          }
+          
+          // Also set auth-token cookie which is used in some configurations
+          document.cookie = `sb-${projectRef}-auth-token=${JSON.stringify(data.session)}; path=/; max-age=3600; SameSite=Lax`;
+          
+          // Keep the original simplified cookies too for backward compatibility
+          document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=3600; SameSite=Lax`;
           if (data.session.refresh_token) {
             document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/; max-age=2592000; SameSite=Lax`;
           }

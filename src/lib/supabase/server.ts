@@ -5,6 +5,30 @@ import { cookies } from 'next/headers'
 const SUPABASE_URL = 'https://kiotgupdmepdyiscbrmb.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtpb3RndXBkbWVwZHlpc2Nicm1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM5OTc4MDQsImV4cCI6MjA1OTU3MzgwNH0.USrVcvc8lzraMh4a4BpaTSope81DwX4EsYCxMddC1I8'
 
+// Helper function to get project reference from URL
+function getProjectRef(): string {
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || SUPABASE_URL;
+    // URL format: https://{project-ref}.supabase.co
+    const matches = url.match(/https:\/\/(.*?)\.supabase\.co/);
+    if (matches && matches[1]) {
+      return matches[1];
+    }
+  } catch (e) {
+    console.error('[SERVER] Error extracting project ref:', e);
+  }
+  // Use fallback from hardcoded URL
+  try {
+    const matches = SUPABASE_URL.match(/https:\/\/(.*?)\.supabase\.co/);
+    if (matches && matches[1]) {
+      return matches[1];
+    }
+  } catch (e) {
+    console.error('[SERVER] Error extracting fallback project ref:', e);
+  }
+  return 'unknown';
+}
+
 // Helper function to get Supabase URL for server-side
 function getSupabaseUrlServer(): string {
   const envUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -42,7 +66,60 @@ export const createSupabaseServerClient = () => {
       // @ts-ignore - The cookies object is valid for server component usage but not explicitly typed
       cookies: {
         get(name: string) {
-          return cookieStore.get(name)?.value
+          try {
+            // Get the cookie directly
+            const value = cookieStore.get(name)?.value;
+            if (value) {
+              return value;
+            }
+            
+            // If not found, try different naming patterns
+            // First, check for project-specific cookie naming
+            if (name.startsWith('sb-') && name.includes('-auth-')) {
+              const projectRef = getProjectRef();
+              
+              // Check for the token in various formats
+              if (name.endsWith('-auth-token')) {
+                // Try alternate formats
+                const alternates = [
+                  `sb-${projectRef}-auth-token`,
+                  'sb-auth-token',
+                  `sb-access-token`,
+                  `sb-${projectRef}-access-token`,
+                ];
+                
+                for (const alt of alternates) {
+                  const altValue = cookieStore.get(alt)?.value;
+                  if (altValue) {
+                    console.log(`[SERVER] Found alternate cookie: ${alt}`);
+                    return altValue;
+                  }
+                }
+              }
+              
+              // Check for refresh token
+              if (name.includes('refresh')) {
+                const alternates = [
+                  `sb-${projectRef}-refresh-token`,
+                  'sb-refresh-token'
+                ];
+                
+                for (const alt of alternates) {
+                  const altValue = cookieStore.get(alt)?.value;
+                  if (altValue) {
+                    console.log(`[SERVER] Found alternate cookie: ${alt}`);
+                    return altValue;
+                  }
+                }
+              }
+            }
+            
+            // Not found in any format
+            return undefined;
+          } catch (e) {
+            console.error('[SERVER] Error getting cookie:', e);
+            return undefined;
+          }
         },
         set(name: string, value: string, options: any) {
           try {

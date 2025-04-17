@@ -66,8 +66,38 @@ export const getSupabaseBrowserClient = () => {
               const parsedValue = JSON.parse(value);
               const token = parsedValue?.value;
               if (token) {
-                // Set a cookie with more permissive settings
+                // Extract project ref from the URL
+                let projectRef = 'unknown';
+                try {
+                  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || supabaseUrl;
+                  // URL format: https://{project-ref}.supabase.co
+                  const matches = url.match(/https:\/\/(.*?)\.supabase\.co/);
+                  if (matches && matches[1]) {
+                    projectRef = matches[1];
+                  }
+                } catch (e) {
+                  console.error('Error extracting project ref:', e);
+                }
+
+                // Set a cookie with project ref in the name
+                const tokenType = key.includes('access_token') ? 'access-token' : 'refresh-token';
+                document.cookie = `sb-${projectRef}-${tokenType}=${token}; path=/; max-age=31536000; SameSite=Lax`;
+                
+                // Also set simplified cookie for backward compatibility
                 document.cookie = `${key}=${token}; path=/; max-age=31536000; SameSite=Lax`;
+                
+                // If this is an access token, also set the auth-token cookie
+                if (key.includes('access_token')) {
+                  try {
+                    // Try to get session from local storage to create auth-token
+                    const sessionStr = window.localStorage.getItem('sb-' + projectRef + '-auth-token');
+                    if (sessionStr) {
+                      document.cookie = `sb-${projectRef}-auth-token=${sessionStr}; path=/; max-age=31536000; SameSite=Lax`;
+                    }
+                  } catch (e) {
+                    console.error('Error setting auth-token cookie:', e);
+                  }
+                }
               }
             } catch (e) {
               console.error('Error setting cookie manually:', e);
