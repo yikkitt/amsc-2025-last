@@ -72,16 +72,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             // Only redirect on actual sign-in (not initial load)
             if (event === 'SIGNED_IN' && !isInitialMount.current) {
-              console.log('True sign-in event detected, redirecting to dashboard');
+              console.log('Sign-in detected but NO redirect - disabling automatic redirect');
               
               // Set the user in our state
               setUser(newSession?.user || null);
               
-              // Redirect to dashboard
-              setTimeout(() => {
-                console.log('Timeout complete, redirecting to dashboard');
-                router.push('/dashboard');
-              }, 300); 
+              // DISABLED: Redirect to dashboard
+              // setTimeout(() => {
+              //   console.log('Timeout complete, redirecting to dashboard');
+              //   router.push('/dashboard');
+              // }, 300); 
             }
           }
         );
