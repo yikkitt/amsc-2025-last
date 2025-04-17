@@ -24,39 +24,34 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   console.log(`[Middleware SSR] Request for path: ${pathname}`);
 
-  try {
-    console.log(`[Middleware SSR] Attempting getSession...`);
-    // Refresh session if expired - important!
-    const { data, error } = await supabase.auth.getSession();
-    console.log(`[Middleware SSR] getSession finished. Error: ${!!error}, Session: ${!!data.session}`);
+  console.log(`[Middleware SSR] Attempting getSession...`);
+  // Refresh session if expired - important!
+  const { data, error } = await supabase.auth.getSession();
+  console.log(`[Middleware SSR] getSession finished. Error: ${!!error}, Session: ${!!data?.session}`);
 
-    if (error) {
-      console.error('[Middleware SSR] Error getting session:', error);
-      return response; // Return response even on error
-    }
-
-    const session = data.session;
-    console.log(`[Middleware SSR] Path: ${pathname}, Session Exists: ${!!session}`);
-
-    // Protect dashboard routes
-    if (!session && pathname.startsWith('/dashboard')) {
-      console.log('[Middleware SSR] No session, accessing dashboard. Redirecting to signin...');
-      const redirectUrl = new URL('/auth/signin', request.url);
-      return NextResponse.redirect(redirectUrl);
-    }
-
-    // Redirect from login/root to dashboard if already logged in
-    if (session && (pathname === '/' || pathname === '/auth/signin')) {
-      console.log(`[Middleware SSR] Session exists, accessing root or signin (${pathname}). Redirecting to dashboard...`);
-      const redirectUrl = new URL('/dashboard', request.url);
-      return NextResponse.redirect(redirectUrl);
-    }
-
-    console.log(`[Middleware SSR] No redirect needed for path: ${pathname}, Session: ${!!session}. Proceeding.`);
-
-  } catch (e) {
-    console.error('[Middleware SSR] Caught error during session handling:', e);
+  if (error) {
+    console.error('[Middleware SSR] Error returned by getSession:', error);
+    // Allow request to proceed but log the error
   }
+
+  const session = data?.session;
+  console.log(`[Middleware SSR] Path: ${pathname}, Session Exists: ${!!session}`);
+
+  // Protect dashboard routes
+  if (!session && pathname.startsWith('/dashboard')) {
+    console.log('[Middleware SSR] No session, accessing dashboard. Redirecting to signin...');
+    const redirectUrl = new URL('/auth/signin', request.url);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  // Redirect from login/root to dashboard if already logged in
+  if (session && (pathname === '/' || pathname === '/auth/signin')) {
+    console.log(`[Middleware SSR] Session exists, accessing root or signin (${pathname}). Redirecting to dashboard...`);
+    const redirectUrl = new URL('/dashboard', request.url);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  console.log(`[Middleware SSR] No redirect needed for path: ${pathname}, Session: ${!!session}. Proceeding.`);
 
   // Return the response object, potentially modified by the Supabase client
   return response;
