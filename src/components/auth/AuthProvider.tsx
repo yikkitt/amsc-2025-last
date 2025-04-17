@@ -65,10 +65,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setSession(newSession);
             setUser(newSession?.user ?? null);
             
-            // On successful sign-in, refresh the current route
-            // The middleware should then detect the session and redirect.
-            if (event === 'SIGNED_IN') {
-              console.log('Sign-in detected, redirecting to dashboard shortly...');
+            // Only redirect if this is a true sign-in event, not just a session check on page load
+            if (event === 'SIGNED_IN' && !session) {
+              console.log('New sign-in detected, redirecting to dashboard shortly...');
               
               // Set the user in our state
               setUser(newSession?.user || null);
