@@ -30,7 +30,18 @@ export default async function DashboardLayout({
   console.log('[Layout] Found Supabase auth token cookie:', !!supabaseCookie);
   // --- END SERVER COOKIE DEBUG ---
 
-  // Middleware should guarantee authentication by this point
+  // More robust auth check
+  const supabase = createSupabaseServerClient();
+  const { data, error } = await supabase.auth.getUser();
+  
+  console.log('[Layout] Auth check result:', { hasUser: !!data?.user, error: !!error });
+  
+  if (error || !data?.user) {
+    console.log('[Layout] User not authenticated, redirecting to signin');
+    redirect('/auth/signin');
+  }
+  
+  console.log('[Layout] User authenticated, rendering dashboard');
 
   return (
     <div className="flex min-h-screen">
