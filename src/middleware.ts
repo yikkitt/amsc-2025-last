@@ -24,8 +24,12 @@ export async function middleware(request: NextRequest) {
     console.log('[MIDDLEWARE DEBUG] Has auth cookies:', hasAuth);
     console.log('[MIDDLEWARE DEBUG] All cookie names:', Array.from(cookieStore.getAll()).map(c => c.name));
     
-    // No exceptions - always enforce authentication for dashboard routes
-    // const isFormPage = path.includes('/order-forms/') || path.includes('/debug-redirect');
+    // IMPORTANT: Special case for root path to avoid redirect loops
+    // Let the page component handle root path redirection
+    if (path === '/') {
+      console.log('[MIDDLEWARE DEBUG] Root path, skipping middleware redirects');
+      return NextResponse.next();
+    }
     
     // Quick redirect logic based on path + cookie existence
     if (!hasAuth && path.startsWith('/dashboard')) {
@@ -33,7 +37,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/auth/signin', request.url));
     }
     
-    // Only redirect authenticated users from specific paths, not the root landing page
+    // Only redirect authenticated users from auth paths
     if (hasAuth && (path === '/auth/signin' || path === '/auth/signup')) {
       console.log('[MIDDLEWARE DEBUG] Has auth, redirecting to dashboard');
       return NextResponse.redirect(new URL('/dashboard', request.url));
