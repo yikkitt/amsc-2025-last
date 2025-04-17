@@ -33,13 +33,14 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/auth/signin', request.url));
     }
     
-    if (hasAuth && (path === '/' || path === '/auth/signin' || path === '/auth/signup')) {
+    // Only redirect authenticated users from specific paths, not the root landing page
+    if (hasAuth && (path === '/auth/signin' || path === '/auth/signup')) {
       console.log('[MIDDLEWARE DEBUG] Has auth, redirecting to dashboard');
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
     
     // For all other routes, continue normally
-    console.log('[MIDDLEWARE DEBUG] Continuing normally');
+    console.log('[MIDDLEWARE DEBUG] Continuing normally for path:', path);
     return NextResponse.next();
   } catch (error) {
     console.error('[Middleware] Error:', error);
