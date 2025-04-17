@@ -64,16 +64,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.log(`Auth state changed: Event - ${event}, Session Exists - ${!!newSession}`);
             setSession(newSession);
             setUser(newSession?.user ?? null);
-            
-            // Redirect on successful sign-in
-            if (event === 'SIGNED_IN' && newSession) {
-              console.log('Detected SIGNED_IN event, adding short delay before navigating...');
-              // Add a small delay to potentially allow cookie propagation
-              setTimeout(() => {
-                console.log('Navigating to dashboard after delay...');
-                router.push('/dashboard'); // Use Next.js router
-              }, 150); // 150ms delay
-            }
           }
         );
         
