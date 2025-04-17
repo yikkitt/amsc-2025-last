@@ -134,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Redirecting to dashboard...');
       setTimeout(() => {
         router.push('/dashboard');
-      }, 500);
+      }, 1500);
     } catch (error: any) {
       console.error('Error in signIn function:', error);
       throw error;
