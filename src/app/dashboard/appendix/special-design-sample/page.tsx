@@ -1,14 +1,8 @@
 'use client';
 
-import { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
-
-export const metadata: Metadata = {
-  title: 'Sample of Special Design Stand Submission - AMSC 2025',
-  description: 'Sample plans and layouts for special design stand submissions',
-}
 
 export default function SpecialDesignSamplePage() {
   const [activeTab, setActiveTab] = useState('section-a');
