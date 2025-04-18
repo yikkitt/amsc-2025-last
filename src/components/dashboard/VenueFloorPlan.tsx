@@ -1,16 +1,8 @@
 'use client';
 
-import { useState, useRef } from 'react';
 import Image from 'next/image';
 
 export default function VenueFloorPlan() {
-  const [isZoomed, setIsZoomed] = useState(false);
-  const imageContainerRef = useRef(null);
-  
-  const toggleZoom = () => {
-    setIsZoomed(!isZoomed);
-  };
-
   return (
     <div className="bg-white overflow-hidden shadow rounded-lg">
       <div className="p-6">
@@ -20,9 +12,7 @@ export default function VenueFloorPlan() {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
           {/* Floor plan image container - takes 3/5 of the width on medium screens */}
           <div 
-            className={`md:col-span-3 border border-gray-200 rounded-lg ${isZoomed ? 'overflow-visible z-30' : 'overflow-hidden'} cursor-pointer`}
-            onClick={toggleZoom}
-            ref={imageContainerRef}
+            className="md:col-span-3 border border-gray-200 rounded-lg overflow-hidden"
           >
             <div className="relative w-full h-[450px] md:h-[450px]">
               <Image
@@ -33,19 +23,8 @@ export default function VenueFloorPlan() {
                 priority
                 unoptimized
                 quality={100}
-                className={`object-contain transition-all duration-300 origin-center ${isZoomed ? 'scale-225' : 'scale-100'}`}
-                style={{ transformOrigin: 'center center' }}
+                className="object-contain"
               />
-              {!isZoomed && (
-                <div className="absolute bottom-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-md opacity-80">
-                  Click to zoom
-                </div>
-              )}
-              {isZoomed && (
-                <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-md opacity-80">
-                  Click to reset
-                </div>
-              )}
             </div>
           </div>
           
