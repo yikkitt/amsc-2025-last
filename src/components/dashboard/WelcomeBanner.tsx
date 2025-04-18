@@ -1,12 +1,18 @@
 import React from 'react';
-import Image from 'next/image';
 
 interface WelcomeBannerProps {
-  username?: string;
+  firstName?: string;
   companyName?: string;
+  profileCompleted?: boolean;
+  hideViewFormsButton?: boolean;
 }
 
-export default function WelcomeBanner({ username = 'User', companyName = 'Your Company' }: WelcomeBannerProps) {
+export default function WelcomeBanner({ 
+  firstName = 'User',
+  companyName = 'Your Company', 
+  profileCompleted = false,
+  hideViewFormsButton = false
+}: WelcomeBannerProps) {
   // Get current time to customize greeting
   const currentHour = new Date().getHours();
   let greeting = "Good Morning";
@@ -25,21 +31,23 @@ export default function WelcomeBanner({ username = 'User', companyName = 'Your C
       
       <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-1">{greeting}, {username}!</h1>
+          <h1 className="text-2xl font-bold text-white mb-1">{greeting}, {firstName}!</h1>
           <p className="text-blue-100">{companyName}</p>
           <p className="text-blue-100 mt-2 max-w-xl">
-            Welcome to your AMSC dashboard. Here you can access all forms, venue information, and updates for the upcoming event.
+            Welcome to your AMSC dashboard. Here you can access venue information and updates for the upcoming event.
           </p>
         </div>
         
-        <div className="mt-4 md:mt-0">
-          <a 
-            href="/dashboard/forms" 
-            className="inline-block bg-white text-blue-600 font-semibold py-2 px-4 rounded-lg shadow hover:bg-blue-50 transition-colors"
-          >
-            View Required Forms
-          </a>
-        </div>
+        {!hideViewFormsButton && (
+          <div className="mt-4 md:mt-0">
+            <a 
+              href="/dashboard/forms" 
+              className="inline-block bg-white text-blue-600 font-semibold py-2 px-4 rounded-lg shadow hover:bg-blue-50 transition-colors"
+            >
+              View Required Forms
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );

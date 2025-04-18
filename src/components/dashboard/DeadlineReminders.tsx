@@ -73,7 +73,7 @@ export default function DeadlineReminders() {
       </div>
       
       <div className="p-4">
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {deadlines.map((deadline) => (
             <div 
               key={deadline.id} 

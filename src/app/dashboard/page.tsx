@@ -4,11 +4,9 @@ import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { Database } from '@/types/supabase';
 import VenueFloorPlan from '@/components/dashboard/VenueFloorPlan';
-import NewsUpdates from '@/components/dashboard/NewsUpdates';
-import DashboardTopCards from '@/components/dashboard/DashboardTopCards';
-import WelcomeBanner from '@/components/dashboard/WelcomeBanner';
 import DeadlineReminders from '@/components/dashboard/DeadlineReminders';
 import LoadingBox from '@/components/ui/LoadingBox';
+import WelcomeBanner from '@/components/dashboard/WelcomeBanner';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -62,26 +60,19 @@ export default async function DashboardPage() {
         firstName={userProfile?.first_name || 'Exhibitor'} 
         companyName={companyName}
         profileCompleted={!!profileCompleted}
+        hideViewFormsButton={true}
       />
       
-      <Suspense fallback={<LoadingBox className="h-24 mb-6" />}>
-        <DashboardTopCards userId={session.user.id} />
-      </Suspense>
+      {/* Deadlines Section */}
+      <div className="mb-6">
+        <Suspense fallback={<LoadingBox className="h-24 mb-6" />}>
+          <DeadlineReminders />
+        </Suspense>
+      </div>
       
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
-        <div className="xl:col-span-2">
-          <VenueFloorPlan />
-        </div>
-        
-        <div className="flex flex-col gap-6">
-          <Suspense fallback={<LoadingBox className="h-full" />}>
-            <DeadlineReminders />
-          </Suspense>
-          
-          <Suspense fallback={<LoadingBox className="h-full" />}>
-            <NewsUpdates />
-          </Suspense>
-        </div>
+      {/* Venue Floor Plan */}
+      <div className="mb-6">
+        <VenueFloorPlan />
       </div>
     </div>
   );

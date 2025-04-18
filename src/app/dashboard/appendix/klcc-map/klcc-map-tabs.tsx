@@ -92,9 +92,7 @@ export default function KLCCMapTabs() {
                 </div>
               </div>
               
-              <p className="text-sm text-gray-600 mt-3">
-                Layout source from ExpoFP
-              </p>
+            
             </div>
           </div>
           
