@@ -5,6 +5,7 @@ import { Suspense } from 'react';
 import { Database } from '@/types/supabase';
 import VenueFloorPlan from '@/components/dashboard/VenueFloorPlan';
 import DeadlineReminders from '@/components/dashboard/DeadlineReminders';
+import CompanyData from '@/components/dashboard/CompanyData';
 import LoadingBox from '@/components/ui/LoadingBox';
 import WelcomeBanner from '@/components/dashboard/WelcomeBanner';
 
@@ -62,6 +63,16 @@ export default async function DashboardPage() {
         profileCompleted={!!profileCompleted}
         hideViewFormsButton={true}
       />
+      
+      {/* Company Data Section */}
+      <div className="mb-6">
+        <CompanyData 
+          companyName={userProfile?.company_name || 'Not Available'}
+          contactPerson={`${userProfile?.first_name || ''} ${userProfile?.last_name || ''}`.trim() || 'Not Available'}
+          boothNumber={userProfile?.booth_number || 'Not Available'}
+          email={userProfile?.email || session.user.email || 'Not Available'}
+        />
+      </div>
       
       {/* Deadlines Section */}
       <div className="mb-6">

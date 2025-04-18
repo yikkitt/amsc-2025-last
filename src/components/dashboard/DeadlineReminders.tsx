@@ -97,15 +97,6 @@ export default function DeadlineReminders() {
             </div>
           ))}
         </div>
-        
-        <div className="mt-4 pt-3 border-t">
-          <a 
-            href="/dashboard/deadlines"
-            className="text-sm font-medium text-blue-600 hover:text-blue-500"
-          >
-            View all deadlines →
-          </a>
-        </div>
       </div>
     </div>
   );
