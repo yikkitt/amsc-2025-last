@@ -1,132 +1,259 @@
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
+import { FormData } from '@/types/forms';
+
+// Cache for loaded images to prevent repeated fetching
+const imageCache = new Map<string, Promise<HTMLImageElement>>();
+
+// Image preloading function with caching
+const preloadImage = (src: string): Promise<HTMLImageElement> => {
+  if (imageCache.has(src)) {
+    return imageCache.get(src)!;
+  }
+  
+  const imagePromise = new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous'; // Handle CORS issues
+    img.onload = () => resolve(img);
+    img.onerror = (e) => reject(new Error(`Failed to load image: ${src}`));
+    img.src = src;
+  });
+  
+  imageCache.set(src, imagePromise);
+  return imagePromise;
+};
 
 /**
- * Generates a PDF from a DOM element
- * @param element The DOM element to convert to PDF
- * @param fileName The name of the output PDF file
+ * Generates a PDF from a DOM element with optimized handling of images and page breaks
  */
-export const generatePDF = async (element: HTMLElement, fileName: string): Promise<void> => {
+export const generatePDF = async (
+  elementId: string,
+  fileName: string,
+  options = {
+    quality: 1,
+    scale: 2,
+    usePDF: true,
+    format: 'a4',
+    orientation: 'portrait' as const,
+  }
+): Promise<boolean> => {
   try {
-    console.log('Starting PDF generation for element:', element);
+    console.log('Starting PDF generation...');
     
-    // Wait for images to load completely
-    const images = Array.from(element.querySelectorAll('img'));
-    await Promise.all(
-      images.map(
-        (img) =>
-          new Promise((resolve) => {
-            if (img.complete) {
-              resolve(null);
-            } else {
-              img.onload = () => resolve(null);
-              img.onerror = () => {
-                console.warn(`Failed to load image: ${img.src}`);
-                resolve(null);
-              };
-            }
-          })
-      )
-    );
-
-    // Create canvas from the DOM element
-    const canvas = await html2canvas(element, {
-      scale: 2, // Higher scale for better quality
-      useCORS: true, // Allow images from other domains
-      logging: true, // Enable logs for debugging
-      allowTaint: true, // Allow tainted canvas
-      imageTimeout: 5000, // Timeout for loading images
-      onclone: (clonedDoc) => {
-        // Fix any styles in the cloned document if needed
-        const clonedElement = clonedDoc.body.querySelector('[data-pdf-container]');
-        if (clonedElement) {
-          (clonedElement as HTMLElement).style.width = '100%';
-          (clonedElement as HTMLElement).style.margin = '0';
-          (clonedElement as HTMLElement).style.padding = '10px';
+    // Get the DOM element to convert
+    const element = document.getElementById(elementId);
+    if (!element) {
+      console.error('Element not found:', elementId);
+      alert('Error: Could not find the form element.');
+      return false;
+    }
+    
+    // Disable background-blend-mode for PDF generation
+    const originalStyles = new Map();
+    const elementsWithBlendMode = element.querySelectorAll('*');
+    elementsWithBlendMode.forEach((el: Element) => {
+      if (el instanceof HTMLElement) {
+        const bgBlendMode = window.getComputedStyle(el).backgroundBlendMode;
+        if (bgBlendMode !== 'normal') {
+          originalStyles.set(el, { backgroundBlendMode: bgBlendMode });
+          el.style.backgroundBlendMode = 'normal';
         }
       }
     });
-
-    console.log('Canvas created successfully, width:', canvas.width, 'height:', canvas.height);
     
-    // Initialize PDF document
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4',
-    });
-
-    // Calculate dimensions
-    const imgWidth = 210; // A4 width in mm
-    const pageHeight = 297; // A4 height in mm
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    // Load all images before rendering to ensure they appear in the PDF
+    const imageElements = Array.from(element.querySelectorAll('img'));
+    console.log(`Preloading ${imageElements.length} images...`);
     
-    // Add image to PDF - handle multi-page if needed
-    const imgData = canvas.toDataURL('image/png');
-    console.log('Image data created from canvas, length:', imgData.length);
+    // Batch preload images to improve performance
+    const batchSize = 5;
+    const imageBatches = [];
     
-    let heightLeft = imgHeight;
-    let position = 0;
-    
-    // First page
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-    
-    // Additional pages if content is longer than one page
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+    for (let i = 0; i < imageElements.length; i += batchSize) {
+      const batch = imageElements.slice(i, i + batchSize);
+      imageBatches.push(batch);
     }
     
-    // Generate PDF and trigger download
-    const pdfOutput = pdf.output('bloburl');
-    console.log('PDF blob URL created:', pdfOutput);
+    for (const batch of imageBatches) {
+      await Promise.all(
+        batch.map(img => {
+          if (img.complete && img.naturalHeight !== 0) {
+            return Promise.resolve();
+          }
+          return preloadImage(img.src);
+        })
+      );
+    }
     
-    // Open in new window/tab which forces download in most browsers
-    window.open(pdfOutput, '_blank');
+    console.log('All images preloaded successfully.');
     
-    console.log('PDF should now be downloading in a new tab');
+    // Calculate dimensions for A4 format
+    const PDF_WIDTH = options.orientation === 'portrait' ? 210 : 297;
+    const PDF_HEIGHT = options.orientation === 'portrait' ? 297 : 210;
+    
+    // Create canvas with optimized settings
+    const canvas = await html2canvas(element, {
+      scale: options.scale,
+      useCORS: true,
+      allowTaint: true,
+      logging: false, // Disable logging to improve performance
+      imageTimeout: 5000, // 5 second timeout for images
+      onclone: (clonedDoc) => {
+        // Remove any iframe or video elements that might cause issues
+        const iframes = clonedDoc.querySelectorAll('iframe, video');
+        iframes.forEach(el => el.remove());
+        return clonedDoc;
+      }
+    });
+    
+    console.log('Canvas created successfully.');
+    
+    // Create PDF with proper dimensions
+    const pdf = new jsPDF({
+      orientation: options.orientation,
+      unit: 'mm',
+      format: options.format,
+    });
+    
+    // Calculate the aspect ratio and positioning
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    const pdfWidth = PDF_WIDTH;
+    const pdfHeight = (canvasHeight * pdfWidth) / canvasWidth;
+    
+    // Handle content that spans multiple pages
+    if (pdfHeight > PDF_HEIGHT) {
+      console.log('Content spans multiple pages, splitting...');
+      
+      const pageCount = Math.ceil(pdfHeight / PDF_HEIGHT);
+      console.log(`Generating ${pageCount} pages...`);
+      
+      for (let i = 0; i < pageCount; i++) {
+        // Calculate the portion of canvas to use for this page
+        const srcY = (i * canvasHeight * PDF_HEIGHT) / pdfHeight;
+        const srcHeight = (canvasHeight * PDF_HEIGHT) / pdfHeight;
+        
+        // Convert to base64 image to improve memory usage
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = canvasWidth;
+        pageCanvas.height = srcHeight;
+        
+        const ctx = pageCanvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(
+            canvas,
+            0, srcY, canvasWidth, srcHeight,
+            0, 0, canvasWidth, srcHeight
+          );
+          
+          const imgData = pageCanvas.toDataURL('image/jpeg', options.quality);
+          
+          // Add a new page for pages after the first one
+          if (i > 0) {
+            pdf.addPage();
+          }
+          
+          pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, PDF_HEIGHT);
+        }
+      }
+    } else {
+      // Single page content
+      console.log('Content fits on a single page.');
+      const imgData = canvas.toDataURL('image/jpeg', options.quality);
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+    }
+    
+    console.log('PDF generated, preparing to download...');
+    
+    // Try different download methods to cover all browsers
+    if (window.navigator && 'msSaveOrOpenBlob' in window.navigator) {
+      // For IE/Edge
+      const blob = pdf.output('blob');
+      (window.navigator as any).msSaveOrOpenBlob(blob, fileName);
+      console.log('PDF downloaded via msSaveOrOpenBlob.');
+      
+      // Restore original styles
+      elementsWithBlendMode.forEach((el: Element) => {
+        if (el instanceof HTMLElement && originalStyles.has(el)) {
+          const { backgroundBlendMode } = originalStyles.get(el);
+          el.style.backgroundBlendMode = backgroundBlendMode;
+        }
+      });
+      
+      return true;
+    }
+    
+    try {
+      // Modern browsers method
+      const pdfBlob = pdf.output('blob');
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      
+      const downloadLink = document.createElement('a');
+      downloadLink.href = pdfUrl;
+      downloadLink.download = fileName;
+      downloadLink.style.display = 'none';
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(downloadLink);
+        URL.revokeObjectURL(pdfUrl);
+        console.log('PDF download completed and resources cleaned up.');
+        
+        // Restore original styles
+        elementsWithBlendMode.forEach((el: Element) => {
+          if (el instanceof HTMLElement && originalStyles.has(el)) {
+            const { backgroundBlendMode } = originalStyles.get(el);
+            el.style.backgroundBlendMode = backgroundBlendMode;
+          }
+        });
+      }, 1000);
+      
+      return true;
+    } catch (e) {
+      console.error('Error in primary download method:', e);
+      
+      // Fallback method
+      console.log('Attempting fallback download method...');
+      pdf.save(fileName);
+      
+      // Restore original styles
+      elementsWithBlendMode.forEach((el: Element) => {
+        if (el instanceof HTMLElement && originalStyles.has(el)) {
+          const { backgroundBlendMode } = originalStyles.get(el);
+          el.style.backgroundBlendMode = backgroundBlendMode;
+        }
+      });
+      
+      return true;
+    }
   } catch (error) {
     console.error('Error generating PDF:', error);
-    throw new Error(`Failed to generate PDF: ${error instanceof Error ? error.message : String(error)}`);
+    alert('Error generating PDF. Please try again or contact support.');
+    return false;
   }
 };
 
 /**
- * Generates a PDF from form data
- * @param formData The form data
- * @param formType The type of form
- * @param includeEmptyItems Whether to include items with zero quantity
+ * Generates a PDF for a specific form with data
  */
 export const generateFormPDF = async (
-  element: HTMLElement, 
-  formData: any, 
-  formType: number, 
-  includeEmptyItems: boolean = false
-): Promise<void> => {
+  elementId: string,
+  formData: FormData,
+  formType: string
+): Promise<boolean> => {
   try {
-    // Add a data attribute to help with PDF generation
-    element.setAttribute('data-pdf-container', 'true');
+    const companyName = formData.companyName || 'Unknown';
+    const cleanCompanyName = companyName.replace(/[^a-zA-Z0-9]/g, '_');
+    const date = new Date().toISOString().split('T')[0];
+    const fileName = `${cleanCompanyName}_${formType}_${date}.pdf`;
     
-    // Clean form data to exclude items with zero quantity if specified
-    if (!includeEmptyItems && formData.items) {
-      formData.items = formData.items.filter((item: any) => 
-        item.quantity > 0 || item.total > 0
-      );
-    }
-    
-    // Create filename based on company name, form type and date
-    const companyName = formData.company_name || formData.company_data?.company_name || 'Company';
-    const dateStr = new Date().toISOString().split('T')[0];
-    const fileName = `${companyName.replace(/[^a-z0-9]/gi, '_')}_Form${formType}_${dateStr}.pdf`;
-    
-    console.log('Attempting to generate PDF with filename:', fileName);
-    await generatePDF(element, fileName);
+    console.log(`Generating ${formType} PDF for ${companyName}`);
+    return await generatePDF(elementId, fileName);
   } catch (error) {
-    console.error('Failed to generate form PDF:', error);
-    alert('There was an error generating the PDF. Please check your browser settings or try a different browser.');
-    throw error;
+    console.error('Error in generateFormPDF:', error);
+    return false;
   }
 }; 
