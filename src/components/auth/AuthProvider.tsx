@@ -159,11 +159,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (projectRef) {
           try {
-            // Use document.cookie directly instead of cookies.set
-            document.cookie = `sb-${projectRef}-auth-token=${JSON.stringify({
-              access_token,
-              refresh_token
-            })}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
+            console.log("Setting auth cookie with project ref:", projectRef);
+            
+            // Set the main auth token cookie that middleware expects
+            document.cookie = `sb-${projectRef}-auth-token=${JSON.stringify(data.session)}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
+            
+            // Also set individual token cookies
+            document.cookie = `sb-${projectRef}-access-token=${access_token}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
+            document.cookie = `sb-${projectRef}-refresh-token=${refresh_token}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
+            
+            // For backward compatibility
+            document.cookie = `sb-access-token=${access_token}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
+            document.cookie = `sb-refresh-token=${refresh_token}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
           } catch (cookieError) {
             console.error("Error setting auth cookies:", cookieError);
           }
@@ -181,9 +188,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // 3. Navigate to dashboard
         router.refresh();
         
+        // Increase timeout to ensure cookies are fully processed
         setTimeout(() => {
+          console.log("Navigating to dashboard...");
           router.push('/dashboard');
-        }, 500);
+        }, 1000);
       }
 
       return { success: true };
@@ -351,22 +360,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       
-      // Two-step approach to ensure cookies are cleared server-side before redirect:
-      // 1. Sign out via Supabase, which clears the current session
-      // 2. Then clear cookies and redirect
-      
       console.log("Signing out user...");
       await supabase.auth.signOut();
       
       // Clear state
       setUser(null);
+      setSession(null);
       
-      // Delete auth cookies using document.cookie
+      // Delete all auth cookies
       const projectRef = supabaseUrl.match(/([^.]+)\.supabase\.co/)?.[1];
       if (projectRef) {
         try {
-          // Use document.cookie directly instead of cookies.remove
-          document.cookie = `sb-${projectRef}-auth-token=; path=/; max-age=0; samesite=lax`;
+          // Clear all possible cookie variations
+          const cookiesToClear = [
+            `sb-${projectRef}-auth-token`,
+            `sb-${projectRef}-access-token`,
+            `sb-${projectRef}-refresh-token`,
+            `sb-access-token`,
+            `sb-refresh-token`,
+            `supabase-auth-token`
+          ];
+          
+          cookiesToClear.forEach(cookieName => {
+            document.cookie = `${cookieName}=; path=/; max-age=0; samesite=lax`;
+          });
+          
+          console.log("Auth cookies cleared");
         } catch (cookieError) {
           console.error("Error removing auth cookies:", cookieError);
         }
