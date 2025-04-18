@@ -22,7 +22,7 @@ type AuthContextType = {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signUp: (email: string, password: string, profile: UserProfile) => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (password: string) => Promise<void>;
@@ -33,11 +33,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Use the appropriate client based on context
 const supabase = getSupabaseBrowserClient(); // For browser interactions like auth state changes
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   // Track initial mount to identify real sign-ins vs page loads
@@ -99,85 +101,100 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  // Function to clear any existing session
+  const clearSession = async () => {
     try {
-      console.log('Attempting sign in with email:', email);
-      
-      // In development mode with mock auth enabled, allow login with any credentials for testing
-      if (process.env.NEXT_PUBLIC_USE_MOCK_AUTH === 'true') {
-        console.log('Mock authentication enabled: Bypassing authentication');
-        await new Promise(resolve => setTimeout(resolve, 800));
-        window.location.href = '/dashboard';
-        return;
-      }
-      
-      // First, clear any existing session
-      await supabase.auth.signOut();
-      
-      // Wait briefly to ensure the session is cleared
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Sign in with password
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password.trim(),
-      });
-      
+      // Clear existing session without redirecting
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
       if (error) {
-        console.error('Sign in error:', error);
-        throw error;
+        console.error('Error clearing existing session:', error);
       }
       
-      console.log('Login successful for user ID:', data.user?.id);
+      // Clear local state
+      setSession(null);
+      setUser(null);
       
-      // Store session in context
-      setUser(data.user);
-      setSession(data.session);
-      
-      if (data.session) {
-        // Explicitly set cookies for better compatibility
+      // Clear auth cookies
+      const projectRef = supabaseUrl.match(/([^.]+)\.supabase\.co/)?.[1];
+      if (projectRef) {
         try {
-          console.log('Setting explicit auth cookies');
-          
-          // Get project ref from URL or use default
-          let projectRef = 'kiotgupdmepdyiscbrmb';
-          try {
-            const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-            const matches = url.match(/https:\/\/(.*?)\.supabase\.co/);
-            if (matches && matches[1]) {
-              projectRef = matches[1];
-            }
-          } catch (e) {
-            console.error('Error extracting project ref:', e);
-          }
-          
-          // Set all necessary cookies with appropriate settings
-          document.cookie = `sb-${projectRef}-access-token=${data.session.access_token}; path=/; max-age=3600; SameSite=Lax`;
-          
-          if (data.session.refresh_token) {
-            document.cookie = `sb-${projectRef}-refresh-token=${data.session.refresh_token}; path=/; max-age=2592000; SameSite=Lax`;
-          }
-          
-          document.cookie = `sb-${projectRef}-auth-token=${JSON.stringify(data.session)}; path=/; max-age=3600; SameSite=Lax`;
+          // Using the browser cookie API directly since we're in client code
+          document.cookie = `sb-${projectRef}-auth-token=; path=/; max-age=0; samesite=lax`;
         } catch (cookieError) {
-          console.error('Error setting explicit cookies:', cookieError);
+          console.error("Error removing auth cookies:", cookieError);
         }
       }
-      
-      // IMPORTANT: Use a two-step navigation process
-      // First, refresh the current route to properly set cookies
-      router.refresh();
-      
-      // Then wait and use a full page navigation
-      console.log('Login successful, waiting briefly before navigation');
-      setTimeout(() => {
-        // Use window.location for a full page refresh that ensures
-        // the server sees all the cookies on the next request
-        window.location.href = '/';
-      }, 500);
+    } catch (error) {
+      console.error('Failed to clear session:', error);
+    }
+  };
+
+  const signIn = async (
+    email: string,
+    password: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setIsLoading(true);
+
+      // Clear any previous session to avoid conflicts
+      await clearSession();
+
+      // Use Supabase auth to sign in
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Set the session in the cookies
+      if (data?.session) {
+        // Set auth cookie for server-side auth
+        const { access_token, refresh_token } = data.session;
+        
+        // Extract the project reference from the Supabase URL
+        const projectRef = supabaseUrl.match(/([^.]+)\.supabase\.co/)?.[1];
+        
+        if (projectRef) {
+          try {
+            // Use document.cookie directly instead of cookies.set
+            document.cookie = `sb-${projectRef}-auth-token=${JSON.stringify({
+              access_token,
+              refresh_token
+            })}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
+          } catch (cookieError) {
+            console.error("Error setting auth cookies:", cookieError);
+          }
+        }
+
+        // Set the user in state
+        setUser(data.session.user);
+        
+        console.log("Sign-in successful! User:", data.session.user.email);
+        console.log("Session established, preparing navigation...");
+        
+        // Three-phase approach for robust session handling:
+        // 1. Force a refresh to ensure session is available in middleware
+        // 2. Short delay to allow cookies to propagate
+        // 3. Navigate to dashboard
+        router.refresh();
+        
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 500);
+      }
+
+      return { success: true };
     } catch (error: any) {
-      console.error('Error in signIn function:', error);
-      throw error;
+      console.error("Sign-in error:", error.message);
+      return {
+        success: false,
+        error: error.message,
+      };
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -330,38 +347,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signOut = async () => {
+  const signOut = async (): Promise<void> => {
     try {
-      console.log('Signing out user...');
+      setIsLoading(true);
       
-      // First, sign out from Supabase
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      // Two-step approach to ensure cookies are cleared server-side before redirect:
+      // 1. Sign out via Supabase, which clears the current session
+      // 2. Then clear cookies and redirect
       
-      console.log('Sign out successful, clearing cookies and redirecting to signin page...');
+      console.log("Signing out user...");
+      await supabase.auth.signOut();
       
-      // Clear cookies explicitly to ensure proper sign out
-      const projectRef = 'kiotgupdmepdyiscbrmb'; // Your Supabase project ref
-      
-      // Clear all possible Supabase cookies
-      document.cookie = `sb-${projectRef}-access-token=; path=/; max-age=0; SameSite=Lax`;
-      document.cookie = `sb-${projectRef}-refresh-token=; path=/; max-age=0; SameSite=Lax`;
-      document.cookie = `sb-${projectRef}-auth-token=; path=/; max-age=0; SameSite=Lax`;
-      document.cookie = `sb-access-token=; path=/; max-age=0; SameSite=Lax`;
-      document.cookie = `sb-refresh-token=; path=/; max-age=0; SameSite=Lax`;
-      
-      // Reset state
+      // Clear state
       setUser(null);
-      setSession(null);
-
-      // Add a short delay to ensure cookies are cleared before redirect
-      setTimeout(() => {
-        // Use window.location.href for a full page refresh and navigation
-        window.location.href = '/auth/signin';
-      }, 100);
+      
+      // Delete auth cookies using document.cookie
+      const projectRef = supabaseUrl.match(/([^.]+)\.supabase\.co/)?.[1];
+      if (projectRef) {
+        try {
+          // Use document.cookie directly instead of cookies.remove
+          document.cookie = `sb-${projectRef}-auth-token=; path=/; max-age=0; samesite=lax`;
+        } catch (cookieError) {
+          console.error("Error removing auth cookies:", cookieError);
+        }
+      }
+      
+      console.log("Sign-out complete, redirecting to sign-in page");
+      
+      // Redirect to sign-in page
+      router.push('/auth/signin');
     } catch (error) {
-      console.error('Error signing out:', error);
-      throw error;
+      console.error("Sign-out error:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
