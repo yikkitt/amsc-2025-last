@@ -17,23 +17,37 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   experimental: {
-    // Disable CSS optimization that's causing build errors
-    optimizeCss: false,  
+    // Enable CSS optimization for better performance
+    optimizeCss: true,
     legacyBrowsers: false, // Don't support legacy browsers
+    // Enable optimizations for faster loading
+    scrollRestoration: true, // Enable scroll restoration for better UX
+    adjustFontFallbacks: true, // Improve font display
+    adjustFontFallbacksWithSizeAdjust: true, // Better font size adjustments
+    // Enables server components where applicable
+    serverComponents: true,
+    // Enables more efficient code splitting
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+    // Font loading optimizations
+    fontLoaders: [
+      { loader: '@next/font/google', options: { subsets: ['latin'] } },
+    ],
   },
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**.supabase.co',
-        pathname: '/**',
+        hostname: '**',
       },
     ],
-    unoptimized: false, // Ensure image optimization is enabled (default is true in Next.js 13+)
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048], // Responsive image sizes
-    imageSizes: [16, 32, 48, 64, 96, 128, 256], // Image sizes for srcset
-    formats: ['image/webp', 'image/avif'], // Modern image formats for better compression
-    minimumCacheTTL: 60, // Cache optimized images for 60 seconds minimum
+    unoptimized: false, // Ensure image optimization is enabled
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840], // Add 4K support
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384], // Extended image sizes
+    formats: ['image/avif', 'image/webp'], // Modern image formats for better compression
+    minimumCacheTTL: 604800, // Cache optimized images for 1 week (improves LCP)
+    dangerouslyAllowSVG: true, // Allow SVG optimization
+    contentDispositionType: 'attachment', // Better caching for images
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   // Set to 'standalone' to support pages with dynamic server usage (cookies)
   output: 'standalone',
@@ -57,7 +71,61 @@ const nextConfig = {
     if (!isServer) {
       // Set production mode for client-side bundles
       config.mode = 'production';
+      
+      // Performance optimizations
+      config.optimization = {
+        ...config.optimization,
+        runtimeChunk: 'single',
+        moduleIds: 'deterministic',
+        splitChunks: {
+          chunks: 'all',
+          maxInitialRequests: Infinity,
+          minSize: 20000,
+          cacheGroups: {
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name(module) {
+                // Get the name of the package
+                const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1];
+                // Return a unique name for the chunk based on the package name
+                return `npm.${packageName.replace('@', '')}`;
+              },
+            },
+          },
+        },
+      };
     }
+    
+    // Optimize images at build time
+    config.module.rules.push({
+      test: /\.(jpe?g|png|svg|webp|avif)$/i,
+      use: [
+        {
+          loader: 'image-webpack-loader',
+          options: {
+            mozjpeg: {
+              progressive: true,
+              quality: 75,
+            },
+            optipng: {
+              enabled: true,
+              optimizationLevel: 5,
+            },
+            pngquant: {
+              quality: [0.65, 0.80],
+              speed: 4,
+            },
+            webp: {
+              quality: 75,
+              method: 6,
+            },
+            gifsicle: {
+              interlaced: false,
+            },
+          },
+        },
+      ],
+    });
     
     return config;
   },
@@ -79,6 +147,51 @@ const nextConfig = {
   
   // Optimize build output
   poweredByHeader: false, // Remove X-Powered-By header
+  
+  // New performance optimizations
+  productionBrowserSourceMaps: false, // Disable source maps in production for faster loading
+  
+  // Add custom headers for better caching and security
+  async headers() {
+    return [
+      {
+        source: '/fonts/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          }
+        ],
+      },
+      {
+        source: '/images/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          }
+        ],
+      },
+      {
+        source: '/:path*.(jpg|jpeg|png|webp|avif|svg)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          }
+        ],
+      },
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, max-age=0',
+          }
+        ],
+      },
+    ];
+  },
 }
 
 module.exports = nextConfig 

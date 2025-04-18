@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { 
   LayoutDashboard, 
   FileText, 
@@ -11,10 +12,11 @@ import {
   Bookmark,
   Phone
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
 
+// Define the navigation data outside component to avoid re-creation
 const orderForms = [
   { id: 'form1', name: 'Form 1: Fascia Name Form', href: '/dashboard/order-forms/form1' },
   { id: 'form2', name: 'Form 2: Contractor Pass Application', href: '/dashboard/order-forms/form2' },
@@ -47,12 +49,158 @@ const appendixItems = [
   { id: 'vehicle-pass', name: 'Vehicle Pass', href: '/dashboard/appendix/vehicle-pass' },
 ]
 
-export default function Sidebar() {
-  const pathname = usePathname()
-  const [orderFormsOpen, setOrderFormsOpen] = useState(true)
-  const [informationOpen, setInformationOpen] = useState(true)
-  const [appendixOpen, setAppendixOpen] = useState(false)
+// Memoize the navigation sections
+const NavLink = memo(({ href, isActive, children }: {
+  href: string,
+  isActive: boolean,
+  children: React.ReactNode
+}) => (
+  <Link
+    href={href}
+    className={cn(
+      "block px-3 py-2 rounded-lg text-sm transition-colors",
+      isActive
+        ? "bg-blue-50 text-blue-700"
+        : "text-gray-600 hover:bg-gray-100"
+    )}
+  >
+    {children}
+  </Link>
+));
 
+// Memoize section components to prevent re-renders
+const OrderFormsSection = memo(({ pathname }: { pathname: string | null }) => {
+  const [isOpen, setIsOpen] = useState(true);
+  const isActive = pathname?.includes('/order-forms') || false;
+  
+  return (
+    <div>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "flex items-center justify-between w-full px-3 py-2 rounded-lg transition-colors",
+          isActive 
+            ? "bg-blue-50 text-blue-700" 
+            : "text-gray-700 hover:bg-gray-100"
+        )}
+      >
+        <div className="flex items-center space-x-3">
+          <FileText className="w-5 h-5" />
+          <span className="font-medium">Order Forms</span>
+        </div>
+        {isOpen ? (
+          <ChevronDown className="w-4 h-4" />
+        ) : (
+          <ChevronRight className="w-4 h-4" />
+        )}
+      </button>
+      
+      {isOpen && (
+        <div className="mt-2 ml-4 space-y-1">
+          {orderForms.map((form) => (
+            <NavLink
+              key={form.id}
+              href={form.href}
+              isActive={pathname === form.href}
+            >
+              {form.name}
+            </NavLink>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+});
+
+const InformationSection = memo(({ pathname }: { pathname: string | null }) => {
+  const [isOpen, setIsOpen] = useState(true);
+  const isActive = pathname?.includes('/information') || false;
+  
+  return (
+    <div>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "flex items-center justify-between w-full px-3 py-2 rounded-lg transition-colors",
+          isActive
+            ? "bg-blue-50 text-blue-700"
+            : "text-gray-700 hover:bg-gray-100"
+        )}
+      >
+        <div className="flex items-center space-x-3">
+          <Info className="w-5 h-5" />
+          <span className="font-medium">Information</span>
+        </div>
+        {isOpen ? (
+          <ChevronDown className="w-4 h-4" />
+        ) : (
+          <ChevronRight className="w-4 h-4" />
+        )}
+      </button>
+      
+      {isOpen && (
+        <div className="mt-2 ml-4 space-y-1">
+          {informationSections.map((section) => (
+            <NavLink
+              key={section.id}
+              href={section.href}
+              isActive={pathname === section.href}
+            >
+              {section.name}
+            </NavLink>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+});
+
+const AppendixSection = memo(({ pathname }: { pathname: string | null }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const isActive = pathname?.includes('/appendix') || false;
+  
+  return (
+    <div>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "flex items-center justify-between w-full px-3 py-2 rounded-lg transition-colors",
+          isActive
+            ? "bg-blue-50 text-blue-700"
+            : "text-gray-700 hover:bg-gray-100"
+        )}
+      >
+        <div className="flex items-center space-x-3">
+          <Bookmark className="w-5 h-5" />
+          <span className="font-medium">Appendix</span>
+        </div>
+        {isOpen ? (
+          <ChevronDown className="w-4 h-4" />
+        ) : (
+          <ChevronRight className="w-4 h-4" />
+        )}
+      </button>
+      
+      {isOpen && (
+        <div className="mt-2 ml-4 space-y-1">
+          {appendixItems.map((item) => (
+            <NavLink
+              key={item.id}
+              href={item.href}
+              isActive={pathname === item.href}
+            >
+              {item.name}
+            </NavLink>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+});
+
+export default function Sidebar() {
+  const pathname = usePathname();
+  
   return (
     <div className="w-64 bg-white border-r border-gray-200 min-h-screen p-4">
       <div className="flex justify-center mb-6">
@@ -64,6 +212,9 @@ export default function Sidebar() {
             height={60} 
             className="h-16 w-auto" 
             priority
+            quality={85}
+            loading="eager"
+            fetchPriority="high"
           />
         </Link>
       </div>
@@ -76,138 +227,16 @@ export default function Sidebar() {
               ? "bg-blue-50 text-blue-700" 
               : "text-gray-700 hover:bg-gray-100"
           )}
+          prefetch={true}
         >
           <LayoutDashboard className="w-5 h-5" />
           <span className="font-medium">Dashboard</span>
         </Link>
 
-        {/* Order Forms Section */}
-        <div>
-          <button
-            onClick={() => setOrderFormsOpen(!orderFormsOpen)}
-            className={cn(
-              "flex items-center justify-between w-full px-3 py-2 rounded-lg transition-colors",
-              pathname.includes('/order-forms') 
-                ? "bg-blue-50 text-blue-700" 
-                : "text-gray-700 hover:bg-gray-100"
-            )}
-          >
-            <div className="flex items-center space-x-3">
-              <FileText className="w-5 h-5" />
-              <span className="font-medium">Order Forms</span>
-            </div>
-            {orderFormsOpen ? (
-              <ChevronDown className="w-4 h-4" />
-            ) : (
-              <ChevronRight className="w-4 h-4" />
-            )}
-          </button>
-          
-          {orderFormsOpen && (
-            <div className="mt-2 ml-4 space-y-1">
-              {orderForms.map((form) => (
-                <Link
-                  key={form.id}
-                  href={form.href}
-                  className={cn(
-                    "block px-3 py-2 rounded-lg text-sm transition-colors",
-                    pathname === form.href
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-gray-600 hover:bg-gray-100"
-                  )}
-                >
-                  {form.name}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
+        <OrderFormsSection pathname={pathname} />
+        <InformationSection pathname={pathname} />
+        <AppendixSection pathname={pathname} />
 
-        {/* Information Section */}
-        <div>
-          <button
-            onClick={() => setInformationOpen(!informationOpen)}
-            className={cn(
-              "flex items-center justify-between w-full px-3 py-2 rounded-lg transition-colors",
-              pathname.includes('/information')
-                ? "bg-blue-50 text-blue-700"
-                : "text-gray-700 hover:bg-gray-100"
-            )}
-          >
-            <div className="flex items-center space-x-3">
-              <Info className="w-5 h-5" />
-              <span className="font-medium">Information</span>
-            </div>
-            {informationOpen ? (
-              <ChevronDown className="w-4 h-4" />
-            ) : (
-              <ChevronRight className="w-4 h-4" />
-            )}
-          </button>
-          
-          {informationOpen && (
-            <div className="mt-2 ml-4 space-y-1">
-              {informationSections.map((section) => (
-                <Link
-                  key={section.id}
-                  href={section.href}
-                  className={cn(
-                    "block px-3 py-2 rounded-lg text-sm transition-colors",
-                    pathname === section.href
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-gray-600 hover:bg-gray-100"
-                  )}
-                >
-                  {section.name}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Appendix Section */}
-        <div>
-          <button
-            onClick={() => setAppendixOpen(!appendixOpen)}
-            className={cn(
-              "flex items-center justify-between w-full px-3 py-2 rounded-lg transition-colors",
-              pathname.includes('/appendix')
-                ? "bg-blue-50 text-blue-700"
-                : "text-gray-700 hover:bg-gray-100"
-            )}
-          >
-            <div className="flex items-center space-x-3">
-              <Bookmark className="w-5 h-5" />
-              <span className="font-medium">Appendix</span>
-            </div>
-            {appendixOpen ? (
-              <ChevronDown className="w-4 h-4" />
-            ) : (
-              <ChevronRight className="w-4 h-4" />
-            )}
-          </button>
-          
-          {appendixOpen && (
-            <div className="mt-2 ml-4 space-y-1">
-              {appendixItems.map((item) => (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  className={cn(
-                    "block px-3 py-2 rounded-lg text-sm transition-colors",
-                    pathname === item.href
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-gray-600 hover:bg-gray-100"
-                  )}
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Contact Us */}
         <Link 
           href="/dashboard/contact-us" 
           className={cn(
@@ -216,6 +245,7 @@ export default function Sidebar() {
               ? "bg-blue-50 text-blue-700" 
               : "text-gray-700 hover:bg-gray-100"
           )}
+          prefetch={true}
         >
           <Phone className="w-5 h-5" />
           <span className="font-medium">Contact Us</span>

@@ -1,8 +1,11 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 export default function VenueFloorPlan() {
+  const [isLoaded, setIsLoaded] = useState(false);
+
   return (
     <div className="bg-white overflow-hidden shadow rounded-lg">
       <div className="p-6">
@@ -15,15 +18,31 @@ export default function VenueFloorPlan() {
             className="md:col-span-3 border border-gray-200 rounded-lg overflow-hidden"
           >
             <div className="relative w-full h-[450px] md:h-[450px]">
+              {/* Low-quality image placeholder while actual image loads */}
+              <div 
+                className={`absolute inset-0 bg-gray-200 transition-opacity duration-300 ${
+                  isLoaded ? 'opacity-0' : 'opacity-100'
+                }`}
+                style={{ 
+                  zIndex: isLoaded ? 0 : 1,
+                  backgroundImage: "url('/images/klcc-floor-plan-low.png')",
+                  backgroundSize: 'contain',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                }}
+              />
+              
               <Image
                 src="/images/klcc-floor-plan.png"
                 alt="KLCC Exhibition Hall Layout"
                 fill
                 sizes="(max-width: 768px) 100vw, 60vw"
                 priority
-                unoptimized
-                quality={100}
+                quality={80}
                 className="object-contain"
+                onLoad={() => setIsLoaded(true)}
+                loading="eager"
+                fetchPriority="high"
               />
             </div>
           </div>

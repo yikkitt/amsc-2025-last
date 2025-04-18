@@ -11,11 +11,15 @@ const roboto = Roboto({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-roboto',
+  preload: true,
+  fallback: ['system-ui', 'sans-serif'],
 });
 
 export const metadata: Metadata = {
   title: 'AMSC 2025 Exhibitor Manual',
   description: 'Manage your AMSC 2025 exhibition forms and information',
+  viewport: 'width=device-width, initial-scale=1, shrink-to-fit=no',
+  themeColor: '#ffffff',
 };
 
 export default function RootLayout({
@@ -24,7 +28,34 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={roboto.variable}>
+      <head>
+        <link
+          rel="preload"
+          href={`https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap`}
+          as="style"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preconnect" 
+          href="https://kiotgupdmepdyiscbrmb.supabase.co"
+          crossOrigin="anonymous"
+        />
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            body {
+              margin: 0;
+              padding: 0;
+              font-family: var(--font-roboto), system-ui, sans-serif;
+              text-rendering: optimizeSpeed;
+            }
+            img, svg, video {
+              max-width: 100%;
+              display: block;
+            }
+          `
+        }} />
+      </head>
       <body className={roboto.className}>
         <AuthProvider>{children}</AuthProvider>
       </body>
