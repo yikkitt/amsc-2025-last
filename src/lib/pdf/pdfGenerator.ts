@@ -8,6 +8,8 @@ import html2canvas from 'html2canvas';
  */
 export const generatePDF = async (element: HTMLElement, fileName: string): Promise<void> => {
   try {
+    console.log('Starting PDF generation for element:', element);
+    
     // Wait for images to load completely
     const images = Array.from(element.querySelectorAll('img'));
     await Promise.all(
@@ -45,6 +47,8 @@ export const generatePDF = async (element: HTMLElement, fileName: string): Promi
       }
     });
 
+    console.log('Canvas created successfully, width:', canvas.width, 'height:', canvas.height);
+    
     // Initialize PDF document
     const pdf = new jsPDF({
       orientation: 'portrait',
@@ -59,6 +63,7 @@ export const generatePDF = async (element: HTMLElement, fileName: string): Promi
     
     // Add image to PDF - handle multi-page if needed
     const imgData = canvas.toDataURL('image/png');
+    console.log('Image data created from canvas, length:', imgData.length);
     
     let heightLeft = imgHeight;
     let position = 0;
@@ -75,30 +80,14 @@ export const generatePDF = async (element: HTMLElement, fileName: string): Promi
       heightLeft -= pageHeight;
     }
     
-    try {
-      // Download PDF using the blob approach which is more reliable across browsers
-      const blob = pdf.output('blob');
-      const url = URL.createObjectURL(blob);
-      
-      // Create a link and trigger the download
-      const downloadLink = document.createElement('a');
-      downloadLink.href = url;
-      downloadLink.download = fileName;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      
-      // Clean up
-      setTimeout(() => {
-        document.body.removeChild(downloadLink);
-        URL.revokeObjectURL(url);
-      }, 100);
-      
-      console.log('PDF generated successfully:', fileName);
-    } catch (downloadError) {
-      // Fallback to the save method if the blob approach fails
-      console.warn('Blob download failed, using fallback method', downloadError);
-      pdf.save(fileName);
-    }
+    // Generate PDF and trigger download
+    const pdfOutput = pdf.output('bloburl');
+    console.log('PDF blob URL created:', pdfOutput);
+    
+    // Open in new window/tab which forces download in most browsers
+    window.open(pdfOutput, '_blank');
+    
+    console.log('PDF should now be downloading in a new tab');
   } catch (error) {
     console.error('Error generating PDF:', error);
     throw new Error(`Failed to generate PDF: ${error instanceof Error ? error.message : String(error)}`);
@@ -133,9 +122,11 @@ export const generateFormPDF = async (
     const dateStr = new Date().toISOString().split('T')[0];
     const fileName = `${companyName.replace(/[^a-z0-9]/gi, '_')}_Form${formType}_${dateStr}.pdf`;
     
+    console.log('Attempting to generate PDF with filename:', fileName);
     await generatePDF(element, fileName);
   } catch (error) {
     console.error('Failed to generate form PDF:', error);
+    alert('There was an error generating the PDF. Please check your browser settings or try a different browser.');
     throw error;
   }
 }; 

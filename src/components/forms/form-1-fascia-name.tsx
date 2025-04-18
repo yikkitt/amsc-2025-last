@@ -85,8 +85,8 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
 
   // Handle input change and auto-focus to next box
   const handleInputChange = (index: number, value: string) => {
-    // Only accept letters and numbers
-    if (value && !/^[A-Z0-9]$/.test(value.toUpperCase())) {
+    // Accept letters, numbers, and space
+    if (value && !/^[A-Z0-9 ]$/.test(value.toUpperCase())) {
       return;
     }
 
@@ -95,7 +95,7 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
     newFasciaName[index] = value.toUpperCase();
     setFasciaName(newFasciaName.join(''));
 
-    // Focus the next input if a character was entered
+    // Focus the next input if a character was entered (and it's not a space)
     if (value && index < 24) {
       setTimeout(() => {
         inputRefs.current[index + 1]?.focus();
@@ -129,7 +129,8 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
   const handlePaste = (index: number, e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
     const pastedText = e.clipboardData.getData('text').toUpperCase();
-    const validChars = pastedText.replace(/[^A-Z0-9]/g, '').slice(0, 25 - index);
+    // Allow spaces in the pasted text
+    const validChars = pastedText.replace(/[^A-Z0-9 ]/g, '').slice(0, 25 - index);
     
     if (validChars) {
       const newFasciaName = fasciaName.split('');
