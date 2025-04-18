@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Save, Download } from 'lucide-react';
+import { Save, Download, AlertCircle } from 'lucide-react';
 import FormDownloadButton from '../ui/FormDownloadButton';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { FormData } from '@/types/forms';
 import { syncFormWithSupabase } from '@/lib/forms/submitHandler';
+import { useRouter } from 'next/navigation';
 
 interface FormSubmitActionsProps {
   isSubmitting: boolean;
@@ -27,6 +28,7 @@ export default function FormSubmitActions({
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [submittedData, setSubmittedData] = useState<FormData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   /**
    * Handles form submission to Supabase form_submissions table
@@ -42,10 +44,39 @@ export default function FormSubmitActions({
     setError(null);
 
     try {
+      // Check if user is authenticated first
+      const supabase = getSupabaseBrowserClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.error('No authenticated user found');
+        setError('Authentication required. Please log in again to submit your form.');
+        
+        // Redirect to login after a delay
+        setTimeout(() => {
+          router.push('/auth/signin');
+        }, 3000);
+        
+        return;
+      }
+      
       // Use the new syncFormWithSupabase function for consistent form submission
       const result = await syncFormWithSupabase(formData, formType);
       
       if (!result.success) {
+        // Check for auth-related errors specifically
+        if (result.message.includes('authentication') || result.message.includes('auth') || 
+            result.message.includes('logged in') || result.message.includes('permission')) {
+          setError(`Authentication error: ${result.message}. You'll be redirected to the login page.`);
+          
+          // Redirect to login after a delay
+          setTimeout(() => {
+            router.push('/auth/signin');
+          }, 3000);
+          
+          return;
+        }
+        
         throw new Error(result.message);
       }
       
@@ -165,14 +196,15 @@ export default function FormSubmitActions({
         <div className="mt-4 bg-red-50 border border-red-200 rounded-md p-4">
           <div className="flex">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
+              <AlertCircle className="h-5 w-5 text-red-400" />
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">Error Submitting Form</h3>
               <div className="mt-2 text-sm text-red-700">
                 <p>{error}</p>
+                {error.includes('Authentication') && (
+                  <p className="mt-2 font-medium">You will be redirected to the login page shortly.</p>
+                )}
               </div>
             </div>
           </div>
