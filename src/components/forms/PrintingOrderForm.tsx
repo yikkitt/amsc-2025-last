@@ -58,8 +58,8 @@ export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) 
   }
 
   const calculateSurcharge = () => {
-    // 50% surcharge for late orders
-    return calculateSubTotal() * 0.5
+    // 30% surcharge for late orders
+    return calculateSubTotal() * 0.3
   }
 
   const calculateGrandTotal = () => {
@@ -201,7 +201,7 @@ export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) 
             <li>All artwork must be provided 2 week before the event date.</li>
             <li>Any cancellation after the deadline will be charged 50% on the item priced. 100% cancellation fee will be charged for order cancelled after deadline.</li>
             <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be accompanied by this Order Form. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-6, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 8010655824, Bank Swift Code: CIBBMYKL</li>
-            <li>Late order: 50% surcharge will be charged for any late orders received after the deadline 30 June 2025, while orders received on site will be subject to a 50% surcharge.</li>
+            <li>Late order: 30% surcharge will be charged for any late orders received after the deadline 30 June 2025, while orders received on site will be subject to a 50% surcharge.</li>
           </ol>
         </div>
 

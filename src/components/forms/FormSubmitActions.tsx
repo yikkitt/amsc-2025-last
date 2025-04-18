@@ -3,6 +3,7 @@ import { Save, Download } from 'lucide-react';
 import FormDownloadButton from '../ui/FormDownloadButton';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { FormData } from '@/types/forms';
+import { syncFormWithSupabase } from '@/lib/forms/submitHandler';
 
 interface FormSubmitActionsProps {
   isSubmitting: boolean;
@@ -29,6 +30,7 @@ export default function FormSubmitActions({
 
   /**
    * Handles form submission to Supabase form_submissions table
+   * Using the centralized syncFormWithSupabase function for consistency
    */
   const handleSubmit = async () => {
     if (!formData) {
@@ -40,30 +42,18 @@ export default function FormSubmitActions({
     setError(null);
 
     try {
-      const supabase = getSupabaseBrowserClient();
+      // Use the new syncFormWithSupabase function for consistent form submission
+      const result = await syncFormWithSupabase(formData, formType);
       
-      // Prepare the form data for submission
-      const submissionData = {
-        form_type: typeof formType === 'number' ? formType : parseInt(formType) || 0,
-        ...formData
-      };
-      
-      // Log the data being submitted
-      console.log('Submitting form data to Supabase:', submissionData);
-      
-      // Submit to form_submissions table
-      const { data, error: submissionError } = await supabase
-        .from('form_submissions')
-        .insert(submissionData)
-        .select();
-        
-      if (submissionError) {
-        throw new Error(`Failed to submit form: ${submissionError.message}`);
+      if (!result.success) {
+        throw new Error(result.message);
       }
       
-      console.log('Form submitted successfully:', data);
+      console.log('Form submitted successfully:', result.data);
       setFormSubmitted(true);
-      setSubmittedData(submissionData);
+      
+      // Use the enhanced form data returned from the function
+      setSubmittedData(result.submittedData || formData);
       
       // Call onSuccess callback if provided
       if (onSuccess) {

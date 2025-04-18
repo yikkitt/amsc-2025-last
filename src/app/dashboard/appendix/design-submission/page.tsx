@@ -92,7 +92,7 @@ export default function DesignSubmissionPage() {
             </div>
             <div>
               <h3 className="font-bold">Submit for Review</h3>
-              <p className="text-sm">Email all files in PDF format to technical@amsc-2025.com with your booth number in the subject line.</p>
+              <p className="text-sm">Email all files in PDF format to info@bcpgroup.com.my with your booth number in the subject line.</p>
             </div>
           </div>
           

@@ -1,4 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
+import { getSupabaseBrowserClient } from '@/lib/supabase/client';
+import { FormData } from '@/types/forms';
 
 /**
  * Checks if the current date is past the form submission deadline
@@ -116,6 +118,109 @@ export async function submitForm(
     return {
       success: false,
       error,
+    };
+  }
+}
+
+/**
+ * Enhanced form submission that ensures consistent data formatting and error handling
+ * This function is designed to be the central submission handler for all forms
+ * 
+ * @param formData The form data to submit
+ * @param formType The type of form (number or string)
+ * @returns Object with success status, data and message
+ */
+export async function syncFormWithSupabase(
+  formData: FormData,
+  formType: number | string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message: string;
+  submittedData?: FormData;
+}> {
+  try {
+    console.log('Starting form submission to Supabase:', { formType, formData });
+    
+    // Get Supabase client
+    const supabase = getSupabaseBrowserClient();
+    
+    // Ensure formType is a number
+    const formId = typeof formType === 'number' ? formType : parseInt(formType.toString()) || 0;
+    
+    // Calculate subtotal based on items if present
+    const subtotal = formData.items?.reduce(
+      (acc: number, item: any) => acc + (
+        (item.total || 0) || 
+        (item.quantity && (item.unitCost || item.unitPrice) 
+          ? item.quantity * (item.unitCost || item.unitPrice) 
+          : 0)
+      ),
+      0
+    ) || 0;
+    
+    // Check if past deadline
+    const pastDeadline = isPastDeadline();
+    
+    // Calculate late charge
+    const lateCharge = calculateLateCharge(formId, subtotal, pastDeadline);
+    
+    // Calculate grand total
+    const grandTotal = subtotal + lateCharge;
+    
+    // Get current timestamp
+    const timestamp = new Date().toISOString();
+    
+    // Ensure required fields exist
+    const enhancedFormData = {
+      ...formData,
+      items: formData.items || [],
+      subtotal: subtotal,
+      late_charge: lateCharge,
+      grand_total: grandTotal,
+      form_type: formId,
+      submission_date: timestamp,
+      updated_at: timestamp,
+      past_deadline: pastDeadline,
+      auth_details: formData.auth_details || {
+        name: '',
+        designation: '',
+        date: timestamp
+      }
+    };
+    
+    console.log('Prepared data for submission:', enhancedFormData);
+    
+    // Submit to form_submissions table
+    const { data, error: submissionError } = await supabase
+      .from('form_submissions')
+      .insert(enhancedFormData)
+      .select();
+      
+    if (submissionError) {
+      console.error('Supabase submission error:', submissionError);
+      return {
+        success: false,
+        message: `Failed to submit form: ${submissionError.message}`,
+      };
+    }
+    
+    console.log('Form submitted successfully:', data);
+    
+    return {
+      success: true,
+      data,
+      submittedData: enhancedFormData,
+      message: 'Form submitted successfully'
+    };
+    
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error submitting form';
+    console.error('Form submission error:', errorMessage);
+    
+    return {
+      success: false,
+      message: errorMessage,
     };
   }
 } 
