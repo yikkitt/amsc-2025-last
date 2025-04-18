@@ -26,7 +26,7 @@ export default function VenueFloorPlan() {
           >
             <div className="relative w-full h-[450px] md:h-[450px]">
               <Image
-                src="/images/floor-plan.jpg"
+                src="/images/klcc-floor-plan.png"
                 alt="KLCC Exhibition Hall Layout"
                 fill
                 sizes="(max-width: 768px) 100vw, 60vw"

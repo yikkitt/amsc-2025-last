@@ -73,7 +73,7 @@ export default function KLCCMapTabs() {
               {/* Larger image container with auto-zoomed view */}
               <div className="relative w-full h-[463px] border border-gray-200 bg-white overflow-hidden">
                 <Image
-                  src="/images/klcc_floor_plan.png"
+                  src="/images/klcc-floor-plan.png"
                   alt="KLCC Exhibition Hall Layout"
                   fill
                   sizes="(max-width: 768px) 100vw, 1200px"
