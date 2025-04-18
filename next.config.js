@@ -70,6 +70,8 @@ const nextConfig = {
     // Use explicitly hardcoded values for build time to avoid substitution issues
     NEXT_PUBLIC_SUPABASE_URL: 'https://kiotgupdmepdyiscbrmb.supabase.co',
     NEXT_PUBLIC_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtpb3RndXBkbWVwZHlpc2Nicm1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM5OTc4MDQsImV4cCI6MjA1OTU3MzgwNH0.USrVcvc8lzraMh4a4BpaTSope81DwX4EsYCxMddC1I8',
+    // Google Maps API key
+    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: 'AIzaSyA-rV5256Pr0I1g-yVGX2UvDdaOVPrBMYs',
   },
   
   // Enable compression

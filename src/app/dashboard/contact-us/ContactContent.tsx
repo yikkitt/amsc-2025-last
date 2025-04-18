@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import KLCCMap from '@/components/maps/KLCCMap'
 
 export default function ContactContent() {
   const [activeTab, setActiveTab] = useState('google-map')
@@ -39,28 +40,8 @@ export default function ContactContent() {
         <p className="text-gray-700 mb-4">Kuala Lumpur Convention Centre, Kuala Lumpur City Centre, 50088 Kuala Lumpur, Malaysia</p>
         
         {activeTab === 'google-map' ? (
-          <div className="relative mb-6 h-64 bg-slate-200 rounded-lg overflow-hidden">
-            {/* Google Map placeholder */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="bg-slate-300 w-full h-full relative">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="bg-red-500 h-8 w-8 rounded-full relative flex items-center justify-center">
-                    <div className="bg-red-600 h-3 w-3 rounded-full"></div>
-                    <div className="absolute -bottom-6 bg-white px-2 py-1 rounded shadow-md text-xs text-gray-800 font-medium">
-                      KLCC
-                    </div>
-                  </div>
-                </div>
-                <div className="absolute bottom-2 right-2 text-xs text-gray-600">
-                  Google Map will be displayed here
-                </div>
-              </div>
-              <div className="absolute bottom-4 right-4 bg-white rounded-full p-2 shadow-md cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
-                </svg>
-              </div>
-            </div>
+          <div className="relative mb-6 h-96 bg-slate-200 rounded-lg overflow-hidden">
+            <KLCCMap />
           </div>
         ) : (
           <div className="relative mb-6 h-64 bg-slate-100 rounded-lg overflow-hidden">
