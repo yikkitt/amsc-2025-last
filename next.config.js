@@ -17,8 +17,8 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   experimental: {
-    // Enable CSS optimization for better performance
-    optimizeCss: true,
+    // Disable CSS optimization that's causing build errors with critters
+    optimizeCss: false,
     legacyBrowsers: false, // Don't support legacy browsers
     // Enable optimizations for faster loading
     scrollRestoration: true, // Enable scroll restoration for better UX

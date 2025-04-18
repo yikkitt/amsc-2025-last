@@ -28,6 +28,7 @@
     "@types/google.maps": "^3.58.1",
     "@vercel/og": "^0.6.8",
     "clsx": "^2.1.1",
+    "critters": "^0.0.23",
     "dotenv": "^16.5.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
