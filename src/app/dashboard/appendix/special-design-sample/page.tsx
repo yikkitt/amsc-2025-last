@@ -231,177 +231,46 @@ export default function SpecialDesignSamplePage() {
           <div>
             <h2 className="text-xl font-bold mb-4 text-blue-900">Construction and Structural Details</h2>
             
-            <div className="border border-gray-200 rounded-lg overflow-hidden mb-6">
+            <div className="overflow-hidden border border-gray-200 rounded-lg mb-6">
               <table className="min-w-full">
-                <tbody className="bg-white">
-                  <tr>
-                    <th className="w-12 px-4 py-2 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      3
-                    </th>
-                    <td className="px-4 py-2 text-sm">
-                      The construction and structural details of the stand should include the respective building methodology, materials used and other relevant details inclusive of specific suspension requirements if required.
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            
-            <div className="relative w-full h-[400px] border border-gray-200 rounded-lg mb-6">
-              <Image
-                src="/images/front-view.png"
-                alt="Booth Perspective"
-                fill
-                className="object-contain"
-              />
-              <div className="absolute top-4 left-4 bg-white px-3 py-1 rounded-full shadow-md">
-                <span className="text-sm font-medium">Structure A</span>
-              </div>
-              <div className="absolute top-1/2 right-1/4 bg-white px-3 py-1 rounded-full shadow-md">
-                <span className="text-sm font-medium">Structure B</span>
-              </div>
-              <div className="absolute bottom-1/3 left-1/2 bg-white px-3 py-1 rounded-full shadow-md">
-                <span className="text-sm font-medium">Structure C</span>
-              </div>
-            </div>
-            
-            <div className="border border-gray-200 rounded-lg overflow-hidden mb-6">
-              <div className="bg-blue-600 text-white px-4 py-3">
-                <h3 className="font-medium">Material Used</h3>
-              </div>
-              <table className="min-w-full">
-                <tbody className="divide-y divide-gray-200">
-                  <tr className="bg-gray-50">
-                    <td colSpan={2} className="px-4 py-2 text-sm italic">
-                      Eg: Timber/Plywood/Metal pole (including thickness/ sizes / diameter etc.)
-                    </td>
-                  </tr>
-                  <tr>
-                    <th className="w-12 px-4 py-3 bg-blue-50 text-center text-sm font-medium text-blue-800">
+                <tbody>
+                  <tr className="bg-[#fdf3e7]">
+                    <td className="w-12 px-4 py-3 text-center font-medium border-r border-gray-200">
                       1
-                    </th>
-                    <td className="px-4 py-3 text-sm">
-                      Structure A:
+                    </td>
+                    <td className="px-4 py-3">
+                      Only 3D stand design plans or photos are accepted
                     </td>
                   </tr>
-                  <tr>
-                    <th className="w-12 px-4 py-3 bg-blue-50 text-center text-sm font-medium text-blue-800">
+                  <tr className="bg-[#fdf3e7]">
+                    <td className="w-12 px-4 py-3 text-center font-medium border-r border-gray-200">
                       2
-                    </th>
-                    <td className="px-4 py-3 text-sm">
-                      Structure B:
                     </td>
-                  </tr>
-                  <tr>
-                    <th className="w-12 px-4 py-3 bg-blue-50 text-center text-sm font-medium text-blue-800">
-                      3
-                    </th>
-                    <td className="px-4 py-3 text-sm">
-                      Structure C:
-                    </td>
-                  </tr>
-                  <tr>
-                    <th className="w-12 px-4 py-3 bg-blue-50 text-center text-sm font-medium text-blue-800">
-                      4
-                    </th>
-                    <td className="px-4 py-3 text-sm">
-                      Platform/Flooring:
+                    <td className="px-4 py-3">
+                      The structural details of the stand should include Orthographic View (Elevations and Isometric) which cater all angles of the model.
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
             
-            <div className="border border-gray-200 rounded-lg overflow-hidden mb-6">
-              <div className="bg-blue-600 text-white px-4 py-3">
-                <h3 className="font-medium">Method to construct/support</h3>
-                <p className="text-sm italic text-blue-100">eg: method to construct the 3 sets of triangle share wooden arch</p>
+            <div className="mb-6">
+              <p className="font-medium mb-3 text-gray-700">C.2 (1) - Example of Orthographic View-Top, Side, Front and Back grid/elevation drawing with measurements.</p>
+              <div className="border border-gray-200 p-4 rounded-lg bg-gray-50">
+                <div className="relative w-full h-[600px]">
+                  <Image
+                    src="/images/elevation.png"
+                    alt="Orthographic View Example"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
               </div>
-              <table className="min-w-full">
-                <tbody className="divide-y divide-gray-200">
-                  <tr className="bg-gray-50">
-                    <td colSpan={2} className="px-4 py-2 text-sm italic">
-                      <p>To list down the steps in building up structures. Example:</p>
-                      <ol className="list-decimal ml-6 mt-2 space-y-1">
-                        <li>3 units of xx inch X xx inch attached to form triangular arch minimum with xx screw points.</li>
-                        <li>Boxed up lighted supported by metal pole/beam attached to triangular arch.</li>
-                        <li>Support Method for Backdrop – 'L' shape design backdrop (90 degrees) with xx inch width and counter xx kg as counter weight</li>
-                        <li>etc</li>
-                      </ol>
-                    </td>
-                  </tr>
-                  <tr>
-                    <th className="w-12 px-4 py-3 bg-blue-50 text-center text-sm font-medium text-blue-800">
-                      1
-                    </th>
-                    <td className="px-4 py-3 text-sm">
-                      
-                    </td>
-                  </tr>
-                  <tr>
-                    <th className="w-12 px-4 py-3 bg-blue-50 text-center text-sm font-medium text-blue-800">
-                      2
-                    </th>
-                    <td className="px-4 py-3 text-sm">
-                      
-                    </td>
-                  </tr>
-                  <tr>
-                    <th className="w-12 px-4 py-3 bg-blue-50 text-center text-sm font-medium text-blue-800">
-                      3
-                    </th>
-                    <td className="px-4 py-3 text-sm">
-                      
-                    </td>
-                  </tr>
-                  <tr>
-                    <th className="w-12 px-4 py-3 bg-blue-50 text-center text-sm font-medium text-blue-800">
-                      4
-                    </th>
-                    <td className="px-4 py-3 text-sm">
-                      
-                    </td>
-                  </tr>
-                  <tr>
-                    <th className="w-12 px-4 py-3 bg-blue-50 text-center text-sm font-medium text-blue-800">
-                      5
-                    </th>
-                    <td className="px-4 py-3 text-sm">
-                      
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
             </div>
             
-            <div className="border border-gray-200 rounded-lg overflow-hidden mb-6">
-              <table className="min-w-full">
-                <tbody className="bg-white">
-                  <tr>
-                    <th className="w-12 px-4 py-2 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      4
-                    </th>
-                    <td className="px-4 py-2 text-sm">
-                      A copy of the Structural Engineering Certification for Double deck and "complex" stand. (use additional or separate document where necessary)
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colSpan={2} className="px-6 py-4">
-                      <p className="mb-3">PE endorsement is not required when:</p>
-                      <ol className="list-decimal ml-8 space-y-1 text-sm">
-                        <li>Platform less than 3 inch</li>
-                        <li>Below 1 ton (vehicle/object/machine)</li>
-                        <li>Ramp usage design for less than 200kg load</li>
-                      </ol>
-                      <p className="mt-3 text-sm italic">Ref: 3inch=7.62cm= 0.25 ft</p>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            
-            {/* Original content from the Special Design Sample page */}
-            <div className="mb-8">
-              <h2 className="text-xl font-bold mb-4 text-blue-900">Sample Perspective View</h2>
+            <div className="mb-6">
+              <p className="font-medium mb-3 text-gray-700">C.2 (2) - Top, Side, Front, and Back grid/elevation views</p>
+              
               <div className="border border-gray-200 p-4 bg-gray-50 rounded-lg">
                 <div className="grid grid-cols-2 gap-4 mb-2">
                   <div className="border border-gray-200 rounded-lg p-2">
@@ -453,71 +322,174 @@ export default function SpecialDesignSamplePage() {
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div>
-                <h2 className="text-xl font-bold mb-4 text-blue-900">Sample Floor Plan</h2>
-                <div className="border border-gray-200 p-4 bg-gray-50 rounded-lg text-center">
-                  <div className="relative w-full h-[200px] mb-2">
-                    <Image
-                      src="/images/sample-floor-plan.png"
-                      alt="Floor Plan Sample"
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
-                  <p className="text-sm text-gray-600">Top view drawing showing dimensions and layout</p>
+            <div className="overflow-hidden border border-gray-200 rounded-lg mb-6">
+              <table className="min-w-full">
+                <tbody>
+                  <tr className="bg-[#fdf3e7]">
+                    <td className="w-12 px-4 py-3 text-center font-medium border-r border-gray-200">
+                      3
+                    </td>
+                    <td className="px-4 py-3">
+                      The construction and structural details of the stand should include the respective building methodology, materials used and other relevant details inclusive of specific suspension requirements if required.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <div className="mb-6">
+              <div className="relative w-full h-[400px] border border-gray-200 rounded-lg mb-4">
+                <Image
+                  src="/images/front-view.png"
+                  alt="Booth Perspective with Structure Labels"
+                  fill
+                  className="object-contain"
+                />
+                <div className="absolute top-4 left-4 bg-white px-3 py-1 rounded-full shadow-md">
+                  <span className="text-sm font-medium">Structure A</span>
+                </div>
+                <div className="absolute top-1/3 right-1/3 bg-white px-3 py-1 rounded-full shadow-md">
+                  <span className="text-sm font-medium">Structure B</span>
+                </div>
+                <div className="absolute bottom-1/3 left-1/2 bg-white px-3 py-1 rounded-full shadow-md">
+                  <span className="text-sm font-medium">Structure C</span>
                 </div>
               </div>
               
-              <div>
-                <h2 className="text-xl font-bold mb-4 text-blue-900">Sample Elevation</h2>
-                <div className="border border-gray-200 p-4 bg-gray-50 rounded-lg text-center">
-                  <div className="relative w-full h-[200px] mb-2">
-                    <Image
-                      src="/images/elevation.png"
-                      alt="Elevation View Sample"
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
-                  <p className="text-sm text-gray-600">Front and side views showing heights and dimensions</p>
+              <div className="overflow-hidden border border-gray-200 rounded-lg mb-6">
+                <div className="bg-[#2563eb] text-white px-4 py-3">
+                  <h3 className="font-medium">Material Used</h3>
                 </div>
+                <table className="min-w-full">
+                  <tbody className="divide-y divide-gray-200">
+                    <tr className="bg-gray-50">
+                      <td colSpan={2} className="px-4 py-2 text-sm italic">
+                        Eg: Timber/Plywood/Metal pole (including thickness/ sizes / diameter etc.)
+                      </td>
+                    </tr>
+                    <tr>
+                      <th className="w-12 px-4 py-3 bg-blue-50 text-center text-sm font-medium text-blue-800 border-r border-gray-200">
+                        1
+                      </th>
+                      <td className="px-4 py-3 text-sm">
+                        Structure A:
+                      </td>
+                    </tr>
+                    <tr>
+                      <th className="w-12 px-4 py-3 bg-blue-50 text-center text-sm font-medium text-blue-800 border-r border-gray-200">
+                        2
+                      </th>
+                      <td className="px-4 py-3 text-sm">
+                        Structure B:
+                      </td>
+                    </tr>
+                    <tr>
+                      <th className="w-12 px-4 py-3 bg-blue-50 text-center text-sm font-medium text-blue-800 border-r border-gray-200">
+                        3
+                      </th>
+                      <td className="px-4 py-3 text-sm">
+                        Structure C:
+                      </td>
+                    </tr>
+                    <tr>
+                      <th className="w-12 px-4 py-3 bg-blue-50 text-center text-sm font-medium text-blue-800 border-r border-gray-200">
+                        4
+                      </th>
+                      <td className="px-4 py-3 text-sm">
+                        Platform/Flooring:
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              
+              <div className="overflow-hidden border border-gray-200 rounded-lg mb-6">
+                <div className="bg-[#2563eb] text-white px-4 py-3">
+                  <h3 className="font-medium">Method to construct/support</h3>
+                  <p className="text-sm italic text-blue-100">eg: method to construct the 3 sets of triangle share wooden arch</p>
+                </div>
+                <table className="min-w-full">
+                  <tbody className="divide-y divide-gray-200">
+                    <tr className="bg-gray-50">
+                      <td colSpan={2} className="px-4 py-2 text-sm italic">
+                        <p>To list down the steps in building up structures. Example:</p>
+                        <ol className="list-decimal ml-6 mt-2 space-y-1">
+                          <li>3 units of xx inch X xx inch attached to form triangular arch minimum with xx screw points.</li>
+                          <li>Boxed up lighted supported by metal pole/beam attached to triangular arch.</li>
+                          <li>Support Method for Backdrop – 'L' shape design backdrop (90 degrees) with xx inch width and counter xx kg as counter weight</li>
+                          <li>etc</li>
+                        </ol>
+                      </td>
+                    </tr>
+                    <tr>
+                      <th className="w-12 px-4 py-3 bg-blue-50 text-center text-sm font-medium text-blue-800 border-r border-gray-200">
+                        1
+                      </th>
+                      <td className="px-4 py-3 text-sm">
+                        
+                      </td>
+                    </tr>
+                    <tr>
+                      <th className="w-12 px-4 py-3 bg-blue-50 text-center text-sm font-medium text-blue-800 border-r border-gray-200">
+                        2
+                      </th>
+                      <td className="px-4 py-3 text-sm">
+                        
+                      </td>
+                    </tr>
+                    <tr>
+                      <th className="w-12 px-4 py-3 bg-blue-50 text-center text-sm font-medium text-blue-800 border-r border-gray-200">
+                        3
+                      </th>
+                      <td className="px-4 py-3 text-sm">
+                        
+                      </td>
+                    </tr>
+                    <tr>
+                      <th className="w-12 px-4 py-3 bg-blue-50 text-center text-sm font-medium text-blue-800 border-r border-gray-200">
+                        4
+                      </th>
+                      <td className="px-4 py-3 text-sm">
+                        
+                      </td>
+                    </tr>
+                    <tr>
+                      <th className="w-12 px-4 py-3 bg-blue-50 text-center text-sm font-medium text-blue-800 border-r border-gray-200">
+                        5
+                      </th>
+                      <td className="px-4 py-3 text-sm">
+                        
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
             
-            <div className="mb-8">
-              <h2 className="text-xl font-bold mb-4 text-blue-900">Sample Technical Specifications</h2>
-              
-              <div className="border border-gray-200 rounded-lg overflow-hidden mb-4">
-                <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                  <h3 className="font-bold">Materials Specification</h3>
-                </div>
-                <div className="p-4">
-                  <ul className="list-disc ml-5 space-y-2 text-sm">
-                    <li><strong>Main Structure:</strong> Aluminum extrusion system with MDF cladding</li>
-                    <li><strong>Flooring:</strong> Raised platform with vinyl finish</li>
-                    <li><strong>Wall Panels:</strong> Fire-retardant MDF panels (6mm thickness)</li>
-                    <li><strong>Graphics:</strong> Fabric prints with aluminum frame systems</li>
-                    <li><strong>Lighting:</strong> LED spotlights and strip lighting</li>
-                    <li><strong>Furniture:</strong> Glass display counters, reception desk, bar stools</li>
-                  </ul>
-                </div>
-              </div>
-              
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                  <h3 className="font-bold">Electrical Details</h3>
-                </div>
-                <div className="p-4">
-                  <ul className="list-disc ml-5 space-y-2 text-sm">
-                    <li><strong>Power Requirements:</strong> Total load of 5KW</li>
-                    <li><strong>Main Distribution Board:</strong> Located at the back storage area</li>
-                    <li><strong>Lighting:</strong> 10 x LED spotlights (5W each), 3 x LED strip lights (15W each)</li>
-                    <li><strong>Sockets:</strong> 4 x 13A power sockets for equipment</li>
-                    <li><strong>Special Equipment:</strong> 1 x 65" LED screen (120W)</li>
-                  </ul>
-                </div>
-              </div>
+            <div className="overflow-hidden border border-gray-200 rounded-lg mb-6">
+              <table className="min-w-full">
+                <tbody>
+                  <tr className="bg-[#fdf3e7]">
+                    <td className="w-12 px-4 py-3 text-center font-medium border-r border-gray-200">
+                      4
+                    </td>
+                    <td className="px-4 py-3">
+                      A copy of the Structural Engineering Certification for Double deck and "complex" stand. (use additional or separate document where necessary)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colSpan={2} className="px-6 py-4">
+                      <p className="mb-3">PE endorsement is not required when:</p>
+                      <ol className="list-decimal ml-8 space-y-1 text-sm">
+                        <li>Platform less than 3 inch</li>
+                        <li>Below 1 ton (vehicle/object/machine)</li>
+                        <li>Ramp usage design for less than 200kg load</li>
+                      </ol>
+                      <p className="mt-3 text-sm italic">Ref: 3inch=7.62cm= 0.25 ft</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         )}
