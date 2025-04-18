@@ -20,6 +20,8 @@ const nextConfig = {
     // Enable optimizations
     optimizeCss: true,  // CSS optimization
     legacyBrowsers: false, // Don't support legacy browsers
+    // Disable critters CSS optimization to fix build error
+    critters: false,
   },
   images: {
     remotePatterns: [
