@@ -7,6 +7,13 @@ import { useState } from 'react'
 export default function SpecialDesignSamplePage() {
   const [activeTab, setActiveTab] = useState('section-a');
 
+  // Function to handle form download
+  const handleDownload = (section: string) => {
+    // Create a download filename based on the section
+    const filename = `special-design-form-section-${section}.pdf`;
+    alert(`Downloading ${filename}... This is a placeholder. In a real implementation, this would download the actual form.`);
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
@@ -84,7 +91,18 @@ export default function SpecialDesignSamplePage() {
         {/* Section A */}
         {activeTab === 'section-a' && (
           <div>
-            <h2 className="text-xl font-bold mb-4 text-blue-900">General Information</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-blue-900">General Information</h2>
+              <button 
+                onClick={() => handleDownload('a')}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded flex items-center"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download Form
+              </button>
+            </div>
             <div className="overflow-hidden border border-gray-200 rounded-lg mb-6">
               <table className="min-w-full divide-y divide-gray-200">
                 <tbody className="divide-y divide-gray-200 bg-white">
@@ -193,7 +211,18 @@ export default function SpecialDesignSamplePage() {
         {/* Section B */}
         {activeTab === 'section-b' && (
           <div>
-            <h2 className="text-xl font-bold mb-4 text-blue-900">Technical Floor Plan</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-blue-900">Technical Floor Plan</h2>
+              <button 
+                onClick={() => handleDownload('b')}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded flex items-center"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download Form
+              </button>
+            </div>
             <div className="overflow-hidden border border-gray-200 rounded-lg mb-6">
               <table className="min-w-full">
                 <tbody className="bg-white">
@@ -229,7 +258,18 @@ export default function SpecialDesignSamplePage() {
         {/* Section C */}
         {activeTab === 'section-c' && (
           <div>
-            <h2 className="text-xl font-bold mb-4 text-blue-900">Construction and Structural Details</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-blue-900">Construction and Structural Details</h2>
+              <button 
+                onClick={() => handleDownload('c')}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded flex items-center"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download Form
+              </button>
+            </div>
             
             <div className="overflow-hidden border border-gray-200 rounded-lg mb-6">
               <table className="min-w-full">
@@ -259,7 +299,7 @@ export default function SpecialDesignSamplePage() {
               <div className="border border-gray-200 p-4 rounded-lg bg-gray-50">
                 <div className="relative w-full h-[600px]">
                   <Image
-                    src="/images/elevation.png"
+                    src="/images/orthographic.png"
                     alt="Orthographic View Example"
                     fill
                     className="object-contain"
@@ -340,8 +380,8 @@ export default function SpecialDesignSamplePage() {
             <div className="mb-6">
               <div className="relative w-full h-[400px] border border-gray-200 rounded-lg mb-4">
                 <Image
-                  src="/images/front-view.png"
-                  alt="Booth Perspective with Structure Labels"
+                  src="/images/material-used.png"
+                  alt="Material Used Structure Diagram"
                   fill
                   className="object-contain"
                 />
@@ -497,7 +537,18 @@ export default function SpecialDesignSamplePage() {
         {/* Section D */}
         {activeTab === 'section-d' && (
           <div>
-            <h2 className="text-xl font-bold mb-4 text-blue-900">Preparation Information</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-blue-900">Preparation Information</h2>
+              <button 
+                onClick={() => handleDownload('d')}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded flex items-center"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download Form
+              </button>
+            </div>
             <div className="overflow-hidden border border-gray-200 rounded-lg mb-6">
               <table className="min-w-full divide-y divide-gray-200">
                 <tbody className="divide-y divide-gray-200 bg-white">
@@ -542,7 +593,18 @@ export default function SpecialDesignSamplePage() {
         {/* Section E */}
         {activeTab === 'section-e' && (
           <div>
-            <h2 className="text-xl font-bold mb-4 text-blue-900">Approval Information</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-blue-900">Approval Information</h2>
+              <button 
+                onClick={() => handleDownload('e')}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded flex items-center"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download Form
+              </button>
+            </div>
             <div className="overflow-hidden border border-gray-200 rounded-lg mb-6">
               <table className="min-w-full divide-y divide-gray-200">
                 <tbody className="divide-y divide-gray-200 bg-white">
