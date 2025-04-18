@@ -17,11 +17,9 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   experimental: {
-    // Enable optimizations
-    optimizeCss: true,  // CSS optimization
+    // Disable CSS optimization that's causing build errors
+    optimizeCss: false,  
     legacyBrowsers: false, // Don't support legacy browsers
-    // Disable critters CSS optimization to fix build error
-    critters: false,
   },
   images: {
     remotePatterns: [
