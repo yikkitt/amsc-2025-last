@@ -119,7 +119,7 @@ export default function SpecialDesignSamplePage() {
                       Event Name
                     </th>
                     <td className="px-6 py-3 text-sm text-gray-900">
-                      REGIONAL CONFERENCE OF DERMATOLOGY 2024
+                      Aesthetic Medicine & Surgery Conference 2025
                     </td>
                   </tr>
                   <tr>
@@ -127,7 +127,7 @@ export default function SpecialDesignSamplePage() {
                       Event Date
                     </th>
                     <td className="px-6 py-3 text-sm text-gray-900">
-                      Oct 3 - 5, 2024
+                      Oct 6 - 8, 2025
                     </td>
                   </tr>
                   <tr>
@@ -183,7 +183,7 @@ export default function SpecialDesignSamplePage() {
                       Halls Name
                     </th>
                     <td className="px-6 py-3 text-sm text-gray-900">
-                      Ballroom
+                  
                     </td>
                   </tr>
                   <tr>
@@ -302,6 +302,7 @@ export default function SpecialDesignSamplePage() {
                     src="/images/orthographic.png"
                     alt="Orthographic View Example"
                     fill
+                    unoptimized
                     className="object-contain"
                   />
                 </div>
@@ -319,6 +320,7 @@ export default function SpecialDesignSamplePage() {
                         src="/images/front-view.png"
                         alt="Front Views"
                         fill
+                        unoptimized
                         className="object-contain"
                       />
                     </div>
@@ -330,6 +332,7 @@ export default function SpecialDesignSamplePage() {
                         src="/images/side-view.png"
                         alt="Side Views"
                         fill
+                        unoptimized
                         className="object-contain"
                       />
                     </div>
@@ -341,6 +344,7 @@ export default function SpecialDesignSamplePage() {
                         src="/images/back-view.png"
                         alt="Back Views"
                         fill
+                        unoptimized
                         className="object-contain"
                       />
                     </div>
@@ -352,6 +356,7 @@ export default function SpecialDesignSamplePage() {
                         src="/images/top-view.png"
                         alt="Top Views"
                         fill
+                        unoptimized
                         className="object-contain"
                       />
                     </div>
@@ -383,6 +388,7 @@ export default function SpecialDesignSamplePage() {
                   src="/images/material-used.png"
                   alt="Material Used Structure Diagram"
                   fill
+                  unoptimized
                   className="object-contain"
                 />
                 <div className="absolute top-4 left-4 bg-white px-3 py-1 rounded-full shadow-md">
