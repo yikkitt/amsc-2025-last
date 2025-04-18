@@ -98,11 +98,23 @@ export const generatePDF = async (
       useCORS: true,
       allowTaint: true,
       logging: false, // Disable logging to improve performance
-      imageTimeout: 5000, // 5 second timeout for images
+      imageTimeout: 10000, // 10 second timeout for images
+      foreignObjectRendering: false, // Disable foreign object rendering for better compatibility
+      removeContainer: true, // Clean up the cloned DOM element
+      backgroundColor: '#ffffff', // Set white background
       onclone: (clonedDoc) => {
         // Remove any iframe or video elements that might cause issues
         const iframes = clonedDoc.querySelectorAll('iframe, video');
         iframes.forEach(el => el.remove());
+        
+        // Remove any buttons or inputs that might cause issues
+        const interactiveElements = clonedDoc.querySelectorAll('button, input[type="submit"], select');
+        interactiveElements.forEach(el => {
+          if (el instanceof HTMLElement) {
+            el.style.display = 'none';
+          }
+        });
+        
         return clonedDoc;
       }
     });
@@ -114,6 +126,17 @@ export const generatePDF = async (
       orientation: options.orientation,
       unit: 'mm',
       format: options.format,
+      compress: true, // Enable compression for smaller file size
+      putOnlyUsedFonts: true, // Optimize font usage
+      floatPrecision: 16, // Higher precision
+    });
+    
+    // Add metadata to the PDF
+    pdf.setProperties({
+      title: fileName.replace('.pdf', ''),
+      subject: 'AMSC 2025 Form',
+      creator: 'AMSC 2025 Exhibitor Portal',
+      author: 'AMSC 2025',
     });
     
     // Calculate the aspect ratio and positioning
@@ -166,12 +189,13 @@ export const generatePDF = async (
     
     console.log('PDF generated, preparing to download...');
     
-    // Try different download methods to cover all browsers
-    if (window.navigator && 'msSaveOrOpenBlob' in window.navigator) {
-      // For IE/Edge
-      const blob = pdf.output('blob');
-      (window.navigator as any).msSaveOrOpenBlob(blob, fileName);
-      console.log('PDF downloaded via msSaveOrOpenBlob.');
+    try {
+      // Modern browsers method - most reliable approach
+      console.log('Using direct save method for maximum compatibility...');
+      
+      // First attempt with direct save method - works in all modern browsers
+      pdf.save(fileName);
+      console.log('PDF saved using direct save method.');
       
       // Restore original styles
       elementsWithBlendMode.forEach((el: Element) => {
@@ -182,50 +206,42 @@ export const generatePDF = async (
       });
       
       return true;
-    }
-    
-    try {
-      // Modern browsers method - most reliable approach
-      console.log('Using modern browser download method...');
-      const pdfBlob = pdf.output('blob');
-      const pdfUrl = URL.createObjectURL(pdfBlob);
+    } catch (e) {
+      console.error('Error in primary download method:', e);
       
-      const downloadLink = document.createElement('a');
-      downloadLink.href = pdfUrl;
-      downloadLink.download = fileName;
-      downloadLink.style.display = 'none';
-      document.body.appendChild(downloadLink);
-      
-      // Force click event with a slight delay to ensure browser processes it
-      setTimeout(() => {
-        console.log('Triggering download click...');
+      // Fallback method - use blob and createObjectURL
+      try {
+        console.log('Attempting fallback download method...');
+        const pdfBlob = pdf.output('blob');
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        
+        const downloadLink = document.createElement('a');
+        downloadLink.href = pdfUrl;
+        downloadLink.download = fileName;
+        downloadLink.style.display = 'none';
+        document.body.appendChild(downloadLink);
+        
+        // Force click event with a slight delay to ensure browser processes it
         downloadLink.click();
         
         // Clean up
         setTimeout(() => {
-          document.body.removeChild(downloadLink);
+          if (document.body.contains(downloadLink)) {
+            document.body.removeChild(downloadLink);
+          }
           URL.revokeObjectURL(pdfUrl);
-          console.log('PDF download completed and resources cleaned up.');
-          
-          // Restore original styles
-          elementsWithBlendMode.forEach((el: Element) => {
-            if (el instanceof HTMLElement && originalStyles.has(el)) {
-              const { backgroundBlendMode } = originalStyles.get(el);
-              el.style.backgroundBlendMode = backgroundBlendMode;
-            }
-          });
+          console.log('PDF download completed via fallback and resources cleaned up.');
         }, 1000);
-      }, 100);
-      
-      return true;
-    } catch (e) {
-      console.error('Error in primary download method:', e);
-      
-      // Fallback method - direct save
-      console.log('Attempting fallback download method...');
-      try {
-        pdf.save(fileName);
-        console.log('PDF saved using fallback method.');
+        
+        // Restore original styles
+        elementsWithBlendMode.forEach((el: Element) => {
+          if (el instanceof HTMLElement && originalStyles.has(el)) {
+            const { backgroundBlendMode } = originalStyles.get(el);
+            el.style.backgroundBlendMode = backgroundBlendMode;
+          }
+        });
+        
+        return true;
       } catch (fallbackError) {
         console.error('Fallback method also failed:', fallbackError);
         
@@ -234,22 +250,31 @@ export const generatePDF = async (
           console.log('Attempting to open PDF in new window...');
           const pdfData = pdf.output('datauristring');
           window.open(pdfData, '_blank');
+          
+          // Restore original styles
+          elementsWithBlendMode.forEach((el: Element) => {
+            if (el instanceof HTMLElement && originalStyles.has(el)) {
+              const { backgroundBlendMode } = originalStyles.get(el);
+              el.style.backgroundBlendMode = backgroundBlendMode;
+            }
+          });
+          
+          return true;
         } catch (lastError) {
           console.error('All download methods failed:', lastError);
           alert('Unable to download PDF. Please try again or use a different browser.');
+          
+          // Restore original styles
+          elementsWithBlendMode.forEach((el: Element) => {
+            if (el instanceof HTMLElement && originalStyles.has(el)) {
+              const { backgroundBlendMode } = originalStyles.get(el);
+              el.style.backgroundBlendMode = backgroundBlendMode;
+            }
+          });
+          
           return false;
         }
       }
-      
-      // Restore original styles
-      elementsWithBlendMode.forEach((el: Element) => {
-        if (el instanceof HTMLElement && originalStyles.has(el)) {
-          const { backgroundBlendMode } = originalStyles.get(el);
-          el.style.backgroundBlendMode = backgroundBlendMode;
-        }
-      });
-      
-      return true;
     }
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -268,9 +293,24 @@ export const generateFormPDF = async (
   includeEmptyItems: boolean = false
 ): Promise<boolean> => {
   try {
-    const companyName = formData.companyName || 'Unknown';
+    // Validate required parameters
+    if (!element) {
+      console.error('Element not provided to generateFormPDF');
+      return false;
+    }
+    
+    if (!formData) {
+      console.error('Form data not provided to generateFormPDF');
+      return false;
+    }
+    
+    // Get company name from form data or use generic name
+    const companyName = formData.companyName || 'AMSC_Form';
+    // Create a clean filename by removing special characters
     const cleanCompanyName = companyName.replace(/[^a-zA-Z0-9]/g, '_');
+    // Get current date in YYYY-MM-DD format
     const date = new Date().toISOString().split('T')[0];
+    // Create the filename
     const fileName = `${cleanCompanyName}_${formType}_${date}.pdf`;
     
     console.log(`Generating ${formType} PDF for ${companyName}`);
@@ -280,8 +320,17 @@ export const generateFormPDF = async (
       element.id = `pdf-container-${Date.now()}`;
     }
     
-    // Now we can pass the element's ID to the generatePDF function
-    return await generatePDF(element.id, fileName);
+    // Apply temporary styles to optimize for PDF generation
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'visible'; // Prevent unexpected clipping
+    
+    try {
+      // Now we can pass the element's ID to the generatePDF function
+      return await generatePDF(element.id, fileName);
+    } finally {
+      // Restore original styles regardless of success or failure
+      document.body.style.overflow = originalOverflow;
+    }
   } catch (error) {
     console.error('Error in generateFormPDF:', error);
     return false;
