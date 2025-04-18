@@ -75,10 +75,30 @@ export const generatePDF = async (element: HTMLElement, fileName: string): Promi
       heightLeft -= pageHeight;
     }
     
-    // Download PDF
-    pdf.save(fileName);
-    
-    console.log('PDF generated successfully:', fileName);
+    try {
+      // Download PDF using the blob approach which is more reliable across browsers
+      const blob = pdf.output('blob');
+      const url = URL.createObjectURL(blob);
+      
+      // Create a link and trigger the download
+      const downloadLink = document.createElement('a');
+      downloadLink.href = url;
+      downloadLink.download = fileName;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(downloadLink);
+        URL.revokeObjectURL(url);
+      }, 100);
+      
+      console.log('PDF generated successfully:', fileName);
+    } catch (downloadError) {
+      // Fallback to the save method if the blob approach fails
+      console.warn('Blob download failed, using fallback method', downloadError);
+      pdf.save(fileName);
+    }
   } catch (error) {
     console.error('Error generating PDF:', error);
     throw new Error(`Failed to generate PDF: ${error instanceof Error ? error.message : String(error)}`);

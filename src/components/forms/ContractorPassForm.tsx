@@ -23,8 +23,19 @@ interface ContractorPassFormProps {
 
 export default function ContractorPassForm({ userData }: ContractorPassFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [quantity, setQuantity] = useState<number>(0);
   const router = useRouter();
   const supabase = getSupabaseBrowserClient();
+
+  const unitPrice = 25.00;
+  const total = quantity * unitPrice;
+  const lateSurcharge = 0; // Can be calculated based on date if needed
+  const grandTotal = total + lateSurcharge;
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value) || 0;
+    setQuantity(value);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,14 +57,14 @@ export default function ContractorPassForm({ userData }: ContractorPassFormProps
         items: [
           {
             item: 'Contractor Pass',
-            quantity: parseInt(formData.get('quantity') as string) || 0,
-            unit_price: 25.00,
-            total: (parseInt(formData.get('quantity') as string) || 0) * 25.00
+            quantity: quantity,
+            unit_price: unitPrice,
+            total: total
           }
         ],
-        subtotal: (parseInt(formData.get('quantity') as string) || 0) * 25.00,
-        late_charge: 0, // Will be calculated based on submission date
-        grand_total: (parseInt(formData.get('quantity') as string) || 0) * 25.00, // Will include late charge if applicable
+        subtotal: total,
+        late_charge: lateSurcharge,
+        grand_total: grandTotal,
         auth_details: {
           name: formData.get('auth_name'),
           designation: formData.get('auth_designation'),
@@ -160,27 +171,29 @@ export default function ContractorPassForm({ userData }: ContractorPassFormProps
             <tbody>
               <tr>
                 <td className="border border-gray-300 p-2">Contractor Pass</td>
-                <td className="border border-gray-300 p-2">
+                <td className="border border-gray-300 p-2 text-center">
                   <input 
                     type="number" 
                     name="quantity" 
-                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                    className="w-24 text-center border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 mx-auto" 
                     min="0"
                     step="any"
+                    value={quantity}
+                    onChange={handleQuantityChange}
                   />
                 </td>
                 <td className="border border-gray-300 p-2 text-center">25.00</td>
-                <td className="border border-gray-300 p-2"></td>
+                <td className="border border-gray-300 p-2 text-center">{total.toFixed(2)}</td>
               </tr>
               <tr>
                 <td colSpan={2} className="border border-gray-300 p-2"></td>
                 <td className="border border-gray-300 p-2 text-right">Late Surcharge:<br/>(if applicable)</td>
-                <td className="border border-gray-300 p-2"></td>
+                <td className="border border-gray-300 p-2 text-center">{lateSurcharge.toFixed(2)}</td>
               </tr>
               <tr>
                 <td colSpan={2} className="border border-gray-300 p-2"></td>
                 <td className="border border-gray-300 p-2 text-right font-bold">Total Amount:</td>
-                <td className="border border-gray-300 p-2"></td>
+                <td className="border border-gray-300 p-2 text-center font-bold">{grandTotal.toFixed(2)}</td>
               </tr>
             </tbody>
           </table>

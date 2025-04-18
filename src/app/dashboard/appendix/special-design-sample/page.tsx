@@ -168,7 +168,7 @@ export default function SpecialDesignSamplePage() {
                       Event Date
                     </th>
                     <td className="px-6 py-3 text-sm text-gray-900">
-                      Oct 6 - 8, 2025
+                      Aug 6 - 7, 2025
                     </td>
                   </tr>
                   <tr>
@@ -432,15 +432,6 @@ export default function SpecialDesignSamplePage() {
                   unoptimized
                   className="object-contain"
                 />
-                <div className="absolute top-4 left-4 bg-white px-3 py-1 rounded-full shadow-md">
-                  <span className="text-sm font-medium">Structure A</span>
-                </div>
-                <div className="absolute top-1/3 right-1/3 bg-white px-3 py-1 rounded-full shadow-md">
-                  <span className="text-sm font-medium">Structure B</span>
-                </div>
-                <div className="absolute bottom-1/3 left-1/2 bg-white px-3 py-1 rounded-full shadow-md">
-                  <span className="text-sm font-medium">Structure C</span>
-                </div>
               </div>
               
               <div className="overflow-hidden border border-gray-200 rounded-lg mb-6">
