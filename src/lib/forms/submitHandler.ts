@@ -145,19 +145,6 @@ export async function syncFormWithSupabase(
     // Get Supabase client
     const supabase = getSupabaseBrowserClient();
     
-    // Get the current user from the session - ESSENTIAL for RLS policies
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user || !user.id) {
-      console.error('No authenticated user found. Forms can only be submitted by logged-in users.');
-      return {
-        success: false,
-        message: 'Authentication required. Please log in to submit the form.',
-      };
-    }
-    
-    console.log('Submitting form as user:', user.id);
-    
     // Ensure formType is a number
     const formId = typeof formType === 'number' ? formType : parseInt(formType.toString()) || 0;
     
@@ -187,7 +174,6 @@ export async function syncFormWithSupabase(
     // Ensure required fields exist
     const enhancedFormData = {
       ...formData,
-      user_id: user.id, // Add the user ID - this is REQUIRED by your database schema
       items: formData.items || [],
       subtotal: subtotal,
       late_charge: lateCharge,
