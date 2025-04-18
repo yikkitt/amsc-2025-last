@@ -185,7 +185,8 @@ export const generatePDF = async (
     }
     
     try {
-      // Modern browsers method
+      // Modern browsers method - most reliable approach
+      console.log('Using modern browser download method...');
       const pdfBlob = pdf.output('blob');
       const pdfUrl = URL.createObjectURL(pdfBlob);
       
@@ -194,30 +195,51 @@ export const generatePDF = async (
       downloadLink.download = fileName;
       downloadLink.style.display = 'none';
       document.body.appendChild(downloadLink);
-      downloadLink.click();
       
-      // Clean up
+      // Force click event with a slight delay to ensure browser processes it
       setTimeout(() => {
-        document.body.removeChild(downloadLink);
-        URL.revokeObjectURL(pdfUrl);
-        console.log('PDF download completed and resources cleaned up.');
+        console.log('Triggering download click...');
+        downloadLink.click();
         
-        // Restore original styles
-        elementsWithBlendMode.forEach((el: Element) => {
-          if (el instanceof HTMLElement && originalStyles.has(el)) {
-            const { backgroundBlendMode } = originalStyles.get(el);
-            el.style.backgroundBlendMode = backgroundBlendMode;
-          }
-        });
-      }, 1000);
+        // Clean up
+        setTimeout(() => {
+          document.body.removeChild(downloadLink);
+          URL.revokeObjectURL(pdfUrl);
+          console.log('PDF download completed and resources cleaned up.');
+          
+          // Restore original styles
+          elementsWithBlendMode.forEach((el: Element) => {
+            if (el instanceof HTMLElement && originalStyles.has(el)) {
+              const { backgroundBlendMode } = originalStyles.get(el);
+              el.style.backgroundBlendMode = backgroundBlendMode;
+            }
+          });
+        }, 1000);
+      }, 100);
       
       return true;
     } catch (e) {
       console.error('Error in primary download method:', e);
       
-      // Fallback method
+      // Fallback method - direct save
       console.log('Attempting fallback download method...');
-      pdf.save(fileName);
+      try {
+        pdf.save(fileName);
+        console.log('PDF saved using fallback method.');
+      } catch (fallbackError) {
+        console.error('Fallback method also failed:', fallbackError);
+        
+        // Last resort - open in new window
+        try {
+          console.log('Attempting to open PDF in new window...');
+          const pdfData = pdf.output('datauristring');
+          window.open(pdfData, '_blank');
+        } catch (lastError) {
+          console.error('All download methods failed:', lastError);
+          alert('Unable to download PDF. Please try again or use a different browser.');
+          return false;
+        }
+      }
       
       // Restore original styles
       elementsWithBlendMode.forEach((el: Element) => {
@@ -240,9 +262,10 @@ export const generatePDF = async (
  * Generates a PDF for a specific form with data
  */
 export const generateFormPDF = async (
-  elementId: string,
+  element: HTMLElement,
   formData: FormData,
-  formType: string
+  formType: string | number,
+  includeEmptyItems: boolean = false
 ): Promise<boolean> => {
   try {
     const companyName = formData.companyName || 'Unknown';
@@ -251,7 +274,14 @@ export const generateFormPDF = async (
     const fileName = `${cleanCompanyName}_${formType}_${date}.pdf`;
     
     console.log(`Generating ${formType} PDF for ${companyName}`);
-    return await generatePDF(elementId, fileName);
+    
+    // Create a unique ID for the element if it doesn't have one
+    if (!element.id) {
+      element.id = `pdf-container-${Date.now()}`;
+    }
+    
+    // Now we can pass the element's ID to the generatePDF function
+    return await generatePDF(element.id, fileName);
   } catch (error) {
     console.error('Error in generateFormPDF:', error);
     return false;

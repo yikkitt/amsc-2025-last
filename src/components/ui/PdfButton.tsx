@@ -34,7 +34,21 @@ export const PdfButton: React.FC<PdfButtonProps> = ({
       console.log('Starting PDF generation for form type:', formType);
       console.log('Container element:', containerRef.current);
       
-      await generateFormPDF(containerRef.current, formData, formType, includeEmptyItems);
+      // Ensure the element has an ID
+      if (!containerRef.current.id) {
+        containerRef.current.id = `pdf-container-${Date.now()}`;
+      }
+      
+      const success = await generateFormPDF(
+        containerRef.current, 
+        formData, 
+        formType, 
+        includeEmptyItems
+      );
+      
+      if (!success) {
+        setErrorMessage('Failed to generate PDF. Please try again.');
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error occurred';
       setErrorMessage(`Error generating PDF: ${message}`);
