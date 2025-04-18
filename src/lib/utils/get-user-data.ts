@@ -216,4 +216,78 @@ export async function getUserProfileData(supabase: SupabaseClient) {
     console.error('Error retrieving user profile data:', error)
     return null
   }
+}
+
+/**
+ * Simplified version of getUserProfileData for dashboard components
+ * This function gets data from either amsc_2025_user or profiles table
+ */
+export async function getDashboardUserData(supabase: SupabaseClient) {
+  try {
+    // Get the user's session
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    // If no authenticated user, return null
+    if (!user?.id) {
+      console.log('No authenticated user found for dashboard');
+      return null
+    }
+    
+    console.log('Fetching dashboard user data for ID:', user.id);
+    
+    // First try the amsc_2025_user table (primary data source)
+    const { data: amscUser, error: amscError } = await supabase
+      .from('amsc_2025_user')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+      
+    if (!amscError && amscUser) {
+      console.log('Found user data in amsc_2025_user table');
+      return {
+        id: amscUser.id,
+        company_name: amscUser.company_name,
+        contact_person: amscUser.contact_person,
+        booth_number: amscUser.booth_number,
+        email: amscUser.email || user.email,
+        telephone: amscUser.telephone || amscUser.tel,
+      };
+    }
+    
+    // If not found in amsc_2025_user, try the profiles table
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+      
+    if (!profileError && profileData) {
+      console.log('Found user data in profiles table');
+      return {
+        id: profileData.id,
+        company_name: profileData.company_name,
+        contact_person: profileData.first_name && profileData.last_name 
+          ? `${profileData.first_name} ${profileData.last_name}`
+          : null,
+        booth_number: profileData.booth_number,
+        email: profileData.email || user.email,
+        telephone: profileData.telephone,
+      };
+    }
+    
+    // As a last resort, try to get data from user metadata
+    console.log('Falling back to user metadata for dashboard');
+    return {
+      id: user.id,
+      company_name: user.user_metadata?.company_name,
+      contact_person: user.user_metadata?.contact_person,
+      booth_number: user.user_metadata?.booth_number,
+      email: user.email,
+      telephone: user.user_metadata?.telephone,
+    };
+  
+  } catch (error) {
+    console.error('Error retrieving dashboard user data:', error);
+    return null;
+  }
 } 

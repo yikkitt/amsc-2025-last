@@ -1,8 +1,7 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getDashboardUserData } from '@/lib/utils/get-user-data';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
-import { Database } from '@/types/supabase';
 import VenueFloorPlan from '@/components/dashboard/VenueFloorPlan';
 import DeadlineReminders from '@/components/dashboard/DeadlineReminders';
 import CompanyData from '@/components/dashboard/CompanyData';
@@ -13,75 +12,48 @@ export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 export const revalidate = 0;
 
-// Enhanced function to get complete profile data
-async function getUserProfile(userId: string) {
-  const supabase = createServerComponentClient<Database>({ cookies });
-  
-  try {
-    // Query profiles table for all user data
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-      
-    if (error) {
-      console.error('Error fetching user profile:', error);
-      return null;
-    }
-    
-    console.log('Retrieved company data from Supabase:', {
-      company_name: profile?.company_name,
-      first_name: profile?.first_name,
-      last_name: profile?.last_name,
-      booth_number: profile?.booth_number,
-      email: profile?.email
-    });
-    
-    return profile;
-  } catch (error) {
-    console.error('Unexpected error fetching profile:', error);
-    return null;
-  }
-}
-
 export default async function DashboardPage() {
-  const supabase = createServerComponentClient<Database>({ cookies });
+  // Create Supabase client using the same approach as order forms
+  const supabase = createSupabaseServerClient();
   
   // Get session
   const { data: { session } } = await supabase.auth.getSession();
   
   if (!session) {
+    console.log('No session found, redirecting to signin');
     redirect('/auth/signin');
   }
   
-  // Fetch user's profile data from Supabase
-  const userProfile = await getUserProfile(session.user.id);
+  // Fetch user data using the same utility function used in order forms
+  const userData = await getDashboardUserData(supabase);
+  console.log('Dashboard user data retrieved:', userData);
   
-  if (!userProfile) {
-    console.error('User profile not found in Supabase');
+  if (!userData) {
+    console.error('User data not found in any table');
   }
   
-  // Prepare data for display, defaulting if not available
-  const companyName = userProfile?.company_name || 'Not Available';
-  const contactPerson = userProfile?.first_name && userProfile?.last_name 
-    ? `${userProfile.first_name} ${userProfile.last_name}` 
-    : 'Not Available';
-  const boothNumber = userProfile?.booth_number || 'Not Available';
-  const email = userProfile?.email || session.user.email || 'Not Available';
+  // Prepare display data from userData
+  const companyName = userData?.company_name || 'Not Available';
+  const contactPerson = userData?.contact_person || 'Not Available';
+  const boothNumber = userData?.booth_number || 'Not Available';
+  const email = userData?.email || session.user.email || 'Not Available';
   
-  const profileCompleted = 
-    userProfile?.first_name && 
-    userProfile?.last_name && 
-    userProfile?.company_name && 
-    userProfile?.job_title;
+  // Check if profile is complete for display purposes
+  const profileCompleted = Boolean(
+    userData?.company_name && 
+    userData?.contact_person && 
+    userData?.booth_number
+  );
+  
+  // Extract first name for the welcome banner
+  const firstName = userData?.contact_person?.split(' ')[0] || 'Exhibitor';
   
   return (
     <div className="dashboard-content fade-in">
       <WelcomeBanner 
-        firstName={userProfile?.first_name || 'Exhibitor'} 
+        firstName={firstName} 
         companyName={companyName}
-        profileCompleted={!!profileCompleted}
+        profileCompleted={profileCompleted}
         hideViewFormsButton={true}
       />
       
