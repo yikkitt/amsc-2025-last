@@ -78,9 +78,18 @@ export default function KLCCMapTabs() {
                   fill
                   sizes="(max-width: 768px) 100vw, 1200px"
                   priority
+                  unoptimized
                   quality={100}
                   className="object-contain"
                 />
+                {/* Test image to check path */}
+                <div className="absolute bottom-0 right-0 w-16 h-16">
+                  <img 
+                    src="/images/klcc-floor-plan.png" 
+                    alt="Test image" 
+                    className="w-full h-full opacity-50"
+                  />
+                </div>
               </div>
               
               <p className="text-sm text-gray-600 mt-3">

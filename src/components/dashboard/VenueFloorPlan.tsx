@@ -31,6 +31,7 @@ export default function VenueFloorPlan() {
                 fill
                 sizes="(max-width: 768px) 100vw, 60vw"
                 priority
+                unoptimized
                 quality={100}
                 className={`object-contain transition-all duration-300 origin-center ${isZoomed ? 'scale-225' : 'scale-100'}`}
                 style={{ transformOrigin: 'center center' }}
