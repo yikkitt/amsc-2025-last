@@ -3,8 +3,7 @@ import { generateFormPDF } from '@/lib/pdf/pdfGenerator';
 
 interface PdfButtonProps {
   formData: any;
-  formType: number;
-  includeEmptyItems?: boolean;
+  formType: number | string;
   containerRef: React.RefObject<HTMLElement>;
   className?: string;
 }
@@ -12,7 +11,6 @@ interface PdfButtonProps {
 export const PdfButton: React.FC<PdfButtonProps> = ({
   formData,
   formType,
-  includeEmptyItems = false,
   containerRef,
   className = '',
 }) => {
@@ -42,51 +40,43 @@ export const PdfButton: React.FC<PdfButtonProps> = ({
         return;
       }
       
-      // Ensure the element has an ID
-      if (!containerRef.current.id) {
-        containerRef.current.id = `pdf-container-${Date.now()}`;
-      }
-
-      // Wait a moment for any UI updates to complete
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Convert formType to string if it's a number
+      const formTypeString = typeof formType === 'number' ? `Form${formType}` : formType.toString();
       
+      // Generate PDF using updated parameters
       try {
-        const success = await generateFormPDF(
-          containerRef.current, 
-          formData, 
-          formType, 
-          includeEmptyItems
+        // Call generateFormPDF with the correct parameter order based on the function signature
+        await generateFormPDF(
+          formData,
+          containerRef.current,
+          formTypeString
         );
         
-        if (!success) {
-          setErrorMessage('Failed to generate PDF. Please try again.');
-        } else {
-          // Show success message
-          const notification = document.createElement('div');
-          notification.textContent = 'PDF generated successfully!';
-          notification.style.position = 'fixed';
-          notification.style.bottom = '20px';
-          notification.style.right = '20px';
-          notification.style.backgroundColor = '#4CAF50';
-          notification.style.color = 'white';
-          notification.style.padding = '10px 20px';
-          notification.style.borderRadius = '4px';
-          notification.style.zIndex = '9999';
-          notification.style.opacity = '0.9';
-          
-          document.body.appendChild(notification);
-          
-          // Remove notification after 3 seconds
+        // Show success message
+        const notification = document.createElement('div');
+        notification.textContent = 'PDF generated successfully!';
+        notification.style.position = 'fixed';
+        notification.style.bottom = '20px';
+        notification.style.right = '20px';
+        notification.style.backgroundColor = '#4CAF50';
+        notification.style.color = 'white';
+        notification.style.padding = '10px 20px';
+        notification.style.borderRadius = '4px';
+        notification.style.zIndex = '9999';
+        notification.style.opacity = '0.9';
+        
+        document.body.appendChild(notification);
+        
+        // Remove notification after 3 seconds
+        setTimeout(() => {
+          notification.style.opacity = '0';
+          notification.style.transition = 'opacity 0.5s';
           setTimeout(() => {
-            notification.style.opacity = '0';
-            notification.style.transition = 'opacity 0.5s';
-            setTimeout(() => {
-              if (document.body.contains(notification)) {
-                document.body.removeChild(notification);
-              }
-            }, 500);
-          }, 3000);
-        }
+            if (document.body.contains(notification)) {
+              document.body.removeChild(notification);
+            }
+          }, 500);
+        }, 3000);
       } catch (err) {
         console.error('PDF generation error:', err);
         setErrorMessage(`Error generating PDF: ${err instanceof Error ? err.message : 'Unknown error'}`);

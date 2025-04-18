@@ -107,8 +107,11 @@ export const generatePDF = async (element: HTMLElement, filename: string): Promi
     // Cache the generated PDF
     if (pdfCache.size > 10) {
       // Limit cache size by removing oldest entry
-      const oldestKey = pdfCache.keys().next().value;
-      pdfCache.delete(oldestKey);
+      const iterator = pdfCache.keys();
+      const firstKey = iterator.next().value;
+      if (firstKey) {
+        pdfCache.delete(firstKey);
+      }
     }
     pdfCache.set(cacheKey, pdfBlob);
     

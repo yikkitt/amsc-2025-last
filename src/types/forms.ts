@@ -1,17 +1,18 @@
 export interface FormData {
-  company_name: string
-  contact_person: string
-  booth_number: string
-  telephone: string
-  email: string
-  items?: Array<{
-    description: string
-    quantity: number
-    unit_price: number
-    total: number
-  }>
-  subtotal?: number
-  late_charge?: number
-  grand_total?: number
-  [key: string]: any // Allow for form-specific fields
+  [key: string]: string | number | boolean | null | undefined;
+  companyName?: string;
+  company?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  zipCode?: string;
+  formId?: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
 } 

@@ -85,10 +85,19 @@ const nextConfig = {
             vendor: {
               test: /[\\/]node_modules[\\/]/,
               name(module) {
-                // Get the name of the package
-                const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1];
-                // Return a unique name for the chunk based on the package name
-                return `npm.${packageName.replace('@', '')}`;
+                // Safely get the package name
+                try {
+                  // Get the name of the package
+                  const packagePathMatch = module.context?.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/);
+                  if (!packagePathMatch || !packagePathMatch[1]) {
+                    return 'vendor';
+                  }
+                  // Return a unique name for the chunk based on the package name
+                  return `npm.${packagePathMatch[1].replace('@', '')}`;
+                } catch (err) {
+                  console.warn('Failed to determine package name:', err);
+                  return 'vendor';
+                }
               },
             },
           },
