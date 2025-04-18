@@ -9,9 +9,50 @@ export default function SpecialDesignSamplePage() {
 
   // Function to handle form download
   const handleDownload = (section: string) => {
-    // Create a download filename based on the section
+    // Create filenames based on section
     const filename = `special-design-form-section-${section}.pdf`;
-    alert(`Downloading ${filename}... This is a placeholder. In a real implementation, this would download the actual form.`);
+    
+    // Create a temporary link element
+    const link = document.createElement('a');
+    
+    // In a real implementation, this would point to an actual PDF file
+    // For now, we'll just point to a demo URL that would typically be your API endpoint
+    link.href = `/api/forms/download?file=${filename}`;
+    
+    // Set download attribute to suggest filename
+    link.setAttribute('download', filename);
+    
+    // Hide the element
+    link.style.display = 'none';
+    
+    // Add to DOM, click it, then remove it
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Show a subtle notification instead of an alert
+    const notification = document.createElement('div');
+    notification.textContent = `Downloading ${filename}...`;
+    notification.style.position = 'fixed';
+    notification.style.bottom = '20px';
+    notification.style.right = '20px';
+    notification.style.backgroundColor = '#4CAF50';
+    notification.style.color = 'white';
+    notification.style.padding = '10px 20px';
+    notification.style.borderRadius = '4px';
+    notification.style.zIndex = '9999';
+    notification.style.opacity = '0.9';
+    
+    document.body.appendChild(notification);
+    
+    // Remove notification after 3 seconds
+    setTimeout(() => {
+      notification.style.opacity = '0';
+      notification.style.transition = 'opacity 0.5s';
+      setTimeout(() => {
+        document.body.removeChild(notification);
+      }, 500);
+    }, 3000);
   };
 
   return (
