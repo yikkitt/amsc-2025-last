@@ -224,6 +224,7 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
                       <input
                         type="number"
                         min="0"
+                        step="any"
                         className="w-20 text-center border border-gray-300 rounded p-1 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 mx-auto block"
                         value={item.quantity}
                         onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}

@@ -198,6 +198,7 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
                     <input
                       type="number"
                       min="0"
+                      step="any"
                       value={item.quantity}
                       onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
                       className="w-20 text-center border rounded p-1"

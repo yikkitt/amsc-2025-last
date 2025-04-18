@@ -144,7 +144,7 @@ export default function PerformanceBondForm({ userData }: PerformanceBondFormPro
                     onChange={(e) => setSquareMetre(e.target.value)}
                     className="w-full text-center border rounded p-1"
                     min="0"
-                    step="0.01"
+                    step="any"
                   />
                 </td>
                 <td className="border p-2 text-right">

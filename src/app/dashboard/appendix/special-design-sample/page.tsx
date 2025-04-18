@@ -143,7 +143,7 @@ export default function SpecialDesignSamplePage() {
                 </svg>
                 Download Form
               </button>
-            </div>
+              </div>
             <div className="overflow-hidden border border-gray-200 rounded-lg mb-6">
               <table className="min-w-full divide-y divide-gray-200">
                 <tbody className="divide-y divide-gray-200 bg-white">
@@ -292,8 +292,8 @@ export default function SpecialDesignSamplePage() {
                   </tr>
                 </tbody>
               </table>
-            </div>
           </div>
+        </div>
         )}
         
         {/* Section C */}
@@ -421,8 +421,8 @@ export default function SpecialDesignSamplePage() {
                   </tr>
                 </tbody>
               </table>
-            </div>
-            
+          </div>
+          
             <div className="mb-6">
               <div className="relative w-full h-[400px] border border-gray-200 rounded-lg mb-4">
                 <Image

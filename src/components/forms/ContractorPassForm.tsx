@@ -165,7 +165,8 @@ export default function ContractorPassForm({ userData }: ContractorPassFormProps
                     type="number" 
                     name="quantity" 
                     className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                    min="0" 
+                    min="0"
+                    step="any"
                   />
                 </td>
                 <td className="border border-gray-300 p-2 text-center">25.00</td>
