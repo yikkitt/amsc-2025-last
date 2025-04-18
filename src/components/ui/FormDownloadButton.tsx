@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Download } from 'lucide-react';
 import { generateFormPDF } from '@/lib/pdf/pdfGenerator';
+import { FormData } from '@/types/forms';
 
 interface FormDownloadButtonProps {
-  formData: any;
-  formType: string;
+  formData: FormData;
+  formType: string | number;
   containerRef: React.RefObject<HTMLElement>;
   className?: string;
 }
@@ -32,6 +33,7 @@ export default function FormDownloadButton({
       // Log what's being used for PDF generation
       console.log('Starting PDF generation for form:', formType);
       console.log('Container element:', containerRef.current);
+      console.log('Form data:', formData);
       
       // Verify form data
       if (!formData) {
@@ -41,12 +43,15 @@ export default function FormDownloadButton({
         return;
       }
       
+      // Convert formType to string if it's a number
+      const formTypeString = typeof formType === 'number' ? `Form${formType}` : formType.toString();
+      
       // Generate PDF
       try {
         await generateFormPDF(
-          formData, 
           containerRef.current,
-          formType
+          formTypeString,
+          formData
         );
         
         // Show success message
@@ -124,7 +129,7 @@ export default function FormDownloadButton({
         ) : (
           <>
             <Download className="h-5 w-5 mr-2" />
-            Download Form
+            Download PDF
           </>
         )}
       </button>

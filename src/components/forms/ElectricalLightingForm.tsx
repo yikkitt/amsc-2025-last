@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import React from 'react'
 import UserDataContainer from '@/components/UserDataContainer'
-import { PdfButton } from '@/components/ui/PdfButton'
 import { isPastDeadline } from '@/lib/forms/submitHandler'
+import FormSubmitActions from './FormSubmitActions'
+import { FormData } from '@/types/forms'
 
 interface OrderItem {
   id: string
@@ -87,31 +88,33 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
   const subtotal = calculateTotal();
   const lateCharge = isLateOrder ? subtotal * 0.1 : 0;
 
+  // Prepare form data for submission and PDF generation
+  const formData: FormData = {
+    form_type: 3,
+    company_data: {
+      company_name: userData?.company_name || '',
+      booth_number: userData?.booth_number || '',
+      contact_person: userData?.contact_person || '',
+      email: userData?.email || '',
+    },
+    items: orderItems.filter(item => item.quantity > 0).map(item => ({
+      ...item,
+      total: item.quantity * item.unitCost
+    })),
+    subtotal: subtotal,
+    late_charge: lateCharge,
+    grand_total: subtotal + lateCharge,
+    auth_details: {
+      name: '',
+      designation: '',
+      date: new Date().toISOString(),
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      // Filter items with quantity > 0
-      const selectedItems = orderItems.filter(item => item.quantity > 0);
-      
-      // Create form data object
-      const formData = {
-        form_type: 3,
-        company_data: {
-          company_name: userData?.company_name || '',
-          booth_number: userData?.booth_number || '',
-        },
-        items: selectedItems,
-        subtotal: subtotal,
-        late_charge: lateCharge,
-        grand_total: subtotal + lateCharge,
-        auth_details: {
-          name: '',
-          designation: '',
-          date: new Date().toISOString(),
-        }
-      };
-
       // Submit to Supabase
       const { error } = await supabase.from('form_submissions').insert(formData);
 

@@ -6,6 +6,7 @@ interface PdfButtonProps {
   formType: number | string;
   containerRef: React.RefObject<HTMLElement>;
   className?: string;
+  includeEmptyItems?: boolean;
 }
 
 export const PdfButton: React.FC<PdfButtonProps> = ({
@@ -13,6 +14,7 @@ export const PdfButton: React.FC<PdfButtonProps> = ({
   formType,
   containerRef,
   className = '',
+  includeEmptyItems = false,
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -31,6 +33,7 @@ export const PdfButton: React.FC<PdfButtonProps> = ({
       // Log what's being used for PDF generation
       console.log('Starting PDF generation for form type:', formType);
       console.log('Container element:', containerRef.current);
+      console.log('Form data:', formData); // Added to debug
       
       // Verify form data
       if (!formData) {
@@ -45,11 +48,14 @@ export const PdfButton: React.FC<PdfButtonProps> = ({
       
       // Generate PDF using updated parameters
       try {
-        // Call generateFormPDF with the correct parameter order based on the function signature
+        // NOTE: generateFormPDF expects 3 parameters in this order:
+        // 1. formElement: HTMLElement (containerRef.current)
+        // 2. formType: string (formTypeString)
+        // 3. formData: FormData (formData)
         await generateFormPDF(
-          formData,
           containerRef.current,
-          formTypeString
+          formTypeString,
+          formData
         );
         
         // Show success message

@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
-import { FormData } from '@/types/forms';
+import { FormData, FormItem } from '@/types/forms';
 
 // Cache for loaded images to prevent repeated fetching
 const imageCache = new Map<string, Promise<HTMLImageElement>>();
@@ -225,36 +225,46 @@ const waitForImagesToLoad = (element: HTMLElement): Promise<void> => {
 
 /**
  * Generate a PDF from form data
- * @param formData The form data to include in the PDF
  * @param formElement The form element to convert to PDF
- * @param formType The type of form
+ * @param formType The type of form (e.g. "Form1", "Form2")
+ * @param formData The form data to include in the PDF
  */
 export const generateFormPDF = async (
-  formData: any, 
-  formElement: HTMLElement, 
-  formType: string
+  formElement: HTMLElement,
+  formType: string,
+  formData: FormData
 ): Promise<void> => {
   try {
-    // Clean empty items for better PDF generation
-    const cleanFormData = Object.entries(formData).reduce((acc: any, [key, value]) => {
-      if (value !== '' && value !== null && value !== undefined) {
-        acc[key] = value;
-      }
-      return acc;
-    }, {});
+    console.log('Generating PDF for form type:', formType, 'with data:', formData);
     
     // Create filename based on company name and form type
-    const companyName = cleanFormData.companyName || 
-                        cleanFormData.company || 
-                        'form';
+    let companyName = '';
+    
+    // Try to extract company name from various possible data structures
+    if (formData.company_data && formData.company_data.company_name) {
+      companyName = formData.company_data.company_name;
+    } else if (formData.companyName) {
+      companyName = formData.companyName;
+    } else if (formData.company) {
+      companyName = formData.company;
+    }
+    
+    // Default if no company name found
+    if (!companyName) {
+      companyName = 'form';
+    }
+    
     const sanitizedCompanyName = companyName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     const date = new Date().toISOString().split('T')[0];
     const filename = `${sanitizedCompanyName}_${formType}_${date}.pdf`;
     
     // Generate the PDF
     await generatePDF(formElement, filename);
+    
+    return;
   } catch (error) {
     console.error('Error generating form PDF:', error);
     alert('Failed to generate PDF from form data. Please try again.');
+    throw error;
   }
 }; 
