@@ -13,21 +13,36 @@ export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 export const revalidate = 0;
 
+// Enhanced function to get complete profile data
 async function getUserProfile(userId: string) {
   const supabase = createServerComponentClient<Database>({ cookies });
   
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
+  try {
+    // Query profiles table for all user data
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+      
+    if (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
     
-  if (error) {
-    console.error('Error fetching user profile:', error);
+    console.log('Retrieved company data from Supabase:', {
+      company_name: profile?.company_name,
+      first_name: profile?.first_name,
+      last_name: profile?.last_name,
+      booth_number: profile?.booth_number,
+      email: profile?.email
+    });
+    
+    return profile;
+  } catch (error) {
+    console.error('Unexpected error fetching profile:', error);
     return null;
   }
-  
-  return profile;
 }
 
 export default async function DashboardPage() {
@@ -40,15 +55,21 @@ export default async function DashboardPage() {
     redirect('/auth/signin');
   }
   
-  // Fetch user's profile data
+  // Fetch user's profile data from Supabase
   const userProfile = await getUserProfile(session.user.id);
   
   if (!userProfile) {
-    // Handle case where profile doesn't exist
-    console.error('User profile not found');
+    console.error('User profile not found in Supabase');
   }
   
-  const companyName = userProfile?.company_name || 'Your Company';
+  // Prepare data for display, defaulting if not available
+  const companyName = userProfile?.company_name || 'Not Available';
+  const contactPerson = userProfile?.first_name && userProfile?.last_name 
+    ? `${userProfile.first_name} ${userProfile.last_name}` 
+    : 'Not Available';
+  const boothNumber = userProfile?.booth_number || 'Not Available';
+  const email = userProfile?.email || session.user.email || 'Not Available';
+  
   const profileCompleted = 
     userProfile?.first_name && 
     userProfile?.last_name && 
@@ -64,14 +85,16 @@ export default async function DashboardPage() {
         hideViewFormsButton={true}
       />
       
-      {/* Company Data Section */}
+      {/* Company Data Section - Using data from Supabase */}
       <div className="mb-6">
-        <CompanyData 
-          companyName={userProfile?.company_name || 'Not Available'}
-          contactPerson={`${userProfile?.first_name || ''} ${userProfile?.last_name || ''}`.trim() || 'Not Available'}
-          boothNumber={userProfile?.booth_number || 'Not Available'}
-          email={userProfile?.email || session.user.email || 'Not Available'}
-        />
+        <Suspense fallback={<LoadingBox className="h-24 mb-6" />}>
+          <CompanyData 
+            companyName={companyName}
+            contactPerson={contactPerson}
+            boothNumber={boothNumber}
+            email={email}
+          />
+        </Suspense>
       </div>
       
       {/* Deadlines Section */}
