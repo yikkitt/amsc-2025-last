@@ -118,7 +118,7 @@ export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) 
       }
       
       // Use the syncFormWithSupabase function for submission
-      const result = await syncFormWithSupabase(formData, userData?.company_name);
+      const result = await syncFormWithSupabase(formData);
       
       if (!result.success) {
         throw new Error(result.message);

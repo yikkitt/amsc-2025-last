@@ -68,7 +68,7 @@ export default function AdminFeesForm({ userData }: AdminFeesFormProps) {
       console.log('Submitting form data:', preparedData);
       
       // Use the syncFormWithSupabase function for submission
-      const result = await syncFormWithSupabase(preparedData, userData?.company_name);
+      const result = await syncFormWithSupabase(preparedData);
       
       if (!result.success) {
         throw new Error(result.message);
