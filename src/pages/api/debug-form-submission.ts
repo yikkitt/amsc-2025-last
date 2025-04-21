@@ -11,9 +11,10 @@ export default async function handler(
   }
 
   try {
-    // Parse the form data from the request body
-    const formData = req.body;
+    // Parse the request body
+    const { formData, userId: providedUserId } = req.body;
     console.log('Received form data:', formData);
+    console.log('Provided user ID:', providedUserId);
     
     // Create Supabase client with service role key for admin access
     const supabaseAdmin = createClient(
@@ -29,7 +30,7 @@ export default async function handler(
     
     // Get the user's session from the request headers
     const authHeader = req.headers.authorization;
-    let userId;
+    let userId = providedUserId;
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
@@ -42,32 +43,40 @@ export default async function handler(
         return res.status(401).json({ error: 'Unauthorized', details: authError.message });
       }
       
-      userId = userData.user?.id;
+      // Use the token's user ID if no user ID was provided
+      if (!userId) {
+        userId = userData.user?.id;
+      }
       console.log('Verified user ID:', userId);
-    } else {
-      return res.status(401).json({ error: 'Unauthorized - No valid authentication token provided' });
+    } else if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized - No valid authentication token provided and no user ID specified' });
     }
     
-    // Prepare the data with the verified user ID
+    // Get form type from the data
+    const formType = formData.formType || 'unknown';
+    console.log('Form type:', formType);
+    
+    // Prepare the data to insert
     const submission = {
-      ...formData,
       user_id: userId,
-      updated_at: new Date().toISOString(),
-      submission_date: new Date().toISOString()
+      form_type: formType,
+      data: formData,
+      status: 'submitted',
+      submitted_at: new Date().toISOString()
     };
     
-    console.log('Submitting to form_submissions:', submission);
+    console.log('Submitting to forms table:', submission);
     
-    // Insert into form_submissions table using service role
+    // Insert into forms table using service role
     const { data, error } = await supabaseAdmin
-      .from('form_submissions')
+      .from('forms')
       .insert(submission)
       .select();
     
     if (error) {
-      console.error('Error inserting form submission:', error);
+      console.error('Error inserting form data:', error);
       return res.status(500).json({ 
-        error: 'Failed to insert form submission', 
+        error: 'Failed to insert form data', 
         details: error.message,
         code: error.code,
         hint: error.hint
