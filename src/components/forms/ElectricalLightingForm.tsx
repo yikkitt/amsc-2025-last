@@ -96,7 +96,7 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
     const validGrandTotal = isNaN(grandTotal) ? validSubtotal + validLateCharge : grandTotal;
     
     return {
-      form_type: 3,
+      formType: 3,
       company_data: {
         company_name: userData?.company_name || '',
         booth_number: userData?.booth_number || '',
@@ -137,7 +137,7 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
       }
       
       // Use the syncFormWithSupabase function for submission
-      const result = await syncFormWithSupabase(formData, userData?.company_name);
+      const result = await syncFormWithSupabase(formData);
       
       if (!result.success) throw new Error(result.message);
       
