@@ -103,12 +103,10 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
       items: orderItems
         .filter(item => item.quantity > 0)
         .map(item => ({
-          id: item.id,
           description: item.description,
-          unitCost: item.unitCost,
           quantity: item.quantity,
-          total: item.quantity * item.unitCost,
-          section: item.section
+          unitCost: item.unitCost,
+          total: item.quantity * item.unitCost
         })),
       subtotal: subtotal,
       late_charge: lateCharge,
@@ -144,7 +142,15 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
       // Don't redirect immediately - stay on page so user can download PDF
     } catch (error) {
       console.error('Error submitting form:', error)
-      alert(`Error submitting form: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      let errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      // Check for specific error types from Supabase
+      if (errorMessage.includes('surcharge') || errorMessage.includes('column')) {
+        errorMessage = "There was a database field mismatch. Our team has been notified and will fix this issue.";
+      } else if (errorMessage.includes('duplicate key')) {
+        errorMessage = "You have already submitted this form. Please view your submissions in the dashboard.";
+      }
+      
+      alert(`Error submitting form: ${errorMessage}`);
     } finally {
       setIsSubmitting(false)
     }
