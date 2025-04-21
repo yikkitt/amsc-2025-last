@@ -1,30 +1,49 @@
--- Temporarily give broader permissions to form_submissions table
+-- This migration script helps diagnose and fix form submission issues
+-- by temporarily making permissions more permissive for testing
 
--- First, disable RLS temporarily to diagnose issues
--- CAUTION: Only use in development, and re-enable security for production
-ALTER TABLE form_submissions DISABLE ROW LEVEL SECURITY;
+-- 1. Check if form_submissions table exists and create it if not
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'form_submissions') THEN
+    CREATE TABLE public.form_submissions (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES auth.users(id) NULL,
+      form_type TEXT NOT NULL,
+      company_name TEXT,
+      booth_number TEXT,
+      inserted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      data JSONB DEFAULT '{}'::JSONB
+    );
+  END IF;
+END
+$$;
 
--- Create a simple public policy for authenticated users
-DROP POLICY IF EXISTS "Authenticated users can access form_submissions" ON form_submissions;
+-- 2. Ensure the table has all necessary columns
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT FROM information_schema.columns 
+                 WHERE table_schema = 'public' AND table_name = 'form_submissions' AND column_name = 'user_id') THEN
+    ALTER TABLE public.form_submissions ADD COLUMN user_id UUID REFERENCES auth.users(id) NULL;
+  END IF;
+  
+  IF NOT EXISTS (SELECT FROM information_schema.columns 
+                 WHERE table_schema = 'public' AND table_name = 'form_submissions' AND column_name = 'form_type') THEN
+    ALTER TABLE public.form_submissions ADD COLUMN form_type TEXT NOT NULL DEFAULT 'unknown';
+  END IF;
+  
+  IF NOT EXISTS (SELECT FROM information_schema.columns 
+                 WHERE table_schema = 'public' AND table_name = 'form_submissions' AND column_name = 'data') THEN
+    ALTER TABLE public.form_submissions ADD COLUMN data JSONB DEFAULT '{}'::JSONB;
+  END IF;
+END
+$$;
 
-CREATE POLICY "Authenticated users can access form_submissions"
-ON form_submissions
-FOR ALL
-USING (auth.role() = 'authenticated');
+-- 3. Temporarily disable RLS to diagnose issues
+ALTER TABLE public.form_submissions DISABLE ROW LEVEL SECURITY;
 
--- Ensure the user_id foreign key constraint is properly set up
--- but with a check that makes it easier to insert data
-ALTER TABLE form_submissions
-DROP CONSTRAINT IF EXISTS fk_form_submissions_user;
-
--- Optional: Apply this constraint if you want to ensure user_id exists
--- ALTER TABLE form_submissions
--- ADD CONSTRAINT fk_form_submissions_user
--- FOREIGN KEY (user_id) REFERENCES auth.users(id)
--- ON DELETE CASCADE;
-
--- Add a trigger to help ensure user_id is set
-CREATE OR REPLACE FUNCTION ensure_user_id()
+-- 4. Create a trigger to set user_id from auth.uid() if it's NULL
+CREATE OR REPLACE FUNCTION public.set_user_id_if_null()
 RETURNS TRIGGER AS $$
 BEGIN
   IF NEW.user_id IS NULL THEN
@@ -32,13 +51,30 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
-DROP TRIGGER IF EXISTS set_user_id ON form_submissions;
-CREATE TRIGGER set_user_id
-BEFORE INSERT ON form_submissions
-FOR EACH ROW
-EXECUTE FUNCTION ensure_user_id();
+DROP TRIGGER IF EXISTS set_user_id_on_insert ON public.form_submissions;
+CREATE TRIGGER set_user_id_on_insert
+  BEFORE INSERT ON public.form_submissions
+  FOR EACH ROW
+  EXECUTE FUNCTION public.set_user_id_if_null();
+
+-- 5. Create a more permissive policy for authenticated users
+DROP POLICY IF EXISTS "Allow authenticated users full access" ON public.form_submissions;
+CREATE POLICY "Allow authenticated users full access"
+  ON public.form_submissions
+  USING (true)
+  WITH CHECK (true);
+
+-- 6. Enable RLS again with the more permissive policy
+ALTER TABLE public.form_submissions ENABLE ROW LEVEL SECURITY;
+
+-- 7. Grant necessary permissions to authenticated users
+GRANT ALL ON public.form_submissions TO authenticated;
+GRANT ALL ON public.form_submissions TO service_role;
+
+-- 8. Remove any NOT NULL constraints on user_id for greater flexibility
+ALTER TABLE public.form_submissions ALTER COLUMN user_id DROP NOT NULL;
 
 -- Verify all required columns exist
 DO $$

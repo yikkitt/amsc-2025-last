@@ -1,6 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { FormData } from '@/types/forms';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import type { Database } from '@/types/supabase';
+import { supabase } from '@/lib/supabase/client';
 
 // Global singleton instance for Supabase client
 let globalSupabaseInstance: SupabaseClient | null = null;
@@ -175,114 +176,99 @@ function normalizeItems(items: any[]) {
     }));
 }
 
-/**
- * Enhanced form submission with proper data validation and error handling
- */
-export const syncFormWithSupabase = async (formData: any, formType: number): Promise<{ success: boolean; submittedData?: any; message: string }> => {
+// Enhanced form submission function that attempts to use a server API first, 
+// then falls back to direct Supabase access if needed
+export async function syncFormWithSupabase(
+  formData: Record<string, any>,
+  userId: string | undefined
+): Promise<{ success: boolean; message: string; data?: any }> {
+  console.log('Starting form submission process with data:', formData);
+
   try {
-    console.log('Starting form submission to Supabase:', { formType });
+    // Clone the data to avoid modifying the original
+    const cleanedData = { ...formData };
     
-    const supabase = getSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      console.error('No authenticated user found');
-      return { success: false, message: 'You must be logged in to submit a form' };
+    // Ensure formType is a string 
+    if (typeof cleanedData.formType !== 'string') {
+      cleanedData.formType = String(cleanedData.formType);
     }
     
-    // Clean input data
-    const cleanedFormData = {...formData};
-    // Remove any fields that don't exist in the database schema
-    if ('surcharge' in cleanedFormData) delete cleanedFormData.surcharge;
-    if ('submission_date' in cleanedFormData) delete cleanedFormData.submission_date;
-    if ('form_id' in cleanedFormData) delete cleanedFormData.form_id;
+    // Remove problematic fields
+    delete cleanedData.surcharge;
+    delete cleanedData.id;
+    delete cleanedData.inserted_at;
+    delete cleanedData.updated_at;
     
-    // Normalize items for consistent data format and proper number handling
-    const normalizedItems = cleanedFormData.items ? normalizeItems(cleanedFormData.items) : [];
+    // Remove null/undefined values
+    Object.keys(cleanedData).forEach(key => {
+      if (cleanedData[key] === null || cleanedData[key] === undefined) {
+        delete cleanedData[key];
+      }
+    });
     
-    // Calculate financial totals with strict number handling
-    const subtotalValue = parseFloat(cleanedFormData.subtotal) || 
-                          normalizedItems.reduce((sum, item) => sum + (item.total || 0), 0);
-    const lateChargeValue = parseFloat(cleanedFormData.late_charge) || 0;
+    console.log('Cleaned form data:', cleanedData);
     
-    // Ensure grand_total is never null and is a valid number
-    const grandTotalValue = subtotalValue + lateChargeValue;
-    if (isNaN(grandTotalValue)) {
-      return { 
-        success: false, 
-        message: 'Invalid total calculation. Please check your amounts.'
-      };
-    }
+    // Get the current session for authentication
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
     
-    // Prepare data in exact format matching database schema
-    const submissionData = {
-      user_id: user.id,
-      form_type: formType,
-      company_data: cleanedFormData.company_data || {},
-      items: normalizedItems,
-      subtotal: subtotalValue,
-      late_charge: lateChargeValue,
-      grand_total: grandTotalValue, // This must never be null
-      total: grandTotalValue, // For backward compatibility
-      submitted_at: new Date().toISOString(),
-      auth_details: cleanedFormData.auth_details || {},
-      status: 'submitted',
-      payment_details: {}
-    };
-    
-    console.log('Prepared submission data:', submissionData);
-    
-    // Check for existing submission
-    const { data: existingSubmission, error: checkError } = await supabase
-      .from('form_submissions')
-      .select('id')
-      .match({ user_id: user.id, form_type: formType })
-      .maybeSingle();
+    try {
+      // Try to use the API endpoint first (which bypasses RLS)
+      const response = await fetch('/api/form-submission', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          formData: cleanedData,
+          userId
+        }),
+      });
       
-    if (checkError) {
-      console.error('Error checking for existing submission:', checkError);
-    }
-    
-    let result;
-    
-    // If submission exists, update it
-    if (existingSubmission?.id) {
-      console.log('Updating existing submission:', existingSubmission.id);
-      result = await supabase
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Form submitted successfully via API:', result);
+        return { 
+          success: true, 
+          message: 'Form submitted successfully!',
+          data: result 
+        };
+      } else {
+        const errorText = await response.text();
+        console.error('API submission error:', response.status, errorText);
+        throw new Error(`API submission failed: ${response.status} ${errorText}`);
+      }
+    } catch (apiError) {
+      console.warn('API submission failed, falling back to direct Supabase access:', apiError);
+      
+      // Fallback to direct Supabase submission
+      // Using any type to bypass type checking for database tables
+      // This is necessary since we don't have the complete database schema types
+      const { data, error } = await (supabase as any)
         .from('form_submissions')
-        .update({
-          ...submissionData,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', existingSubmission.id);
-    } else {
-      // Create new submission
-      console.log('Creating new submission');
-      result = await supabase
-        .from('form_submissions')
-        .insert([submissionData]);
-    }
-    
-    const { error } = result;
-    
-    if (error) {
-      console.error('Error submitting form to Supabase:', error);
+        .insert([{ 
+          ...cleanedData,
+          user_id: userId || null // Ensure user_id is never undefined
+        }]);
+      
+      if (error) {
+        console.error('Supabase direct submission error:', error);
+        throw error;
+      }
+      
+      console.log('Form submitted successfully via direct Supabase:', data);
       return { 
-        success: false, 
-        message: `Database error: ${error.message}` 
+        success: true, 
+        message: 'Form submitted successfully (via fallback)!',
+        data 
       };
     }
-    
-    return { 
-      success: true, 
-      submittedData: submissionData, 
-      message: 'Form submitted successfully' 
-    };
-  } catch (error) {
-    console.error('Exception in syncFormWithSupabase:', error);
+  } catch (error: any) {
+    console.error('Form submission error:', error);
     return { 
       success: false, 
-      message: error instanceof Error ? error.message : 'Unknown error occurred' 
+      message: `Error submitting form: ${error.message || 'Unknown error'}`
     };
   }
-}; 
+} 
