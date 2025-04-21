@@ -1,24 +1,35 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { getSupabaseUrlClient, getSupabaseKeyClient } from '../supabase/client';
 import { FormData } from '@/types/forms';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 // Singleton pattern for Supabase client
 let supabaseInstance: SupabaseClient | null = null;
 
-// Get or create Supabase client instance
+// Get or create Supabase client instance 
 const getSupabaseClient = () => {
-  if (supabaseInstance) return supabaseInstance;
+  if (typeof window === 'undefined') {
+    // Server-side - create a new instance
+    return createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    );
+  }
   
-  const supabaseUrl = getSupabaseUrlClient();
-  const supabaseKey = getSupabaseKeyClient();
-  
-  supabaseInstance = createClient(supabaseUrl, supabaseKey, {
-    auth: {
-      persistSession: true,
-      storageKey: 'supabase-auth',
-    }
-  });
+  // Client-side - use singleton
+  if (!supabaseInstance) {
+    console.log('Creating new Supabase client instance');
+    supabaseInstance = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+      {
+        auth: {
+          persistSession: true,
+          storage: window.localStorage,
+          storageKey: 'supabase-auth-token' // Use a unique key to avoid conflicts
+        }
+      }
+    );
+  }
   
   return supabaseInstance;
 };
@@ -93,10 +104,7 @@ export async function submitForm(
   formId: number
 ) {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-    );
+    const supabase = getSupabaseClient();
 
     // Calculate subtotal based on items if present
     const subtotal = formData.items?.reduce(
@@ -117,7 +125,7 @@ export async function submitForm(
       late_charge: lateCharge,
       grand_total: subtotal + lateCharge,
       form_id: formId,
-      submission_date: new Date().toISOString(),
+      submitted_at: new Date().toISOString(),
       past_deadline: pastDeadline
     };
 
@@ -167,22 +175,29 @@ export const syncFormWithSupabase = async (formData: any, formType: number): Pro
       return { success: false, message: 'You must be logged in to submit a form' };
     }
     
-    // Normalize items to ensure consistent data format
-    const normalizedItems = formData.items ? normalizeItems(formData.items) : [];
+    // Remove any references to non-existent columns like 'surcharge'
+    const cleanedFormData = {...formData};
+    if ('surcharge' in cleanedFormData) {
+      delete cleanedFormData.surcharge;
+    }
     
-    // Prepare data in the format matching the database schema
+    // Normalize items to ensure consistent data format
+    const normalizedItems = cleanedFormData.items ? normalizeItems(cleanedFormData.items) : [];
+    
+    // Prepare data in the format matching the database schema exactly
     const submissionData = {
       user_id: user.id,
       form_type: formType,
-      company_data: formData.company_data || {},
+      company_data: cleanedFormData.company_data || {},
       items: normalizedItems,
-      subtotal: parseFloat(formData.subtotal) || 0,
-      late_charge: parseFloat(formData.late_charge) || 0,
-      grand_total: parseFloat(formData.grand_total) || 0,
+      subtotal: parseFloat(cleanedFormData.subtotal) || 0,
+      late_charge: parseFloat(cleanedFormData.late_charge) || 0,
+      grand_total: parseFloat(cleanedFormData.grand_total) || 0,
       submitted_at: new Date().toISOString(),
-      past_deadline: formData.past_deadline || false,
-      auth_details: formData.auth_details || {},
-      status: 'submitted'
+      auth_details: cleanedFormData.auth_details || {},
+      // Fields confirmed to exist in the database schema
+      status: 'submitted',
+      payment_details: {}
     };
     
     console.log('Prepared submission data:', submissionData);
