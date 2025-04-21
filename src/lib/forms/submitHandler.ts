@@ -145,6 +145,21 @@ export async function syncFormWithSupabase(
     // Get Supabase client
     const supabase = getSupabaseBrowserClient();
     
+    // Get current user session - needed for RLS policies
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session || !session.user) {
+      console.error('No authenticated user session found');
+      return {
+        success: false,
+        message: 'You must be logged in to submit forms. Please sign in and try again.',
+      };
+    }
+    
+    // Get the current user ID from the session
+    const userId = session.user.id;
+    console.log('Current authenticated user ID:', userId);
+    
     // Ensure formType is a number
     const formId = typeof formType === 'number' ? formType : parseInt(formType.toString()) || 0;
     
@@ -181,10 +196,13 @@ export async function syncFormWithSupabase(
     // Ensure required fields exist
     const enhancedFormData = {
       ...cleanedFormData,
+      // Explicitly set the user_id to the current authenticated user's ID (required for RLS)
+      user_id: userId,
       items: formData.items || [],
       subtotal: subtotal,
       late_charge: lateCharge,
       grand_total: grandTotal,
+      total: grandTotal, // Add total field to match grand_total
       form_type: formId,
       submission_date: timestamp,
       updated_at: timestamp,
