@@ -176,148 +176,110 @@ function normalizeItems(items: any[]) {
     }));
 }
 
-// Enhanced form submission function that attempts to use a server API first, 
-// then falls back to direct Supabase access if needed
+/**
+ * Synchronizes form data with Supabase
+ * @param formData - The form data to submit
+ * @param userId - The user ID (optional)
+ * @returns Object with success status and message
+ */
 export async function syncFormWithSupabase(
   formData: Record<string, any>,
-  userId: string | undefined
-): Promise<{ success: boolean; message: string; data?: any }> {
-  console.log('Starting form submission process with data:', formData);
-
+  userId?: string
+): Promise<{ success: boolean; message: string }> {
   try {
-    // Clone the data to avoid modifying the original
+    console.log("Syncing form data with Supabase:", formData);
+    console.log("User ID:", userId);
+
+    // Clone the form data to avoid mutation
     const cleanedData = { ...formData };
-    
-    // Ensure formType is a string 
-    if (typeof cleanedData.form_type !== 'string' && cleanedData.form_type !== undefined) {
-      cleanedData.form_type = String(cleanedData.form_type);
+
+    // Ensure formType is a string
+    if (cleanedData.formType && typeof cleanedData.formType !== "string") {
+      cleanedData.formType = String(cleanedData.formType);
     }
-    
-    // Ensure grand_total is a valid number (never null)
-    if (cleanedData.grand_total === undefined || cleanedData.grand_total === null || isNaN(cleanedData.grand_total)) {
-      // Set to subtotal or 0 if not available
-      cleanedData.grand_total = cleanedData.subtotal || 0;
-    }
-    
-    // Remove ALL potentially problematic fields
-    const fieldsToRemove = [
-      'surcharge', 'id', 'inserted_at', 'updated_at', 
-      'created_at', 'late_charge', 'status'
-    ];
-    
-    fieldsToRemove.forEach(field => {
-      delete cleanedData[field];
-    });
-    
-    // Handle case where form data has items with surcharge property
-    if (cleanedData.items && Array.isArray(cleanedData.items)) {
-      cleanedData.items = cleanedData.items.map(item => {
-        const cleanItem = { ...item };
-        delete cleanItem.surcharge;
-        return cleanItem;
-      });
-    }
-    
-    // Remove null/undefined values
-    Object.keys(cleanedData).forEach(key => {
+
+    // Remove problematic fields
+    delete cleanedData.surcharge;
+    delete cleanedData.id;
+    delete cleanedData.inserted_at;
+    delete cleanedData.updated_at;
+
+    // Remove null or undefined values
+    Object.keys(cleanedData).forEach((key) => {
       if (cleanedData[key] === null || cleanedData[key] === undefined) {
         delete cleanedData[key];
       }
     });
-    
-    // Re-add grand_total after removing null values
-    if (!cleanedData.grand_total) {
-      cleanedData.grand_total = 0;
-    }
-    
-    console.log('Cleaned form data:', cleanedData);
-    
-    // Get the current session for authentication
-    const supabaseClient = supabase; // Get a reference to avoid null check warnings
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    const token = session?.access_token;
-    
+
+    console.log("Cleaned data:", cleanedData);
+
+    // Try to submit to API endpoint first
     try {
-      // Try to use the API endpoint (correct path for Next.js App Router)
-      const response = await fetch('/api/form-submission', {
-        method: 'POST',
+      console.log("Attempting API submission");
+      
+      const token = (await supabase.auth.getSession())?.data?.session?.access_token;
+      if (!token) {
+        throw new Error("No authentication token available");
+      }
+
+      const response = await fetch("/api/debug-form-submission", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           formData: cleanedData,
-          userId
+          userId: userId,
         }),
       });
+
+      const result = await response.json();
       
-      if (response.ok) {
-        const result = await response.json();
-        console.log('Form submitted successfully via API:', result);
-        return { 
-          success: true, 
-          message: 'Form submitted successfully!',
-          data: result 
-        };
-      } else {
-        const errorText = await response.text();
-        console.error('API submission error:', response.status, errorText);
-        throw new Error(`API submission failed: ${response.status} ${errorText}`);
+      if (!response.ok) {
+        throw new Error(result.message || "API submission failed");
       }
+      
+      console.log("API submission successful:", result);
+      return { success: true, message: "Form submitted successfully via API" };
     } catch (apiError) {
-      console.warn('API submission failed, falling back to direct Supabase access:', apiError);
+      console.error("API submission failed, falling back to direct Supabase access:", apiError);
       
-      // Convert form data to a flattened format for database insertion
-      const flattenedData: Record<string, any> = {
-        ...cleanedData,
-        user_id: userId || null,
-        // Ensure grand_total is set
-        grand_total: typeof cleanedData.grand_total === 'number' ? cleanedData.grand_total : 0
-      };
+      // Fall back to direct Supabase access
+      const formType = cleanedData.formType || "unknown";
       
-      // For arrays or complex objects like 'items', convert to JSON string or JSONB
-      for (const key in flattenedData) {
-        if (key !== 'form_type' && key !== 'company_name' && key !== 'booth_number' && 
-            key !== 'user_id' && key !== 'grand_total') {
-          if (typeof flattenedData[key] === 'object' && flattenedData[key] !== null) {
-            // Store complex objects in a 'data' JSONB field
-            if (!flattenedData.data) flattenedData.data = {};
-            flattenedData.data[key] = flattenedData[key];
-            delete flattenedData[key];
-          }
+      if (!userId) {
+        const authUser = (await supabase.auth.getUser()).data.user;
+        userId = authUser?.id;
+        
+        if (!userId) {
+          throw new Error("User is not authenticated");
         }
       }
-      
-      // Final check to ensure grand_total is valid
-      if (flattenedData.grand_total === undefined || flattenedData.grand_total === null) {
-        flattenedData.grand_total = 0;
-      }
-      
-      console.log('Sending flattened data to Supabase:', flattenedData);
-      
-      // Fallback to direct Supabase submission
-      const { data, error } = await (supabaseClient as any)
-        .from('form_submissions')
-        .insert([flattenedData])
-        .select();
-      
+
+      const { data, error } = await supabase
+        .from("forms")
+        .insert({
+          user_id: userId,
+          form_type: formType,
+          data: cleanedData,
+          status: "submitted",
+          submitted_at: new Date().toISOString(),
+        });
+
       if (error) {
-        console.error('Supabase direct submission error:', error);
+        console.error("Supabase error:", error);
         throw error;
       }
-      
-      console.log('Form submitted successfully via direct Supabase:', data);
-      return { 
-        success: true, 
-        message: 'Form submitted successfully (via fallback)!',
-        data 
-      };
+
+      console.log("Form submission successful:", data);
+      return { success: true, message: "Form submitted successfully" };
     }
-  } catch (error: any) {
-    console.error('Form submission error:', error);
-    return { 
-      success: false, 
-      message: `Error submitting form: ${error.message || 'Unknown error'}`
+  } catch (error) {
+    console.error("Form submission error:", error);
+    return {
+      success: false,
+      message: `Error submitting form: ${(error as Error).message}`,
     };
   }
 } 
