@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import UserDataContainer from '@/components/UserDataContainer'
+import { syncFormWithSupabase } from '@/lib/forms/submitHandler'
+import { PdfButton } from '@/components/ui/PdfButton'
 
 interface OrderItem {
   id: string
@@ -32,8 +34,10 @@ interface PrintingOrderFormProps {
 
 export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) {
   const router = useRouter()
-  const supabase = getSupabaseBrowserClient()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formSubmitted, setFormSubmitted] = useState(false)
+  const [submittedData, setSubmittedData] = useState<any>(null)
+  const formRef = useRef<HTMLDivElement>(null)
   const [orderItems, setOrderItems] = useState<OrderItem[]>([
     { id: '301', description: 'Digital Inkjet Print on Internal System Panel - Poles will be visible', printableSize: '950mm x 2350mmH', unitPrice: 450, quantity: 0, image: '/products/digital-inkjet.jpg', unit: 'panel' },
     { id: '302', description: 'Digital Print on Compressed Foam Panel - Poles will not be visible', printableSize: '1000mm x 2440mmH', unitPrice: 550, quantity: 0, image: '/products/compressed-foam.jpg', unit: 'panel' },
@@ -66,39 +70,85 @@ export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) 
     return calculateSubTotal() + calculateSurcharge()
   }
 
+  const prepareFormData = () => {
+    const subtotal = calculateSubTotal();
+    const surcharge = calculateSurcharge();
+    const grandTotal = calculateGrandTotal();
+    
+    // Ensure all monetary values are valid numbers
+    const validSubtotal = isNaN(subtotal) ? 0 : subtotal;
+    const validSurcharge = isNaN(surcharge) ? 0 : surcharge;
+    const validGrandTotal = isNaN(grandTotal) ? validSubtotal + validSurcharge : grandTotal;
+    
+    return {
+      form_type: 5,
+      company_name: userData?.company_name || '',
+      booth_number: userData?.booth_number || '',
+      items: orderItems
+        .filter(item => item.quantity > 0)
+        .map(item => ({
+          id: item.id,
+          description: item.description,
+          printableSize: item.printableSize,
+          unitPrice: item.unitPrice,
+          quantity: item.quantity,
+          total: item.unitPrice * item.quantity
+        })),
+      subtotal: validSubtotal,
+      grand_total: validGrandTotal,
+      late_charge: validSurcharge,
+      auth_details: {
+        name: '',
+        designation: '',
+        date: new Date().toISOString(),
+      }
+    };
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      const selectedItems = orderItems.filter(item => item.quantity > 0)
-      const { error } = await supabase.from('form_submissions').insert({
-        form_type: 5,
-        company_data: {
-          company_name: userData?.company_name || '',
-          booth_number: userData?.booth_number || '',
-        },
-        items: selectedItems,
-        subtotal: calculateSubTotal(),
-        surcharge: calculateSurcharge(),
-        grand_total: calculateGrandTotal(),
-        auth_details: {
-          name: '',
-          designation: '',
-          date: new Date().toISOString(),
-        }
-      })
-
-      if (error) throw error
-      // router.refresh()
+      const formData = prepareFormData();
+      console.log('Prepared form data:', formData);
+      
+      // Verify grand_total is not null or undefined
+      if (formData.grand_total === null || formData.grand_total === undefined || isNaN(formData.grand_total)) {
+        throw new Error('Invalid grand total amount. Please try again.');
+      }
+      
+      // Use the syncFormWithSupabase function for submission
+      const result = await syncFormWithSupabase(formData, userData?.company_name);
+      
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+      
+      // Store submitted data for PDF generation
+      setSubmittedData(formData);
+      setFormSubmitted(true);
+      
+      // Show success message
+      alert("Form submitted successfully!");
     } catch (error) {
       console.error('Error submitting form:', error)
+      let errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      // Check for specific error types from Supabase
+      if (errorMessage.includes('violates not-null constraint')) {
+        errorMessage = "Required form fields are missing. Please ensure all required fields are filled.";
+      } else if (errorMessage.includes('duplicate key')) {
+        errorMessage = "You have already submitted this form. Please view your submissions in the dashboard.";
+      }
+      
+      alert(`Error submitting form: ${errorMessage}`);
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-md">
+    <div ref={formRef} className="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-md">
       {/* Form Header */}
       <div className="text-center mb-8 border-b border-gray-200 pb-6">
         <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 5</h1>
@@ -284,20 +334,40 @@ export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) 
 
         {/* Form Actions */}
         <div className="flex justify-center space-x-6">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="px-8 py-3 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit Form'}
-          </button>
+          {formSubmitted ? (
+            <>
+              <PdfButton
+                formData={submittedData}
+                formType={5}
+                containerRef={formRef}
+                className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => router.push('/dashboard/order-forms')}
+                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
+              >
+                Return to Dashboard
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="px-8 py-3 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit Form'}
+              </button>
+            </>
+          )}
         </div>
       </form>
     </div>

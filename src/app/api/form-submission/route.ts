@@ -59,12 +59,15 @@ export async function POST(request: NextRequest) {
         company_name: cleanedData.company_name,
         booth_number: cleanedData.booth_number,
         user_id: userId || null,
-        data: {} // Store complex objects in JSONB data field
+        data: {}, // Store complex objects in JSONB data field
+        // Ensure grand_total is always a valid number and never null
+        grand_total: typeof cleanedData.grand_total === 'number' ? cleanedData.grand_total : 0
       };
       
       // Store objects and arrays in the data JSONB field
       for (const key in cleanedData) {
-        if (key !== 'form_type' && key !== 'company_name' && key !== 'booth_number' && key !== 'user_id') {
+        if (key !== 'form_type' && key !== 'company_name' && key !== 'booth_number' && 
+            key !== 'user_id' && key !== 'grand_total') {
           if (typeof cleanedData[key] === 'object') {
             processedData.data[key] = cleanedData[key];
           } else {
@@ -72,6 +75,11 @@ export async function POST(request: NextRequest) {
             processedData[key] = cleanedData[key];
           }
         }
+      }
+      
+      // Double-check that grand_total is still set and valid
+      if (processedData.grand_total === undefined || processedData.grand_total === null) {
+        processedData.grand_total = 0;
       }
       
       console.log('Processed data for submission:', processedData);

@@ -193,6 +193,12 @@ export async function syncFormWithSupabase(
       cleanedData.form_type = String(cleanedData.form_type);
     }
     
+    // Ensure grand_total is a valid number (never null)
+    if (cleanedData.grand_total === undefined || cleanedData.grand_total === null || isNaN(cleanedData.grand_total)) {
+      // Set to subtotal or 0 if not available
+      cleanedData.grand_total = cleanedData.subtotal || 0;
+    }
+    
     // Remove ALL potentially problematic fields
     const fieldsToRemove = [
       'surcharge', 'id', 'inserted_at', 'updated_at', 
@@ -218,6 +224,11 @@ export async function syncFormWithSupabase(
         delete cleanedData[key];
       }
     });
+    
+    // Re-add grand_total after removing null values
+    if (!cleanedData.grand_total) {
+      cleanedData.grand_total = 0;
+    }
     
     console.log('Cleaned form data:', cleanedData);
     
@@ -259,17 +270,27 @@ export async function syncFormWithSupabase(
       // Convert form data to a flattened format for database insertion
       const flattenedData: Record<string, any> = {
         ...cleanedData,
-        user_id: userId || null
+        user_id: userId || null,
+        // Ensure grand_total is set
+        grand_total: typeof cleanedData.grand_total === 'number' ? cleanedData.grand_total : 0
       };
       
       // For arrays or complex objects like 'items', convert to JSON string or JSONB
       for (const key in flattenedData) {
-        if (typeof flattenedData[key] === 'object' && flattenedData[key] !== null) {
-          // Store complex objects in a 'data' JSONB field
-          if (!flattenedData.data) flattenedData.data = {};
-          flattenedData.data[key] = flattenedData[key];
-          delete flattenedData[key];
+        if (key !== 'form_type' && key !== 'company_name' && key !== 'booth_number' && 
+            key !== 'user_id' && key !== 'grand_total') {
+          if (typeof flattenedData[key] === 'object' && flattenedData[key] !== null) {
+            // Store complex objects in a 'data' JSONB field
+            if (!flattenedData.data) flattenedData.data = {};
+            flattenedData.data[key] = flattenedData[key];
+            delete flattenedData[key];
+          }
         }
+      }
+      
+      // Final check to ensure grand_total is valid
+      if (flattenedData.grand_total === undefined || flattenedData.grand_total === null) {
+        flattenedData.grand_total = 0;
       }
       
       console.log('Sending flattened data to Supabase:', flattenedData);
