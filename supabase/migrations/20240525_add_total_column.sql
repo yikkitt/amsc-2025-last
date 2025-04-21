@@ -15,7 +15,7 @@ BEGIN
     
     -- Add a trigger to keep 'total' and 'grand_total' in sync
     CREATE OR REPLACE FUNCTION sync_total_with_grand_total()
-    RETURNS TRIGGER AS $$
+    RETURNS TRIGGER AS $TRIG$
     BEGIN
       IF TG_OP = 'INSERT' OR NEW.grand_total != OLD.grand_total THEN
         NEW.total := NEW.grand_total;
@@ -27,7 +27,7 @@ BEGIN
       
       RETURN NEW;
     END;
-    $$ LANGUAGE plpgsql;
+    $TRIG$ LANGUAGE plpgsql;
     
     -- Create triggers for both directions
     DROP TRIGGER IF EXISTS sync_total_trigger ON form_submissions;
