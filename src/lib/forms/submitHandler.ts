@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { FormData } from '@/types/forms';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 /**
  * Checks if the current date is past the form submission deadline
@@ -130,160 +131,102 @@ export async function submitForm(
  * @param formType The type of form (number or string)
  * @returns Object with success status, data and message
  */
-export async function syncFormWithSupabase(
-  formData: FormData,
-  formType: number | string
-): Promise<{
-  success: boolean;
-  data?: any;
-  message: string;
-  submittedData?: FormData;
-}> {
+export async function syncFormWithSupabase(formData: any, formType: number) {
   try {
-    console.log('Starting form submission to Supabase:', { formType, formData });
+    console.log('Starting form submission with data:', formData);
     
-    // Get Supabase client
-    const supabase = getSupabaseBrowserClient();
+    // Get current user from supabase
+    const supabase = createClientComponentClient();
+    const { data: { user } } = await supabase.auth.getUser();
     
-    // Get current user session - needed for RLS policies
-    const { data: { session } } = await supabase.auth.getSession();
+    if (!user) {
+      return { success: false, submittedData: null, message: "User not authenticated." };
+    }
+
+    // Determine form_id
+    const form_id = Number(formType);
     
-    if (!session || !session.user) {
-      console.error('No authenticated user session found');
-      return {
-        success: false,
-        message: 'You must be logged in to submit forms. Please sign in and try again.',
-      };
+    // Normalize items field (could be items or orderItems depending on form type)
+    let normalizedItems = [];
+    if (formData.items && Array.isArray(formData.items)) {
+      normalizedItems = formData.items
+        .filter((item: any) => item.quantity > 0)
+        .map((item: any) => {
+          // Keep only the essential data for each item (especially description)
+          return {
+            description: item.description,
+            quantity: item.quantity,
+            unitCost: item.unitCost || item.price || 0,
+            total: item.total || (item.quantity * (item.unitCost || item.price || 0)),
+            // Add any other essential fields needed for reporting
+            id: item.id
+          };
+        });
+    } else if (formData.orderItems && Array.isArray(formData.orderItems)) {
+      normalizedItems = formData.orderItems
+        .filter((item: any) => item.quantity > 0)
+        .map((item: any) => ({
+          description: item.description,
+          quantity: item.quantity,
+          price: item.price || item.unitCost || 0,
+          total: item.total || (item.quantity * (item.price || item.unitCost || 0))
+        }));
     }
     
-    // Get the current user ID from the session
-    const userId = session.user.id;
-    const accessToken = session.access_token;
-    console.log('Current authenticated user ID:', userId);
-    
-    // Ensure formType is a number
-    const formId = typeof formType === 'number' ? formType : parseInt(formType.toString()) || 0;
-    
-    // Calculate subtotal based on items if present
-    const subtotal = formData.items?.reduce(
-      (acc: number, item: any) => acc + (
-        (item.total || 0) || 
-        (item.quantity && (item.unitCost || item.unitPrice) 
-          ? item.quantity * (item.unitCost || item.unitPrice) 
-          : 0)
-      ),
-      0
-    ) || 0;
-    
-    // Check if past deadline
-    const pastDeadline = isPastDeadline();
-    
-    // Calculate late charge
-    const lateCharge = calculateLateCharge(formId, subtotal, pastDeadline);
-    
-    // Calculate grand total
-    const grandTotal = subtotal + lateCharge;
-    
-    // Get current timestamp
-    const timestamp = new Date().toISOString();
-    
-    // Clean the form data to remove any fields that don't exist in the database
-    // Remove 'total' if it exists (since the DB uses 'grand_total')
-    const cleanedFormData = { ...formData };
-    if ('total' in cleanedFormData) {
-      delete cleanedFormData.total;
-    }
-    
-    // Ensure required fields exist
-    const enhancedFormData = {
-      ...cleanedFormData,
-      // Explicitly set the user_id to the current authenticated user's ID (required for RLS)
-      user_id: userId,
-      items: formData.items || [],
-      subtotal: subtotal,
-      late_charge: lateCharge,
-      grand_total: grandTotal,
-      total: grandTotal, // Add total field to match grand_total
-      form_type: formId,
-      submission_date: timestamp,
-      updated_at: timestamp,
-      past_deadline: pastDeadline,
-      auth_details: formData.auth_details || {
-        name: '',
-        designation: '',
-        date: timestamp
-      }
+    // Prepare standardized data structure for submission
+    const dataToSubmit = {
+      // Add user identification
+      user_id: user.id,
+      
+      // Add form identification
+      form_type: form_id,
+      form_id: form_id, // For backward compatibility with existing code
+      
+      // Add company information
+      company_data: formData.company_data || {},
+      
+      // Add standardized items array
+      items: normalizedItems,
+      
+      // Add financial data
+      subtotal: formData.subtotal || 0,
+      late_charge: formData.late_charge || 0,
+      grand_total: formData.grand_total || 0,
+      
+      // Add timestamps
+      submission_date: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      
+      // Add authorization details if available
+      auth_details: formData.auth_details || {}
     };
     
-    console.log('Prepared data for submission:', enhancedFormData);
+    console.log('Submitting standardized data to Supabase:', dataToSubmit);
     
-    // NEW APPROACH: Use our server-side API instead of direct Supabase access
-    try {
-      // Make an API call to our server-side endpoint to bypass RLS issues
-      const response = await fetch('/api/debug-form-submission', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify(enhancedFormData)
-      });
+    // Submit to Supabase
+    const { data, error } = await supabase
+      .from('form_submissions')
+      .insert(dataToSubmit)
+      .select('*')
+      .single();
       
-      const result = await response.json();
-      
-      if (!response.ok) {
-        console.error('API error submitting form:', result);
-        return {
-          success: false,
-          message: `Failed to submit form: ${result.error} - ${result.details || ''}`
-        };
-      }
-      
-      console.log('Form submitted successfully via API:', result);
-      
-      return {
-        success: true,
-        data: result.data,
-        submittedData: enhancedFormData,
-        message: 'Form submitted successfully'
-      };
-    } catch (apiError) {
-      console.error('Error calling form submission API:', apiError);
-      
-      // Fallback to direct Supabase access if API fails
-      console.log('Falling back to direct Supabase submission...');
-      
-      // Submit to form_submissions table
-      const { data, error: submissionError } = await supabase
-        .from('form_submissions')
-        .insert(enhancedFormData)
-        .select();
-        
-      if (submissionError) {
-        console.error('Supabase submission error:', submissionError);
-        return {
-          success: false,
-          message: `Failed to submit form: ${submissionError.message}`,
-        };
-      }
-      
-      console.log('Form submitted successfully via fallback:', data);
-      
-      return {
-        success: true,
-        data,
-        submittedData: enhancedFormData,
-        message: 'Form submitted successfully'
-      };
+    if (error) {
+      console.error("Error submitting form to Supabase:", error);
+      return { success: false, submittedData: null, message: error.message };
     }
     
+    console.log('Form submission successful:', data);
+    return { 
+      success: true, 
+      submittedData: data, 
+      message: "Form submitted successfully." 
+    };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error submitting form';
-    console.error('Form submission error:', errorMessage);
-    
-    return {
-      success: false,
-      message: errorMessage,
+    console.error("Error in syncFormWithSupabase:", error);
+    return { 
+      success: false, 
+      submittedData: null, 
+      message: error instanceof Error ? error.message : "An unknown error occurred." 
     };
   }
 } 

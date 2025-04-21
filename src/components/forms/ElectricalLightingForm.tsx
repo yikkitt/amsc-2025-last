@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import React, { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
-import React from 'react'
 import UserDataContainer from '@/components/UserDataContainer'
 import { isPastDeadline } from '@/lib/forms/submitHandler'
-import FormSubmitActions from './FormSubmitActions'
 import { FormData } from '@/types/forms'
+import { syncFormWithSupabase } from '@/lib/forms/submitHandler'
+import { PdfButton } from '@/components/ui/PdfButton'
 
 interface OrderItem {
   id: string
@@ -37,6 +37,7 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
   const router = useRouter()
   const supabase = getSupabaseBrowserClient()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formSubmitted, setFormSubmitted] = useState(false)
   const [submittedData, setSubmittedData] = useState<any>(null)
   const formRef = useRef<HTMLDivElement>(null)
   
@@ -89,50 +90,69 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
   const lateCharge = isLateOrder ? subtotal * 0.1 : 0;
 
   // Prepare form data for submission and PDF generation
-  const formData: FormData = {
-    form_type: 3,
-    company_data: {
-      company_name: userData?.company_name || '',
-      booth_number: userData?.booth_number || '',
-      contact_person: userData?.contact_person || '',
-      email: userData?.email || '',
-    },
-    items: orderItems.filter(item => item.quantity > 0).map(item => ({
-      ...item,
-      total: item.quantity * item.unitCost
-    })),
-    subtotal: subtotal,
-    late_charge: lateCharge,
-    grand_total: subtotal + lateCharge,
-    auth_details: {
-      name: '',
-      designation: '',
-      date: new Date().toISOString(),
-    }
+  const prepareFormData = () => {
+    return {
+      form_type: 3,
+      company_data: {
+        company_name: userData?.company_name || '',
+        booth_number: userData?.booth_number || '',
+        contact_person: userData?.contact_person || '',
+        email: userData?.email || '',
+      },
+      // Only include items with a quantity > 0 and simplify the item structure
+      items: orderItems
+        .filter(item => item.quantity > 0)
+        .map(item => ({
+          id: item.id,
+          description: item.description,
+          unitCost: item.unitCost,
+          quantity: item.quantity,
+          total: item.quantity * item.unitCost,
+          section: item.section
+        })),
+      subtotal: subtotal,
+      late_charge: lateCharge,
+      grand_total: subtotal + lateCharge,
+      auth_details: {
+        name: '',
+        designation: '',
+        date: new Date().toISOString(),
+      }
+    };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    
     try {
-      // Submit to Supabase
-      const { error } = await supabase.from('form_submissions').insert(formData);
-
-      if (error) throw error;
-
+      const formData = prepareFormData();
+      console.log('Submitting form data:', formData);
+      
+      // Use the syncFormWithSupabase function for submission
+      const { success, submittedData: returnedData, message } = await syncFormWithSupabase(formData, 3);
+      
+      if (!success) throw new Error(message);
+      
       // Store submitted data for PDF generation
       setSubmittedData(formData);
-
-      // Log form submission (instead of sending email)
-      console.log('Form submitted successfully:', formData);
-
-      // Remove or comment out the router.refresh() call
-      // router.refresh();
+      setFormSubmitted(true);
+      
+      // Show success message
+      alert("Form submitted successfully!");
+      
+      // Don't redirect immediately - stay on page so user can download PDF
     } catch (error) {
       console.error('Error submitting form:', error)
+      alert(`Error submitting form: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  // Handle navigation back to order forms after viewing PDF
+  const handleReturnToDashboard = () => {
+    router.push('/dashboard/order-forms');
   }
 
   return (
@@ -361,30 +381,39 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
 
         {/* Form Actions */}
         <div className="flex justify-center space-x-6">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="px-8 py-3 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-          >
-            Cancel
-          </button>
-          
-          {submittedData ? (
-            <PdfButton
-              formData={submittedData}
-              formType={3}
-              includeEmptyItems={false}
-              containerRef={formRef}
-              className="px-8 py-3"
-            />
+          {formSubmitted ? (
+            <>
+              <PdfButton
+                formData={submittedData}
+                formType={3}
+                containerRef={formRef}
+                className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={handleReturnToDashboard}
+                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
+              >
+                Return to Dashboard
+              </button>
+            </>
           ) : (
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
-            >
-              {isSubmitting ? 'Submitting...' : 'Submit Form'}
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="px-8 py-3 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit Form'}
+              </button>
+            </>
           )}
         </div>
       </form>
