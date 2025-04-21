@@ -10,11 +10,7 @@ export const supabase = (() => {
     // Only create the client on the client side
     if (!supabaseInstance) {
       console.log('Creating singleton Supabase client');
-      supabaseInstance = createClientComponentClient<Database>({
-        cookieOptions: {
-          name: 'amsc-supabase-auth-unique-key'
-        }
-      });
+      supabaseInstance = createClientComponentClient<Database>();
     }
     return supabaseInstance;
   }
@@ -23,6 +19,18 @@ export const supabase = (() => {
   // This won't cause the warning since server context is isolated
   return createClientComponentClient<Database>();
 })();
+
+// BACKWARD COMPATIBILITY FUNCTION - Use the same instance as above
+export const getSupabaseBrowserClient = () => {
+  if (typeof window !== 'undefined') {
+    if (!supabaseInstance) {
+      console.log('Creating singleton Supabase client via getSupabaseBrowserClient');
+      supabaseInstance = createClientComponentClient<Database>();
+    }
+    return supabaseInstance;
+  }
+  return createClientComponentClient<Database>();
+};
 
 // AVOID USING THIS except in special cases
 // This will create a new client and may trigger warnings

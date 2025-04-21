@@ -222,7 +222,8 @@ export async function syncFormWithSupabase(
     console.log('Cleaned form data:', cleanedData);
     
     // Get the current session for authentication
-    const { data: { session } } = await supabase.auth.getSession();
+    const supabaseClient = supabase; // Get a reference to avoid null check warnings
+    const { data: { session } } = await supabaseClient.auth.getSession();
     const token = session?.access_token;
     
     try {
@@ -274,7 +275,7 @@ export async function syncFormWithSupabase(
       console.log('Sending flattened data to Supabase:', flattenedData);
       
       // Fallback to direct Supabase submission
-      const { data, error } = await (supabase as any)
+      const { data, error } = await (supabaseClient as any)
         .from('form_submissions')
         .insert([flattenedData])
         .select();
