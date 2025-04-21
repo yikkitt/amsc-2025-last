@@ -97,11 +97,6 @@ export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) 
       subtotal: validSubtotal,
       grand_total: validGrandTotal,
       late_charge: validSurcharge,
-      auth_details: {
-        name: '',
-        designation: '',
-        date: new Date().toISOString(),
-      }
     };
   };
 
@@ -109,23 +104,45 @@ export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) 
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      const formData = prepareFormData();
-      console.log('Prepared form data:', formData);
+      const formElement = e.target as HTMLFormElement;
+      const formData = new FormData(formElement);
+      
+      // Get the base form data
+      const baseFormData = prepareFormData();
+      
+      // Add authorization details from the form
+      const completeFormData = {
+        ...baseFormData,
+        company_name: formData.get('company') as string || userData?.company_name || '',
+        booth_number: formData.get('booth_no') as string || userData?.booth_number || '',
+        auth_details: {
+          name: formData.get('name') as string || '',
+          designation: formData.get('designation') as string || '',
+          date: formData.get('date') as string || new Date().toISOString(),
+          signature: formData.get('signature') as string || ''
+        },
+        address: formData.get('address') as string || '',
+        tel: formData.get('tel') as string || '',
+        fax: formData.get('fax') as string || '',
+        email: formData.get('email') as string || ''
+      };
+      
+      console.log('Prepared form data:', completeFormData);
       
       // Verify grand_total is not null or undefined
-      if (formData.grand_total === null || formData.grand_total === undefined || isNaN(formData.grand_total)) {
+      if (completeFormData.grand_total === null || completeFormData.grand_total === undefined || isNaN(completeFormData.grand_total)) {
         throw new Error('Invalid grand total amount. Please try again.');
       }
       
       // Use the syncFormWithSupabase function for submission
-      const result = await syncFormWithSupabase(formData);
+      const result = await syncFormWithSupabase(completeFormData);
       
       if (!result.success) {
         throw new Error(result.message);
       }
       
       // Store submitted data for PDF generation
-      setSubmittedData(formData);
+      setSubmittedData(completeFormData);
       setFormSubmitted(true);
       
       // Show success message
@@ -273,58 +290,98 @@ export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700">Name</label>
-                  <input type="text" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                  <input 
+                    type="text" 
+                    name="name" 
+                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                    required
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700">Designation</label>
-                  <input type="text" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                  <input 
+                    type="text" 
+                    name="designation" 
+                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                    required
+                  />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1 text-gray-700">Company</label>
                 <input 
                   type="text" 
+                  name="company"
                   className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   defaultValue={userData?.company_name || ''}
+                  required
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1 text-gray-700">Booth No</label>
                 <input 
                   type="text" 
+                  name="booth_no"
                   className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   defaultValue={userData?.booth_number || ''}
+                  required
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1 text-gray-700">Address</label>
-                <textarea className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" rows={3} />
+                <textarea 
+                  name="address" 
+                  className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                  rows={3}
+                  required 
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700">Tel</label>
-                  <input type="tel" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                  <input 
+                    type="tel" 
+                    name="tel" 
+                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                    required
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700">Fax</label>
-                  <input type="tel" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                  <input 
+                    type="tel" 
+                    name="fax" 
+                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                  />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1 text-gray-700">Email</label>
-                <input type="email" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                <input 
+                  type="email" 
+                  name="email" 
+                  className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                  required
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700">Signature</label>
-                  <input type="text" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                  <input 
+                    type="text" 
+                    name="signature" 
+                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                    required
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700">Date</label>
                   <input 
                     type="date" 
+                    name="date" 
                     className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     defaultValue={new Date().toISOString().split('T')[0]}
+                    required
                   />
                 </div>
               </div>

@@ -43,7 +43,7 @@ export default function AdminFeesForm({ userData }: AdminFeesFormProps) {
       company_name: formData.get('company') as string || userData?.company_name || '',
       booth_number: formData.get('booth_no') as string || userData?.booth_number || '',
       square_metre: sqm,
-      grand_total: calculatedAmount, // Use grand_total instead of amount
+      grand_total: calculatedAmount,
       auth_details: {
         name: formData.get('name') as string || '',
         designation: formData.get('designation') as string || '',
@@ -66,6 +66,13 @@ export default function AdminFeesForm({ userData }: AdminFeesFormProps) {
       const preparedData = prepareFormData(formData);
       
       console.log('Submitting form data:', preparedData);
+      
+      // Make sure all fields have values, don't allow empty strings for required fields
+      if (!preparedData.auth_details.name || !preparedData.auth_details.designation || 
+          !preparedData.company_name || !preparedData.booth_number || 
+          !preparedData.address || !preparedData.tel || !preparedData.email) {
+        throw new Error('Please fill in all required fields');
+      }
       
       // Use the syncFormWithSupabase function for submission
       const result = await syncFormWithSupabase(preparedData);

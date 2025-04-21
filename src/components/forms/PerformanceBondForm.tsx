@@ -73,6 +73,13 @@ export default function PerformanceBondForm({ userData }: PerformanceBondFormPro
       
       console.log('Submitting form data:', preparedData);
       
+      // Make sure all fields have values, don't allow empty strings for required fields
+      if (!preparedData.auth_details.name || !preparedData.auth_details.designation || 
+          !preparedData.company_name || !preparedData.booth_number || 
+          !preparedData.address || !preparedData.tel || !preparedData.email) {
+        throw new Error('Please fill in all required fields');
+      }
+      
       // Use the syncFormWithSupabase function for submission - don't pass company_name as userId
       const result = await syncFormWithSupabase(preparedData);
       
