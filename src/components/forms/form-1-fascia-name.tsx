@@ -41,7 +41,7 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      // Prepare form data
+      // Prepare the form data
       const formData = {
         form_type: 1,
         company_data: {
@@ -60,8 +60,22 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
         }
       };
 
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("You must be logged in to submit a form");
+      }
+
       // Submit to Supabase
-      const { error } = await supabase.from('form_submissions').insert(formData);
+      const { error } = await supabase
+        .from('forms')
+        .insert({
+          user_id: user.id,
+          form_type: '1',
+          data: formData,
+          status: 'submitted',
+          submitted_at: new Date().toISOString()
+        });
 
       if (error) throw error;
 

@@ -140,10 +140,19 @@ export async function submitForm(
       status: 'submitted'
     };
 
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    
     // Insert into appropriate table
     const { data, error } = await supabase
-      .from('form_submissions')
-      .insert(dataToSubmit)
+      .from('forms')
+      .insert({
+        user_id: user?.id || null,
+        form_type: formId.toString(),
+        data: dataToSubmit,
+        status: 'submitted',
+        submitted_at: new Date().toISOString()
+      })
       .select();
 
     if (error) {

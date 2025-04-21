@@ -29,7 +29,7 @@ export default function FormSubmitActions({
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Handles form submission to Supabase form_submissions table
+   * Handles form submission to Supabase forms table
    * Using the centralized syncFormWithSupabase function for consistency
    */
   const handleSubmit = async () => {
@@ -43,17 +43,18 @@ export default function FormSubmitActions({
 
     try {
       // Use the new syncFormWithSupabase function for consistent form submission
-      const result = await syncFormWithSupabase(formData, formType);
+      const formTypeString = typeof formType === 'number' ? formType.toString() : formType;
+      const result = await syncFormWithSupabase(formData, formTypeString);
       
       if (!result.success) {
         throw new Error(result.message);
       }
       
-      console.log('Form submitted successfully:', result.data);
+      console.log('Form submitted successfully');
       setFormSubmitted(true);
       
-      // Use the enhanced form data returned from the function
-      setSubmittedData(result.submittedData || formData);
+      // Use the original form data since we don't get it back from the function
+      setSubmittedData(formData);
       
       // Call onSuccess callback if provided
       if (onSuccess) {
