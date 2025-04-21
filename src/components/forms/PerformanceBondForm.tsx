@@ -73,8 +73,8 @@ export default function PerformanceBondForm({ userData }: PerformanceBondFormPro
       
       console.log('Submitting form data:', preparedData);
       
-      // Use the syncFormWithSupabase function for submission
-      const result = await syncFormWithSupabase(preparedData, userData?.company_name);
+      // Use the syncFormWithSupabase function for submission - don't pass company_name as userId
+      const result = await syncFormWithSupabase(preparedData);
       
       if (!result.success) {
         throw new Error(result.message);
