@@ -145,7 +145,7 @@ CREATE OR REPLACE VIEW form_data_combined AS
     COALESCE(fs.subtotal, 0) as subtotal,
     COALESCE(fs.late_charge, 0) as late_charge,
     COALESCE(fs.grand_total, 0) as grand_total,
-    COALESCE(fs.submitted_at, fs.inserted_at) as submitted_at,
+    fs.submitted_at,
     fs.updated_at,
     'form_submissions' as source_table
   FROM 

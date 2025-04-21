@@ -2,47 +2,112 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import { jsPDF } from 'jspdf'
+import html2canvas from 'html2canvas'
 
 export default function SpecialDesignSamplePage() {
   const [activeTab, setActiveTab] = useState('section-a');
+  const sectionRefs = {
+    'section-a': useRef<HTMLDivElement>(null),
+    'section-b': useRef<HTMLDivElement>(null),
+    'section-c': useRef<HTMLDivElement>(null),
+    'section-d': useRef<HTMLDivElement>(null),
+    'section-e': useRef<HTMLDivElement>(null),
+  };
 
   // Function to handle form download
-  const handleDownload = (section: string) => {
-    // Create filenames based on section
-    const filename = `special-design-form-section-${section}.pdf`;
-    
-    // Create a temporary link element
-    const link = document.createElement('a');
-    
-    // In a real implementation, this would point to an actual PDF file
-    // For now, we'll just point to a demo URL that would typically be your API endpoint
-    link.href = `/api/forms/download?file=${filename}`;
-    
-    // Set download attribute to suggest filename
-    link.setAttribute('download', filename);
-    
-    // Hide the element
-    link.style.display = 'none';
-    
-    // Add to DOM, click it, then remove it
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    // Show a subtle notification instead of an alert
+  const handleDownload = async (section: string) => {
+    try {
+      // Show loading notification
+      showNotification(`Generating section ${section.toUpperCase()} PDF...`, 'info');
+      
+      const sectionKey = `section-${section}`;
+      // Type assertion to handle dynamic key access
+      const sectionRef = sectionRefs[sectionKey as keyof typeof sectionRefs]?.current;
+      
+      if (!sectionRef) {
+        showNotification('Could not generate PDF for this section.', 'error');
+        return;
+      }
+      
+      // Create filename based on section
+      const filename = `special-design-form-section-${section.toUpperCase()}.pdf`;
+      
+      // Generate PDF using html2canvas and jsPDF
+      const canvas = await html2canvas(sectionRef, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      });
+      
+      // Create PDF with A4 dimensions
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      
+      // Get PDF dimensions
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      // Calculate ratio to fit content on page
+      const ratio = Math.min(
+        pdfWidth / canvas.width, 
+        pdfHeight / canvas.height
+      );
+      
+      const imgWidth = canvas.width * ratio;
+      const imgHeight = canvas.height * ratio;
+      
+      // Center the image on the page
+      const x = (pdfWidth - imgWidth) / 2;
+      const y = 10; // Add some top margin
+      
+      // Add image to PDF
+      pdf.addImage(imgData, 'JPEG', x, y, imgWidth, imgHeight);
+      
+      // Add page header
+      pdf.setFontSize(12);
+      pdf.setTextColor(0, 51, 102); // Dark blue
+      pdf.text('Aesthetic Medicine & Surgery Conference 2025', pdfWidth / 2, 5, { align: 'center' });
+      
+      // Add footer
+      pdf.setFontSize(10);
+      pdf.setTextColor(100, 100, 100); // Gray
+      pdf.text('© 2025 AMSC | Special Design Stand Sample - Section ' + section.toUpperCase(), pdfWidth / 2, pdfHeight - 5, { align: 'center' });
+      
+      // Save PDF
+      pdf.save(filename);
+      
+      // Show success notification
+      showNotification(`${filename} downloaded successfully!`, 'success');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      showNotification('Failed to generate PDF. Please try again.', 'error');
+    }
+  };
+  
+  // Function to show notifications
+  const showNotification = (message: string, type: 'success' | 'error' | 'info') => {
+    // Create notification element
     const notification = document.createElement('div');
-    notification.textContent = `Downloading ${filename}...`;
+    notification.textContent = message;
     notification.style.position = 'fixed';
     notification.style.bottom = '20px';
     notification.style.right = '20px';
-    notification.style.backgroundColor = '#4CAF50';
+    notification.style.backgroundColor = 
+      type === 'success' ? '#4CAF50' : 
+      type === 'error' ? '#f44336' :
+      '#2196F3'; // info color
     notification.style.color = 'white';
     notification.style.padding = '10px 20px';
     notification.style.borderRadius = '4px';
     notification.style.zIndex = '9999';
     notification.style.opacity = '0.9';
+    notification.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
     
+    // Add to DOM
     document.body.appendChild(notification);
     
     // Remove notification after 3 seconds
@@ -50,7 +115,9 @@ export default function SpecialDesignSamplePage() {
       notification.style.opacity = '0';
       notification.style.transition = 'opacity 0.5s';
       setTimeout(() => {
-        document.body.removeChild(notification);
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification);
+        }
       }, 500);
     }, 3000);
   };
@@ -131,7 +198,7 @@ export default function SpecialDesignSamplePage() {
         
         {/* Section A */}
         {activeTab === 'section-a' && (
-          <div>
+          <div ref={sectionRefs['section-a']}>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-blue-900">General Information</h2>
               <button 
@@ -143,7 +210,7 @@ export default function SpecialDesignSamplePage() {
                 </svg>
                 Download Form
               </button>
-              </div>
+            </div>
             <div className="overflow-hidden border border-gray-200 rounded-lg mb-6">
               <table className="min-w-full divide-y divide-gray-200">
                 <tbody className="divide-y divide-gray-200 bg-white">
@@ -251,7 +318,7 @@ export default function SpecialDesignSamplePage() {
         
         {/* Section B */}
         {activeTab === 'section-b' && (
-          <div>
+          <div ref={sectionRefs['section-b']}>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-blue-900">Technical Floor Plan</h2>
               <button 
@@ -298,7 +365,7 @@ export default function SpecialDesignSamplePage() {
         
         {/* Section C */}
         {activeTab === 'section-c' && (
-          <div>
+          <div ref={sectionRefs['section-c']}>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-blue-900">Construction and Structural Details</h2>
               <button 
@@ -574,7 +641,7 @@ export default function SpecialDesignSamplePage() {
         
         {/* Section D */}
         {activeTab === 'section-d' && (
-          <div>
+          <div ref={sectionRefs['section-d']}>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-blue-900">Preparation Information</h2>
               <button 
@@ -630,7 +697,7 @@ export default function SpecialDesignSamplePage() {
         
         {/* Section E */}
         {activeTab === 'section-e' && (
-          <div>
+          <div ref={sectionRefs['section-e']}>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-blue-900">Approval Information</h2>
               <button 

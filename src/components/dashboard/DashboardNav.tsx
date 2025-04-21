@@ -18,6 +18,10 @@ const navItems = [
     label: 'Order Forms',
   },
   {
+    href: '/dashboard/forms/download',
+    label: 'Download Forms',
+  },
+  {
     href: '/dashboard/appendix',
     label: 'Appendix',
   },
@@ -52,6 +56,16 @@ export default function DashboardNav() {
           }`}
         >
           Order Forms
+        </Link>
+        <Link
+          href="/dashboard/forms/download"
+          className={`block px-4 py-2 rounded-md ${
+            pathname.startsWith('/dashboard/forms/download')
+              ? 'bg-blue-50 text-blue-700'
+              : 'text-gray-600 hover:bg-gray-50'
+          }`}
+        >
+          Download Forms
         </Link>
         <Link
           href="/dashboard/information"

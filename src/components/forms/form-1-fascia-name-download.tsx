@@ -2,10 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import Image from 'next/image'
 import UserDataContainer from '@/components/UserDataContainer'
-import { PdfButton } from '@/components/ui/PdfButton'
+import FormDownloadButton from '@/components/ui/FormDownloadButton'
 
 interface FasciaNameFormProps {
   userData?: {
@@ -22,80 +21,48 @@ interface FasciaNameFormProps {
   } | null
 }
 
-export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
+export default function FasciaNameFormDownload({ userData }: FasciaNameFormProps) {
   const [fasciaName, setFasciaName] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submittedData, setSubmittedData] = useState<any>(null)
-  const [isSubmitted, setIsSubmitted] = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
   const router = useRouter()
-  const supabase = getSupabaseBrowserClient()
 
   // Initialize inputRefs with the correct length (25 boxes)
   useEffect(() => {
     inputRefs.current = Array(25).fill(null)
   }, [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    try {
-      // Prepare the form data
-      const formData = {
-        form_type: 1,
-        company_data: {
-          company_name: userData?.company_name || '',
-          booth_number: userData?.booth_number || '',
-          fascia_name: fasciaName,
-        },
-        items: [],
-        subtotal: 0,
-        late_charge: 0,
-        grand_total: 0,
-        auth_details: {
-          name: '',
-          designation: '',
-          date: new Date().toISOString(),
-        }
-      };
-
-      // Get current user ID
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error("You must be logged in to submit a form");
-      }
-
-      // Submit to Supabase
-      const { error } = await supabase
-        .from('forms')
-        .insert({
-          user_id: user.id,
-          form_type: '1',
-          data: formData,
-          status: 'submitted',
-          submitted_at: new Date().toISOString()
-        });
-
-      if (error) throw error;
-
-      // Store submitted data for PDF generation
-      setSubmittedData(formData);
-      
-      // Set submitted status to show success message
-      setIsSubmitted(true);
-
-      // Log form submission (instead of sending email)
-      console.log('Form submitted successfully:', formData);
-
-      // Scroll to top to show the success message
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (error) {
-      console.error('Error submitting form:', error)
-    } finally {
-      setIsSubmitting(false)
+  // Prepare form data whenever fasciaName changes
+  const [formData, setFormData] = useState({
+    form_type: 1,
+    company_data: {
+      company_name: userData?.company_name || '',
+      booth_number: userData?.booth_number || '',
+      fascia_name: fasciaName,
+    },
+    items: [],
+    subtotal: 0,
+    late_charge: 0,
+    grand_total: 0,
+    auth_details: {
+      name: '',
+      designation: '',
+      date: new Date().toISOString(),
     }
-  }
+  });
+
+  // Update form data when fasciaName or userData changes
+  useEffect(() => {
+    setFormData(prevData => ({
+      ...prevData,
+      company_data: {
+        ...prevData.company_data,
+        company_name: userData?.company_name || '',
+        booth_number: userData?.booth_number || '',
+        fascia_name: fasciaName,
+      }
+    }));
+  }, [fasciaName, userData]);
 
   // Handle input change and auto-focus to next box
   const handleInputChange = (index: number, value: string) => {
@@ -167,21 +134,6 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
 
   return (
     <div ref={formRef} className="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-md">
-      {/* Success Message */}
-      {isSubmitted && (
-        <div className="mb-8 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <div className="flex items-center">
-            <svg className="h-6 w-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            <h3 className="text-lg font-medium text-green-800">Fascia Name Submitted Successfully!</h3>
-          </div>
-          <p className="mt-2 text-sm text-green-700">
-            Your fascia name "{fasciaName}" has been submitted for booth {userData?.booth_number || ''}. You'll be redirected in a moment.
-          </p>
-        </div>
-      )}
-      
       {/* Form Header */}
       <div className="text-center mb-8 border-b border-gray-200 pb-6">
         <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 1</h1>
@@ -194,7 +146,7 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
       {/* User Data Container */}
       <UserDataContainer userData={userData} />
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <div className="space-y-8">
         {/* Instructions */}
         <div className="mb-8 p-4 bg-gray-50 rounded-lg">
           <p className="text-gray-700 mb-4">This form must be completed and returned by all Standard Shell Scheme exhibitors.</p>
@@ -408,24 +360,14 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
             Cancel
           </button>
           
-          {submittedData ? (
-            <PdfButton
-              formData={submittedData}
-              formType={1}
-              containerRef={formRef}
-              className="px-8 py-3"
-            />
-          ) : (
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
-            >
-              {isSubmitting ? 'Submitting...' : 'Submit Form'}
-            </button>
-          )}
+          <FormDownloadButton
+            formData={formData}
+            formType={1}
+            containerRef={formRef}
+            className="px-8 py-3"
+          />
         </div>
-      </form>
+      </div>
     </div>
   )
 } 

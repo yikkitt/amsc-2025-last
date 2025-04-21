@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import FormSubmitActions from './FormSubmitActions';
+import FormDownloadButton from '../ui/FormDownloadButton';
 
 interface FasciaNameFormProps {
   userData?: {
@@ -16,7 +16,6 @@ interface FasciaNameFormProps {
 const FasciaNameForm = ({ userData }: FasciaNameFormProps) => {
   const router = useRouter();
   const formRef = useRef<HTMLDivElement>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [fasciaText, setFasciaText] = useState('');
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   
@@ -212,21 +211,15 @@ const FasciaNameForm = ({ userData }: FasciaNameFormProps) => {
         </ol>
       </div>
 
-      {/* Form Actions */}
-      <FormSubmitActions
-        isSubmitting={isSubmitting}
-        setIsSubmitting={setIsSubmitting}
-        formData={formData}
-        formType={1}
-        containerRef={formRef}
-        onSuccess={() => {
-          console.log('Form submitted successfully');
-          setTimeout(() => {
-            router.push('/dashboard/order-forms');
-          }, 3000);
-        }}
-        className="mt-6"
-      />
+      {/* Download Button Only */}
+      <div className="flex justify-center mt-6">
+        <FormDownloadButton
+          formData={formData}
+          formType={1}
+          containerRef={formRef}
+          className="w-full md:w-auto"
+        />
+      </div>
     </div>
   );
 };

@@ -2,6 +2,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import type { Database } from '@/types/supabase';
 import { supabase } from '@/lib/supabase/client';
+import { standardizeFormData, validateFormData } from './standardizeFormData';
 
 // Global singleton instance for Supabase client
 let globalSupabaseInstance: SupabaseClient | null = null;
@@ -199,28 +200,22 @@ export async function syncFormWithSupabase(
     console.log("Syncing form data with Supabase:", formData);
     console.log("User ID:", userId);
 
-    // Clone the form data to avoid mutation
-    const cleanedData = { ...formData };
-
-    // Ensure formType is a string
-    if (cleanedData.formType && typeof cleanedData.formType !== "string") {
-      cleanedData.formType = String(cleanedData.formType);
+    // Extract form number from formType
+    const formNumber = parseInt(String(formData.formType || formData.form_type || '0'), 10);
+    if (isNaN(formNumber) || formNumber < 1 || formNumber > 8) {
+      return { success: false, message: `Invalid form type: ${formData.formType}` };
+    }
+    
+    // Standardize the form data
+    const standardizedData = standardizeFormData(formData, formNumber);
+    
+    // Validate the standardized data
+    const validation = validateFormData(standardizedData);
+    if (!validation.valid) {
+      return { success: false, message: `Form validation failed: ${validation.errors.join(', ')}` };
     }
 
-    // Remove problematic fields
-    delete cleanedData.surcharge;
-    delete cleanedData.id;
-    delete cleanedData.inserted_at;
-    delete cleanedData.updated_at;
-
-    // Remove null or undefined values
-    Object.keys(cleanedData).forEach((key) => {
-      if (cleanedData[key] === null || cleanedData[key] === undefined) {
-        delete cleanedData[key];
-      }
-    });
-
-    console.log("Cleaned data:", cleanedData);
+    console.log("Standardized data:", standardizedData);
 
     // Try to submit to API endpoint first
     try {
@@ -238,7 +233,7 @@ export async function syncFormWithSupabase(
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          formData: cleanedData,
+          formData: standardizedData,
           userId: userId,
         }),
       });
@@ -248,47 +243,36 @@ export async function syncFormWithSupabase(
       if (!response.ok) {
         throw new Error(result.message || "API submission failed");
       }
-      
+
       console.log("API submission successful:", result);
       return { success: true, message: "Form submitted successfully via API" };
     } catch (apiError) {
-      console.error("API submission failed, falling back to direct Supabase access:", apiError);
+      console.error("API submission failed, falling back to direct access:", apiError);
       
       // Fall back to direct Supabase access
-      const formType = cleanedData.formType || "unknown";
-      
-      if (!userId) {
-        const authUser = (await supabase.auth.getUser()).data.user;
-        userId = authUser?.id;
-        
-        if (!userId) {
-          throw new Error("User is not authenticated");
-        }
-      }
-
-      const { data, error } = await supabase
-        .from("forms")
+      const { error } = await supabase
+        .from('form_submissions')
         .insert({
+          ...standardizedData,
           user_id: userId,
-          form_type: formType,
-          data: cleanedData,
-          status: "submitted",
           submitted_at: new Date().toISOString(),
         });
 
       if (error) {
-        console.error("Supabase error:", error);
-        throw error;
+        console.error("Supabase submission error:", error);
+        return { 
+          success: false, 
+          message: `Form submission failed: ${error.message}` 
+        };
       }
 
-      console.log("Form submission successful:", data);
-      return { success: true, message: "Form submitted successfully" };
+      return { success: true, message: "Form submitted successfully via direct access" };
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Form submission error:", error);
     return {
       success: false,
-      message: `Error submitting form: ${(error as Error).message}`,
+      message: `Form submission failed: ${error.message || "Unknown error"}`,
     };
   }
 } 
