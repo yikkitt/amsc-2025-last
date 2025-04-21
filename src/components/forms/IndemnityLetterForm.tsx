@@ -30,18 +30,35 @@ export default function IndemnityLetterForm({ userData }: IndemnityLetterFormPro
     setIsSubmitting(true)
     try {
       const formData = new FormData(e.target as HTMLFormElement)
-      const { error } = await supabase.from('form_submissions').insert({
+      
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("You must be logged in to submit a form");
+      }
+      
+      const formDataObj = {
         form_type: 8,
         company_data: {
           company_name: userData?.company_name || '',
           booth_number: userData?.booth_number || '',
         },
         auth_details: {
-          name: formData.get('name'),
-          designation: formData.get('designation'),
-          date: formData.get('date'),
+          name: formData.get('name')?.toString() || '',
+          designation: formData.get('designation')?.toString() || '',
+          date: formData.get('date')?.toString() || '',
         }
-      })
+      };
+      
+      const { error } = await supabase
+        .from('forms')
+        .insert({
+          user_id: user.id,
+          form_type: '8',
+          data: formDataObj,
+          status: 'submitted',
+          submitted_at: new Date().toISOString()
+        });
 
       if (error) throw error
       // router.refresh()

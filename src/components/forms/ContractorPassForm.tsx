@@ -42,17 +42,24 @@ export default function ContractorPassForm({ userData }: ContractorPassFormProps
     setIsSubmitting(true);
     try {
       const formData = new FormData(e.target as HTMLFormElement);
-      const { error } = await supabase.from('form_submissions').insert({
+      
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("You must be logged in to submit a form");
+      }
+      
+      const formDataObj = {
         form_type: 2,
         company_data: {
-          exhibitor_company: formData.get('exhibitor_company'),
-          exhibitor_booth: formData.get('exhibitor_booth'),
-          contractor_company: formData.get('contractor_company'),
-          contractor_person: formData.get('contractor_person'),
-          mobile: formData.get('mobile'),
-          tel: formData.get('tel'),
-          fax: formData.get('fax'),
-          email: formData.get('email'),
+          exhibitor_company: formData.get('exhibitor_company')?.toString() || '',
+          exhibitor_booth: formData.get('exhibitor_booth')?.toString() || '',
+          contractor_company: formData.get('contractor_company')?.toString() || '',
+          contractor_person: formData.get('contractor_person')?.toString() || '',
+          mobile: formData.get('mobile')?.toString() || '',
+          tel: formData.get('tel')?.toString() || '',
+          fax: formData.get('fax')?.toString() || '',
+          email: formData.get('email')?.toString() || '',
         },
         items: [
           {
@@ -66,16 +73,26 @@ export default function ContractorPassForm({ userData }: ContractorPassFormProps
         late_charge: lateSurcharge,
         grand_total: grandTotal,
         auth_details: {
-          name: formData.get('auth_name'),
-          designation: formData.get('auth_designation'),
-          company: formData.get('auth_company'),
-          address: formData.get('auth_address'),
-          email: formData.get('auth_email'),
-          tel: formData.get('auth_tel'),
-          fax: formData.get('auth_fax'),
-          date: formData.get('auth_date'),
+          name: formData.get('auth_name')?.toString() || '',
+          designation: formData.get('auth_designation')?.toString() || '',
+          company: formData.get('auth_company')?.toString() || '',
+          address: formData.get('auth_address')?.toString() || '',
+          email: formData.get('auth_email')?.toString() || '',
+          tel: formData.get('auth_tel')?.toString() || '',
+          fax: formData.get('auth_fax')?.toString() || '',
+          date: formData.get('auth_date')?.toString() || '',
         }
-      });
+      };
+
+      const { error } = await supabase
+        .from('forms')
+        .insert({
+          user_id: user.id,
+          form_type: '2',
+          data: formDataObj,
+          status: 'submitted',
+          submitted_at: new Date().toISOString()
+        });
 
       if (error) throw error;
       // router.refresh();

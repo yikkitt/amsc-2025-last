@@ -81,33 +81,24 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
     setIsSubmitting(true)
     
     try {
-      // Filter items with quantity > 0
-      const selectedItems = orderItems
-        .filter(item => item.quantity > 0)
-        .map(item => ({
-          ...item,
-          total: item.quantity * item.unitCost
-        }));
-        
-      if (selectedItems.length === 0) {
-        alert('Please select at least one item before submitting.');
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Create form data object
       const formData = {
         form_type: 4,
         company_data: {
           company_name: userData?.company_name || '',
           booth_number: userData?.booth_number || '',
-          contact_person: userData?.contact_person || '',
-          email: userData?.email || '',
         },
-        items: selectedItems,
-        subtotal: subtotal,
+        items: orderItems
+          .filter(item => item.quantity > 0)
+          .map(item => ({
+            id: item.id,
+            description: item.description,
+            quantity: item.quantity,
+            unitCost: item.unitCost,
+            total: item.unitCost * item.quantity
+          })),
+        subtotal,
         late_charge: lateCharge,
-        total: subtotal + lateCharge,
+        grand_total: subtotal + lateCharge,
         auth_details: {
           name: '',
           designation: '',
@@ -115,7 +106,22 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
         }
       };
 
-      const { error } = await supabase.from('form_submissions').insert(formData)
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("You must be logged in to submit a form");
+      }
+
+      // Submit to Supabase
+      const { error } = await supabase
+        .from('forms')
+        .insert({
+          user_id: user.id,
+          form_type: '4',
+          data: formData,
+          status: 'submitted',
+          submitted_at: new Date().toISOString()
+        });
 
       if (error) throw error
       // router.refresh()
