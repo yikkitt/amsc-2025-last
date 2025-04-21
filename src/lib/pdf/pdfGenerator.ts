@@ -3,6 +3,11 @@ import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 import { FormData, FormItem } from '@/types/forms';
 
+// Polyfill URL if needed for older browsers
+if (typeof window !== 'undefined' && !window.URL && (window as any).webkitURL) {
+  (window as any).URL = (window as any).webkitURL;
+}
+
 // Cache for loaded images to prevent repeated fetching
 const imageCache = new Map<string, Promise<HTMLImageElement>>();
 
@@ -28,6 +33,58 @@ const preloadImage = (src: string): Promise<HTMLImageElement> => {
 };
 
 /**
+ * Check if the current browser supports Blob URLs and downloading
+ */
+const checkBrowserSupport = (): { 
+  hasBlob: boolean; 
+  hasURL: boolean; 
+  isIOS: boolean;
+  isIE: boolean;
+  isSafari: boolean;
+  isMobile: boolean;
+} => {
+  const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
+  const isAndroid = /android/i.test(ua);
+  const isIE = /*@cc_on!@*/false || !!(document as any).documentMode;
+  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+  const isMobile = isIOS || isAndroid || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  
+  return {
+    hasBlob: typeof Blob !== 'undefined',
+    hasURL: typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function',
+    isIOS,
+    isIE,
+    isSafari,
+    isMobile
+  };
+};
+
+/**
+ * Create a polyfill for the Blob object if it's not available
+ */
+const createBlobPolyfill = (data: string, contentType: string): Blob => {
+  try {
+    // Try to use the native Blob constructor
+    return new Blob([data], { type: contentType });
+  } catch (e) {
+    // If we're in an older browser, try to use BlobBuilder
+    try {
+      const BlobBuilder = (window as any).BlobBuilder || 
+                         (window as any).WebKitBlobBuilder || 
+                         (window as any).MozBlobBuilder || 
+                         (window as any).MSBlobBuilder;
+      const builder = new BlobBuilder();
+      builder.append(data);
+      return builder.getBlob(contentType);
+    } catch (e2) {
+      console.error('Could not create Blob:', e2);
+      throw new Error('Browser does not support creating Blob objects');
+    }
+  }
+};
+
+/**
  * Optimized function to generate a PDF from a DOM element
  * @param element The DOM element to convert to PDF
  * @param filename The name of the PDF file
@@ -35,6 +92,10 @@ const preloadImage = (src: string): Promise<HTMLImageElement> => {
 export const generatePDF = async (element: HTMLElement, filename: string): Promise<void> => {
   try {
     console.log('PDF generation started');
+    
+    // Check browser capabilities
+    const support = checkBrowserSupport();
+    console.log('Browser support:', support);
     
     // Check if we have this PDF cached
     const cacheKey = `${filename}-${Date.now()}`;
@@ -45,6 +106,12 @@ export const generatePDF = async (element: HTMLElement, filename: string): Promi
         downloadPDF(cachedBlob, filename);
         return;
       }
+    }
+    
+    // If on mobile, show a message that download might open in a new tab
+    if (support.isMobile) {
+      console.log('Mobile device detected - PDF might open in a new tab');
+      showNotification('PDF will open in a new tab. You may need to save it manually.', 'info');
     }
     
     // Wait for images to load to ensure they appear in the PDF
@@ -101,27 +168,36 @@ export const generatePDF = async (element: HTMLElement, filename: string): Promi
       page++;
     }
     
-    // Generate the PDF data
-    const pdfBlob = pdf.output('blob');
-    
-    // Cache the generated PDF
-    if (pdfCache.size > 10) {
-      // Limit cache size by removing oldest entry
-      const iterator = pdfCache.keys();
-      const firstKey = iterator.next().value;
-      if (firstKey) {
-        pdfCache.delete(firstKey);
+    // Generate the PDF data as blob for modern browsers
+    try {
+      const pdfBlob = pdf.output('blob');
+      
+      // Cache the generated PDF
+      if (pdfCache.size > 10) {
+        // Limit cache size by removing oldest entry
+        const iterator = pdfCache.keys();
+        const firstKey = iterator.next().value;
+        if (firstKey) {
+          pdfCache.delete(firstKey);
+        }
       }
+      pdfCache.set(cacheKey, pdfBlob);
+      
+      // Download the PDF
+      downloadPDF(pdfBlob, filename);
+      console.log('PDF generation completed successfully');
+    } catch (blobError) {
+      console.warn('Blob output failed, trying data URI instead:', blobError);
+      
+      // Fallback to data URI for older browsers
+      const pdfDataUri = pdf.output('datauristring');
+      downloadPDFViaDataURI(pdfDataUri, filename);
     }
-    pdfCache.set(cacheKey, pdfBlob);
-    
-    // Download the PDF
-    downloadPDF(pdfBlob, filename);
-    console.log('PDF generation completed successfully');
     
   } catch (error) {
     console.error('Error generating PDF:', error);
-    alert('Failed to generate PDF. Please try again or contact support.');
+    showNotification('Failed to generate PDF. Please try again or contact support.', 'error');
+    throw error;
   }
 };
 
@@ -130,48 +206,150 @@ export const generatePDF = async (element: HTMLElement, filename: string): Promi
  */
 const downloadPDF = (blob: Blob, filename: string): void => {
   try {
-    // Method 1: Using iframe (best browser compatibility)
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
+    const support = checkBrowserSupport();
     
-    try {
-      // Create object URL for the blob
+    // For iOS devices, open in new tab since downloads don't work well
+    if (support.isIOS) {
       const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 100);
+      return;
+    }
+    
+    // Method 1: Using modern download API with Blob URL
+    if (support.hasURL && !support.isIE) {
+      try {
+        // Create object URL for the blob
+        const url = URL.createObjectURL(blob);
+        
+        // Try direct download with anchor element
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        
+        // Clean up
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }, 100);
+        
+        return;
+      } catch (e) {
+        console.warn('Direct download failed, trying alternative methods:', e);
+      }
+    }
+    
+    // Method 2: Using iframe for older browsers or IE
+    try {
+      const reader = new FileReader();
+      reader.onload = function() {
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = reader.result as string;
+        document.body.appendChild(iframe);
+        
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 1000);
+      };
+      reader.readAsDataURL(blob);
+    } catch (iframeError) {
+      console.warn('Iframe method failed:', iframeError);
       
-      // Try direct download first (modern browsers)
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      
-      // Clean up
-      setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, 100);
-    } catch (e) {
-      console.warn('Direct download failed, trying iframe method:', e);
-      
-      // Fallback to iframe method for older browsers
-      if (iframe.contentWindow) {
-        iframe.contentWindow.document.open();
-        iframe.contentWindow.document.write(`
-          <html>
-            <body style="margin:0">
-              <embed width="100%" height="100%" src="${URL.createObjectURL(blob)}" type="application/pdf">
-            </body>
-          </html>
-        `);
-        iframe.contentWindow.document.close();
+      // Method 3: Last resort - open in new window
+      try {
+        const dataUrl = URL.createObjectURL(blob);
+        window.open(dataUrl, '_blank');
+        
+        setTimeout(() => {
+          URL.revokeObjectURL(dataUrl);
+        }, 100);
+      } catch (windowError) {
+        console.error('All download methods failed:', windowError);
+        showNotification('Unable to download PDF. Please try a different browser or contact support.', 'error');
       }
     }
   } catch (error) {
     console.error('Error downloading PDF:', error);
-    alert('Failed to download PDF. Please try again later.');
+    showNotification('Failed to download PDF. Please try again later.', 'error');
   }
+};
+
+/**
+ * Helper function to download PDF via data URI for older browsers
+ */
+const downloadPDFViaDataURI = (dataURI: string, filename: string): void => {
+  try {
+    const support = checkBrowserSupport();
+    
+    // For iOS devices, just open in new tab
+    if (support.isIOS) {
+      window.open(dataURI, '_blank');
+      return;
+    }
+    
+    // Create an invisible link
+    const link = document.createElement('a');
+    link.style.display = 'none';
+    link.href = dataURI;
+    link.download = filename;
+    link.target = '_blank';
+    
+    // Append to body, click, and remove
+    document.body.appendChild(link);
+    link.click();
+    
+    setTimeout(() => {
+      document.body.removeChild(link);
+    }, 100);
+  } catch (error) {
+    console.error('Data URI download failed:', error);
+    
+    // Fallback to window.open
+    try {
+      window.open(dataURI, '_blank');
+    } catch (openError) {
+      console.error('Window open failed:', openError);
+      showNotification('Unable to download PDF. Please save the PDF manually by right-clicking on it and selecting "Save As".', 'error');
+    }
+  }
+};
+
+/**
+ * Helper function to display notifications to the user
+ */
+const showNotification = (message: string, type: 'success' | 'error' | 'info'): void => {
+  const notification = document.createElement('div');
+  notification.textContent = message;
+  notification.style.position = 'fixed';
+  notification.style.bottom = '20px';
+  notification.style.right = '20px';
+  notification.style.backgroundColor = 
+    type === 'success' ? '#4CAF50' : 
+    type === 'error' ? '#f44336' : 
+    '#2196F3'; // info color
+  notification.style.color = 'white';
+  notification.style.padding = '10px 20px';
+  notification.style.borderRadius = '4px';
+  notification.style.zIndex = '9999';
+  notification.style.opacity = '0.9';
+  notification.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+  
+  document.body.appendChild(notification);
+  
+  // Remove notification after 3 seconds
+  setTimeout(() => {
+    notification.style.opacity = '0';
+    notification.style.transition = 'opacity 0.5s';
+    setTimeout(() => {
+      if (document.body.contains(notification)) {
+        document.body.removeChild(notification);
+      }
+    }, 500);
+  }, 3000);
 };
 
 /**
@@ -247,6 +425,8 @@ export const generateFormPDF = async (
       companyName = formData.companyName;
     } else if (formData.company) {
       companyName = formData.company;
+    } else if (formData.company_name) {
+      companyName = String(formData.company_name);
     }
     
     // Default if no company name found
@@ -264,7 +444,7 @@ export const generateFormPDF = async (
     return;
   } catch (error) {
     console.error('Error generating form PDF:', error);
-    alert('Failed to generate PDF from form data. Please try again.');
+    showNotification('Failed to generate PDF from form data. Please try again.', 'error');
     throw error;
   }
 }; 
