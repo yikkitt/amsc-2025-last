@@ -171,9 +171,16 @@ export async function syncFormWithSupabase(
     // Get current timestamp
     const timestamp = new Date().toISOString();
     
+    // Clean the form data to remove any fields that don't exist in the database
+    // Remove 'total' if it exists (since the DB uses 'grand_total')
+    const cleanedFormData = { ...formData };
+    if ('total' in cleanedFormData) {
+      delete cleanedFormData.total;
+    }
+    
     // Ensure required fields exist
     const enhancedFormData = {
-      ...formData,
+      ...cleanedFormData,
       items: formData.items || [],
       subtotal: subtotal,
       late_charge: lateCharge,

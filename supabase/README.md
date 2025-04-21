@@ -38,6 +38,7 @@ If you don't have the Supabase CLI:
 ## Migration Files
 
 - `20240524_update_form_tables.sql`: Creates or updates the `form_submissions` and `form_configs` tables, adds a helpful view, and sets up indexes for performance.
+- `20240525_add_total_column.sql`: Adds a `total` column to the `form_submissions` table for backward compatibility with existing code, including a trigger to keep `total` and `grand_total` in sync.
 
 ## Data Model
 
