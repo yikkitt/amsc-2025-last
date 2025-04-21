@@ -45,31 +45,51 @@ export async function POST(request: NextRequest) {
       // Create admin client that bypasses RLS
       const supabase = createAdminClient();
       
-      // Clean formData to remove problematic fields
+      // Clean formData again to ensure no problematic fields
       const cleanedData = { ...formData };
-      delete cleanedData.surcharge;
-      delete cleanedData.id;
-      delete cleanedData.inserted_at;
-      delete cleanedData.updated_at;
       
-      // Set user_id field
-      if (userId) {
-        cleanedData.user_id = userId;
+      // Remove ALL potentially problematic fields
+      ['surcharge', 'id', 'inserted_at', 'updated_at', 'created_at'].forEach(field => {
+        delete cleanedData[field];
+      });
+      
+      // Special handling for complex data structures
+      const processedData: Record<string, any> = {
+        form_type: cleanedData.form_type || cleanedData.formType,
+        company_name: cleanedData.company_name,
+        booth_number: cleanedData.booth_number,
+        user_id: userId || null,
+        data: {} // Store complex objects in JSONB data field
+      };
+      
+      // Store objects and arrays in the data JSONB field
+      for (const key in cleanedData) {
+        if (key !== 'form_type' && key !== 'company_name' && key !== 'booth_number' && key !== 'user_id') {
+          if (typeof cleanedData[key] === 'object') {
+            processedData.data[key] = cleanedData[key];
+          } else {
+            // Add primitive values directly to the top level
+            processedData[key] = cleanedData[key];
+          }
+        }
       }
+      
+      console.log('Processed data for submission:', processedData);
       
       // Format submission timestamp
       const timestamp = new Date().toISOString();
+      processedData.updated_at = timestamp;
       
       // Check for existing submission if we have a userId
       let existingSubmission = null;
       
-      if (userId && formData.form_type) {
+      if (userId && processedData.form_type) {
         const { data: existingData, error: checkError } = await supabase
           .from('form_submissions')
           .select('id')
           .match({ 
             user_id: userId, 
-            form_type: formData.form_type 
+            form_type: processedData.form_type 
           })
           .maybeSingle();
           
@@ -87,22 +107,16 @@ export async function POST(request: NextRequest) {
         console.log(`Updating existing submission ID: ${existingSubmission.id}`);
         result = await supabase
           .from('form_submissions')
-          .update({
-            ...cleanedData,
-            updated_at: timestamp
-          })
+          .update(processedData)
           .eq('id', existingSubmission.id)
           .select();
       } else {
         // Create new submission
-        console.log('Creating new form submission with data:', cleanedData);
+        console.log('Creating new form submission');
+        processedData.created_at = timestamp;
         result = await supabase
           .from('form_submissions')
-          .insert([{
-            ...cleanedData,
-            created_at: timestamp,
-            updated_at: timestamp
-          }])
+          .insert([processedData])
           .select();
       }
       

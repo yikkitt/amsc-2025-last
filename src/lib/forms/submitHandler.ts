@@ -189,15 +189,28 @@ export async function syncFormWithSupabase(
     const cleanedData = { ...formData };
     
     // Ensure formType is a string 
-    if (typeof cleanedData.formType !== 'string') {
-      cleanedData.formType = String(cleanedData.formType);
+    if (typeof cleanedData.form_type !== 'string' && cleanedData.form_type !== undefined) {
+      cleanedData.form_type = String(cleanedData.form_type);
     }
     
-    // Remove problematic fields
-    delete cleanedData.surcharge;
-    delete cleanedData.id;
-    delete cleanedData.inserted_at;
-    delete cleanedData.updated_at;
+    // Remove ALL potentially problematic fields
+    const fieldsToRemove = [
+      'surcharge', 'id', 'inserted_at', 'updated_at', 
+      'created_at', 'late_charge', 'status'
+    ];
+    
+    fieldsToRemove.forEach(field => {
+      delete cleanedData[field];
+    });
+    
+    // Handle case where form data has items with surcharge property
+    if (cleanedData.items && Array.isArray(cleanedData.items)) {
+      cleanedData.items = cleanedData.items.map(item => {
+        const cleanItem = { ...item };
+        delete cleanItem.surcharge;
+        return cleanItem;
+      });
+    }
     
     // Remove null/undefined values
     Object.keys(cleanedData).forEach(key => {
@@ -213,8 +226,8 @@ export async function syncFormWithSupabase(
     const token = session?.access_token;
     
     try {
-      // Try to use the API endpoint first (which bypasses RLS)
-      const response = await fetch('/api/form-submission/route', {
+      // Try to use the API endpoint (correct path for Next.js App Router)
+      const response = await fetch('/api/form-submission', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -237,51 +250,34 @@ export async function syncFormWithSupabase(
       } else {
         const errorText = await response.text();
         console.error('API submission error:', response.status, errorText);
-        
-        // Try fallback to the alternate API endpoint
-        try {
-          const fallbackResponse = await fetch('/api/form-submission', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-            },
-            body: JSON.stringify({
-              formData: cleanedData,
-              userId
-            }),
-          });
-          
-          if (fallbackResponse.ok) {
-            const fallbackResult = await fallbackResponse.json();
-            console.log('Form submitted successfully via fallback API:', fallbackResult);
-            return { 
-              success: true, 
-              message: 'Form submitted successfully (via fallback)!',
-              data: fallbackResult 
-            };
-          } else {
-            const fallbackErrorText = await fallbackResponse.text();
-            console.error('Fallback API submission error:', fallbackResponse.status, fallbackErrorText);
-            throw new Error(`API submission failed: ${fallbackResponse.status} ${fallbackErrorText}`);
-          }
-        } catch (fallbackError) {
-          console.warn('Both API endpoints failed, falling back to direct Supabase access:', fallbackError);
-          throw new Error(`API submission failed: ${response.status} ${errorText}`);
-        }
+        throw new Error(`API submission failed: ${response.status} ${errorText}`);
       }
     } catch (apiError) {
       console.warn('API submission failed, falling back to direct Supabase access:', apiError);
       
+      // Convert form data to a flattened format for database insertion
+      const flattenedData: Record<string, any> = {
+        ...cleanedData,
+        user_id: userId || null
+      };
+      
+      // For arrays or complex objects like 'items', convert to JSON string or JSONB
+      for (const key in flattenedData) {
+        if (typeof flattenedData[key] === 'object' && flattenedData[key] !== null) {
+          // Store complex objects in a 'data' JSONB field
+          if (!flattenedData.data) flattenedData.data = {};
+          flattenedData.data[key] = flattenedData[key];
+          delete flattenedData[key];
+        }
+      }
+      
+      console.log('Sending flattened data to Supabase:', flattenedData);
+      
       // Fallback to direct Supabase submission
-      // Using any type to bypass type checking for database tables
-      // This is necessary since we don't have the complete database schema types
       const { data, error } = await (supabase as any)
         .from('form_submissions')
-        .insert([{ 
-          ...cleanedData,
-          user_id: userId || null // Ensure user_id is never undefined
-        }]);
+        .insert([flattenedData])
+        .select();
       
       if (error) {
         console.error('Supabase direct submission error:', error);
