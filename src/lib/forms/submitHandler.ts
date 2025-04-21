@@ -2,36 +2,40 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { FormData } from '@/types/forms';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
-// Singleton pattern for Supabase client
-let supabaseInstance: SupabaseClient | null = null;
+// Global singleton instance for Supabase client
+let globalSupabaseInstance: SupabaseClient | null = null;
 
-// Get or create Supabase client instance 
-const getSupabaseClient = () => {
+/**
+ * Creates a singleton Supabase client to avoid multiple GoTrueClient instances
+ */
+export const getSupabaseClient = (): SupabaseClient => {
+  // For server-side rendering
   if (typeof window === 'undefined') {
-    // Server-side - create a new instance
     return createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL || '',
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
     );
   }
   
-  // Client-side - use singleton
-  if (!supabaseInstance) {
-    console.log('Creating new Supabase client instance');
-    supabaseInstance = createClient(
+  // Client-side singleton pattern
+  if (!globalSupabaseInstance) {
+    console.log('Creating single global Supabase client instance');
+    globalSupabaseInstance = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL || '',
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
       {
         auth: {
           persistSession: true,
           storage: window.localStorage,
-          storageKey: 'supabase-auth-token' // Use a unique key to avoid conflicts
+          storageKey: 'amsc-supabase-auth', // Use app-specific key
+          autoRefreshToken: true,
+          detectSessionInUrl: false // Disable to prevent extra instances
         }
       }
     );
   }
   
-  return supabaseInstance;
+  return globalSupabaseInstance;
 };
 
 /**
@@ -108,7 +112,7 @@ export async function submitForm(
 
     // Calculate subtotal based on items if present
     const subtotal = formData.items?.reduce(
-      (acc: number, item: any) => acc + (item.total || 0),
+      (acc: number, item: any) => acc + (parseFloat(item.total) || 0),
       0
     ) || 0;
 
@@ -118,15 +122,21 @@ export async function submitForm(
     // Calculate late charge
     const lateCharge = calculateLateCharge(formId, subtotal, pastDeadline);
     
+    // Ensure grand_total is never null
+    const grandTotal = subtotal + lateCharge || 0;
+    if (isNaN(grandTotal) || grandTotal === null) {
+      throw new Error("Invalid grand total calculation");
+    }
+    
     // Prepare data with totals
     const dataToSubmit = {
       ...formData,
-      subtotal,
-      late_charge: lateCharge,
-      grand_total: subtotal + lateCharge,
-      form_id: formId,
+      subtotal: subtotal || 0,
+      late_charge: lateCharge || 0,
+      grand_total: grandTotal,
+      form_type: formId, // Use form_type instead of form_id
       submitted_at: new Date().toISOString(),
-      past_deadline: pastDeadline
+      status: 'submitted'
     };
 
     // Insert into appropriate table
@@ -151,18 +161,23 @@ export async function submitForm(
   }
 }
 
-// Helper function to normalize items data
+// Helper function to normalize items data with strict number handling
 function normalizeItems(items: any[]) {
-  if (!items) return [];
+  if (!items || !Array.isArray(items)) return [];
   
-  return items.map(item => ({
-    description: item.description || '',
-    quantity: Number(item.quantity) || 0,
-    unitCost: Number(item.unitCost) || 0,
-    total: Number(item.total) || Number(item.quantity) * Number(item.unitCost) || 0
-  }));
+  return items
+    .filter(item => item && typeof item === 'object') // Only process valid items
+    .map(item => ({
+      description: item.description || '',
+      quantity: parseInt(item.quantity) || 0,
+      unitCost: parseFloat(item.unitCost) || 0,
+      total: parseFloat(item.total) || (parseInt(item.quantity) || 0) * (parseFloat(item.unitCost) || 0)
+    }));
 }
 
+/**
+ * Enhanced form submission with proper data validation and error handling
+ */
 export const syncFormWithSupabase = async (formData: any, formType: number): Promise<{ success: boolean; submittedData?: any; message: string }> => {
   try {
     console.log('Starting form submission to Supabase:', { formType });
@@ -175,27 +190,42 @@ export const syncFormWithSupabase = async (formData: any, formType: number): Pro
       return { success: false, message: 'You must be logged in to submit a form' };
     }
     
-    // Remove any references to non-existent columns like 'surcharge'
+    // Clean input data
     const cleanedFormData = {...formData};
-    if ('surcharge' in cleanedFormData) {
-      delete cleanedFormData.surcharge;
-    }
+    // Remove any fields that don't exist in the database schema
+    if ('surcharge' in cleanedFormData) delete cleanedFormData.surcharge;
+    if ('submission_date' in cleanedFormData) delete cleanedFormData.submission_date;
+    if ('form_id' in cleanedFormData) delete cleanedFormData.form_id;
     
-    // Normalize items to ensure consistent data format
+    // Normalize items for consistent data format and proper number handling
     const normalizedItems = cleanedFormData.items ? normalizeItems(cleanedFormData.items) : [];
     
-    // Prepare data in the format matching the database schema exactly
+    // Calculate financial totals with strict number handling
+    const subtotalValue = parseFloat(cleanedFormData.subtotal) || 
+                          normalizedItems.reduce((sum, item) => sum + (item.total || 0), 0);
+    const lateChargeValue = parseFloat(cleanedFormData.late_charge) || 0;
+    
+    // Ensure grand_total is never null and is a valid number
+    const grandTotalValue = subtotalValue + lateChargeValue;
+    if (isNaN(grandTotalValue)) {
+      return { 
+        success: false, 
+        message: 'Invalid total calculation. Please check your amounts.'
+      };
+    }
+    
+    // Prepare data in exact format matching database schema
     const submissionData = {
       user_id: user.id,
       form_type: formType,
       company_data: cleanedFormData.company_data || {},
       items: normalizedItems,
-      subtotal: parseFloat(cleanedFormData.subtotal) || 0,
-      late_charge: parseFloat(cleanedFormData.late_charge) || 0,
-      grand_total: parseFloat(cleanedFormData.grand_total) || 0,
+      subtotal: subtotalValue,
+      late_charge: lateChargeValue,
+      grand_total: grandTotalValue, // This must never be null
+      total: grandTotalValue, // For backward compatibility
       submitted_at: new Date().toISOString(),
       auth_details: cleanedFormData.auth_details || {},
-      // Fields confirmed to exist in the database schema
       status: 'submitted',
       payment_details: {}
     };

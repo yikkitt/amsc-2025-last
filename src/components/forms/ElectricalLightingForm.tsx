@@ -88,9 +88,15 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
   const isLateOrder = isPastDeadline(); // Use the isPastDeadline function
   const subtotal = calculateTotal();
   const lateCharge = isLateOrder ? subtotal * 0.1 : 0;
+  const grandTotal = subtotal + lateCharge; // Calculate here to ensure it's a valid number
 
   // Prepare form data for submission and PDF generation
   const prepareFormData = () => {
+    // Ensure all monetary values are valid numbers
+    const validSubtotal = isNaN(subtotal) ? 0 : subtotal;
+    const validLateCharge = isNaN(lateCharge) ? 0 : lateCharge;
+    const validGrandTotal = isNaN(grandTotal) ? validSubtotal + validLateCharge : grandTotal;
+    
     return {
       form_type: 3,
       company_data: {
@@ -99,18 +105,18 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
         contact_person: userData?.contact_person || '',
         email: userData?.email || '',
       },
-      // Only include items with a quantity > 0 and simplify the item structure
+      // Only include items with a quantity > 0 and ensure all numeric values are valid
       items: orderItems
         .filter(item => item.quantity > 0)
         .map(item => ({
           description: item.description,
-          quantity: item.quantity,
-          unitCost: item.unitCost,
-          total: item.quantity * item.unitCost
+          quantity: parseInt(String(item.quantity)) || 0,
+          unitCost: parseFloat(String(item.unitCost)) || 0,
+          total: parseFloat(String(item.quantity * item.unitCost)) || 0
         })),
-      subtotal: subtotal,
-      late_charge: lateCharge,
-      grand_total: subtotal + lateCharge,
+      subtotal: validSubtotal,
+      late_charge: validLateCharge,
+      grand_total: validGrandTotal, // Never null
       auth_details: {
         name: '',
         designation: '',
@@ -126,6 +132,11 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
     try {
       const formData = prepareFormData();
       console.log('Submitting form data:', formData);
+      
+      // Verify grand_total is not null before submission
+      if (formData.grand_total === null || formData.grand_total === undefined || isNaN(formData.grand_total)) {
+        throw new Error("Invalid grand total amount. Please try again.");
+      }
       
       // Use the syncFormWithSupabase function for submission
       const { success, submittedData: returnedData, message } = await syncFormWithSupabase(formData, 3);
@@ -148,6 +159,8 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
         errorMessage = "There was a database field mismatch. Our team has been notified and will fix this issue.";
       } else if (errorMessage.includes('duplicate key')) {
         errorMessage = "You have already submitted this form. Please view your submissions in the dashboard.";
+      } else if (errorMessage.includes('violates not-null constraint')) {
+        errorMessage = "Required form fields are missing. Please ensure all required fields are filled.";
       }
       
       alert(`Error submitting form: ${errorMessage}`);
