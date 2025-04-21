@@ -2,7 +2,6 @@
 
 import React, { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import UserDataContainer from '@/components/UserDataContainer'
 import { isPastDeadline } from '@/lib/forms/submitHandler'
 import { FormData } from '@/types/forms'
@@ -35,7 +34,6 @@ interface ElectricalLightingFormProps {
 
 export default function ElectricalLightingForm({ userData }: ElectricalLightingFormProps) {
   const router = useRouter()
-  const supabase = getSupabaseBrowserClient()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formSubmitted, setFormSubmitted] = useState(false)
   const [submittedData, setSubmittedData] = useState<any>(null)
@@ -139,9 +137,9 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
       }
       
       // Use the syncFormWithSupabase function for submission
-      const { success, submittedData: returnedData, message } = await syncFormWithSupabase(formData, 3);
+      const result = await syncFormWithSupabase(formData, userData?.company_name);
       
-      if (!success) throw new Error(message);
+      if (!result.success) throw new Error(result.message);
       
       // Store submitted data for PDF generation
       setSubmittedData(formData);

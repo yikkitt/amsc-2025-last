@@ -214,7 +214,7 @@ export async function syncFormWithSupabase(
     
     try {
       // Try to use the API endpoint first (which bypasses RLS)
-      const response = await fetch('/api/form-submission', {
+      const response = await fetch('/api/form-submission/route', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -237,7 +237,38 @@ export async function syncFormWithSupabase(
       } else {
         const errorText = await response.text();
         console.error('API submission error:', response.status, errorText);
-        throw new Error(`API submission failed: ${response.status} ${errorText}`);
+        
+        // Try fallback to the alternate API endpoint
+        try {
+          const fallbackResponse = await fetch('/api/form-submission', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({
+              formData: cleanedData,
+              userId
+            }),
+          });
+          
+          if (fallbackResponse.ok) {
+            const fallbackResult = await fallbackResponse.json();
+            console.log('Form submitted successfully via fallback API:', fallbackResult);
+            return { 
+              success: true, 
+              message: 'Form submitted successfully (via fallback)!',
+              data: fallbackResult 
+            };
+          } else {
+            const fallbackErrorText = await fallbackResponse.text();
+            console.error('Fallback API submission error:', fallbackResponse.status, fallbackErrorText);
+            throw new Error(`API submission failed: ${fallbackResponse.status} ${fallbackErrorText}`);
+          }
+        } catch (fallbackError) {
+          console.warn('Both API endpoints failed, falling back to direct Supabase access:', fallbackError);
+          throw new Error(`API submission failed: ${response.status} ${errorText}`);
+        }
       }
     } catch (apiError) {
       console.warn('API submission failed, falling back to direct Supabase access:', apiError);
