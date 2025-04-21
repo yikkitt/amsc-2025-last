@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import UserDataContainer from '@/components/UserDataContainer'
+import { syncFormWithSupabase } from '@/lib/forms/submitHandler'
+import { PdfButton } from '@/components/ui/PdfButton'
 
 interface AdminFeesFormProps {
   userData?: {
@@ -22,51 +24,83 @@ interface AdminFeesFormProps {
 
 export default function AdminFeesForm({ userData }: AdminFeesFormProps) {
   const router = useRouter()
-  const supabase = getSupabaseBrowserClient()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formSubmitted, setFormSubmitted] = useState(false)
+  const [submittedData, setSubmittedData] = useState<any>(null)
+  const formRef = useRef<HTMLDivElement>(null)
   const [squareMetre, setSquareMetre] = useState<string>('')
 
   const calculateAmount = (sqm: number) => {
     return sqm * 50.00 // RM 50.00 per sqm
   }
+  
+  const prepareFormData = (formData: FormData) => {
+    const sqm = parseFloat(squareMetre) || 0;
+    const calculatedAmount = calculateAmount(sqm);
+    
+    return {
+      form_type: 7,
+      company_name: formData.get('company') as string || userData?.company_name || '',
+      booth_number: formData.get('booth_no') as string || userData?.booth_number || '',
+      square_metre: sqm,
+      grand_total: calculatedAmount, // Use grand_total instead of amount
+      auth_details: {
+        name: formData.get('name') as string || '',
+        designation: formData.get('designation') as string || '',
+        date: formData.get('date') as string || new Date().toISOString(),
+        signature: formData.get('signature') as string || ''
+      },
+      address: formData.get('address') as string || userData?.address || '',
+      tel: formData.get('tel') as string || userData?.tel || '',
+      fax: formData.get('fax') as string || userData?.fax || '',
+      email: formData.get('email') as string || userData?.email || ''
+    };
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      const sqm = parseFloat(squareMetre) || 0
-      const formData = new FormData(e.target as HTMLFormElement)
-      const { error } = await supabase.from('form_submissions').insert({
-        form_type: 7,
-        company_data: {
-          company_name: formData.get('company'),
-          booth_number: formData.get('booth_no'),
-          address: formData.get('address'),
-          tel: formData.get('tel'),
-          fax: formData.get('fax'),
-          email: formData.get('email')
-        },
-        square_metre: sqm,
-        amount: calculateAmount(sqm),
-        auth_details: {
-          name: formData.get('name'),
-          designation: formData.get('designation'),
-          date: formData.get('date'),
-          signature: formData.get('signature')
-        }
-      })
-
-      if (error) throw error
-      // router.refresh()
+      const formElement = e.target as HTMLFormElement;
+      const formData = new FormData(formElement);
+      const preparedData = prepareFormData(formData);
+      
+      console.log('Submitting form data:', preparedData);
+      
+      // Use the syncFormWithSupabase function for submission
+      const result = await syncFormWithSupabase(preparedData, userData?.company_name);
+      
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+      
+      // Store submitted data for PDF generation
+      setSubmittedData(preparedData);
+      setFormSubmitted(true);
+      
+      // Show success message
+      alert("Form submitted successfully!");
     } catch (error) {
       console.error('Error submitting form:', error)
+      let errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      // Check for specific error types from Supabase
+      if (errorMessage.includes('violates not-null constraint')) {
+        errorMessage = "Required form fields are missing. Please ensure all required fields are filled.";
+      } else if (errorMessage.includes('duplicate key')) {
+        errorMessage = "You have already submitted this form. Please view your submissions in the dashboard.";
+      } else if (errorMessage.includes('column')) {
+        errorMessage = "There was a database field mismatch. Our team has been notified and will fix this issue.";
+      }
+      
+      alert(`Error submitting form: ${errorMessage}`);
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-md">
+    <div ref={formRef} className="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-md">
       {/* Form Header */}
       <div className="text-center mb-8 border-b border-gray-200 pb-6">
         <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 7</h1>
@@ -219,21 +253,41 @@ export default function AdminFeesForm({ userData }: AdminFeesFormProps) {
         </div>
 
         {/* Form Actions */}
-        <div className="flex justify-center space-x-6">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="px-8 py-3 border-2 border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50"
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit Form'}
-          </button>
+        <div className="flex justify-center space-x-6 mt-8">
+          {formSubmitted ? (
+            <>
+              <PdfButton
+                formData={submittedData}
+                formType={7}
+                containerRef={formRef}
+                className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => router.push('/dashboard/order-forms')}
+                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
+              >
+                Return to Dashboard
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="px-8 py-3 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit Form'}
+              </button>
+            </>
+          )}
         </div>
       </form>
     </div>
