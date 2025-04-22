@@ -31,19 +31,39 @@ export default function ExhibitionSchedulePage() {
               </thead>
               <tbody>
                 <tr>
-                  <td className="border border-gray-300 px-4 py-2 text-sm" rowSpan={2}>Wed Aug 6 2025 <br/>(Build-up Day 1)</td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">05:00 AM - 12:00 PM</td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">Move-in/Floor Possession by Official Contractor</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm" rowSpan={2}>Monday, 4th August 2025</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">7:00AM – 9:00 PM</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">Hall Open & Official Contractor build up</td>
                 </tr>
                 <tr>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">08:00 AM - 6:00 PM</td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">Exhibitors Move-in</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">12:00PM onwards</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">Non-Official Contractor build up</td>
+                </tr>
+                <tr>
+                  <td className="border border-gray-300 px-4 py-2 text-sm"></td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">9:00PM</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">Hall Closed</td>
+                </tr>
+                <tr>
+                  <td className="border border-gray-300 px-4 py-2 text-sm" rowSpan={2}>Tuesday, 5th August 2025</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">8:30AM – 9:00 PM</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">Hall Open<br/>Official & Non-Official Contractor build up</td>
+                </tr>
+                <tr>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">12.00PM – 6:00PM</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">Exhibitor Check-in / Move-In</td>
+                </tr>
+                <tr>
+                  <td className="border border-gray-300 px-4 py-2 text-sm"></td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">9:00PM</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">Hall Closed</td>
                 </tr>
                 <tr>
                   <td className="border border-gray-300 px-4 py-2 text-sm" colSpan={3}>
-                    <p className="font-medium text-amber-700 mb-1">All construction details must be completed by 08:00 PM, 5th October 2024.</p>
-                    <p className="font-medium text-amber-700 mb-1">Stand dressing and stocking up to should be completed by 08:00 PM, 5th October 2024.</p>
-                    <p className="font-medium text-amber-700">All contractor debris, booth coveralls, packing cases, and all other leftovers must be cleared away from the facility by 08:00 PM, 5th October 2024.</p>
+                    <p className="font-medium text-amber-700 mb-1">All stand construction must be completed by 8:00 PM, 5th August 2025.</p>
+                    <p className="font-medium text-amber-700 mb-1">Stand dressing and exhibitor set up should be completed by 6:00 PM, 5th August 2025.</p>
+                    <p className="font-medium text-amber-700 mb-1">All construction debris, booth materials, packing waster, and all other leftover must be cleared away from the hall by 8:00 PM, 5th August 2025.</p>
+                    <p className="font-medium text-amber-700">Automatic penalties including forfeiture of performance bond will be imposed for failure to comply.</p>
                   </td>
                 </tr>
               </tbody>
@@ -65,38 +85,45 @@ export default function ExhibitionSchedulePage() {
               </thead>
               <tbody>
                 <tr>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">Wed, Aug 6 2025<br/>(Show Day 1)</td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">08:00 AM</td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">Registration / Exhibitors</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">Wednesday, 6th August 2025</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">08:30AM onwards</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">Registration of Delegates</td>
                 </tr>
                 <tr>
-                  <td className="border border-gray-300 px-4 py-2 text-sm" rowSpan={2}></td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">09:00 AM - 5:00 PM</td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">Hall Open to Exhibitors</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">Wednesday, 6th August 2025<br/>(Actual Day 1)</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">8:00 AM</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">Hall Open for Exhibitors</td>
                 </tr>
                 <tr>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">10:00 AM - 5:00 PM</td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">Show Open</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm"></td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">9:00 AM – 6:30PM</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">Show hour</td>
                 </tr>
                 <tr>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">Thu, Aug 7 2025<br/>(Show Day 2)</td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">08:00 AM</td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">Hall Open to Exhibitors</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm"></td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">6:30 PM</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">Hall Closed</td>
                 </tr>
                 <tr>
-                  <td className="border border-gray-300 px-4 py-2 text-sm" rowSpan={2}></td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">09:00 AM - 6:00 PM</td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">Show Open</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">Thursday, 7th August 2025<br/>(Actual Day 2)</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">8:00 AM onwards</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">Hall Open for Exhibitors</td>
                 </tr>
                 <tr>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">07:00 PM</td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">Hall Closes for Exhibitors</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm"></td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">9:00 AM – 6:30PM</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">Show hour</td>
+                </tr>
+                <tr>
+                  <td className="border border-gray-300 px-4 py-2 text-sm"></td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">6:30 PM</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">Hall Closed</td>
                 </tr>
                 <tr>
                   <td className="border border-gray-300 px-4 py-2 text-sm" colSpan={3}>
-                    <p className="font-medium text-amber-700 mb-1">Only hand-carry items are allowed to move out from the hall from 05:00 PM onwards, 7th October 2024. Refer to time/date listed in the Regulations/Requirements.</p>
-                    <p className="font-medium text-amber-700">Exhibits must be removed and vacated by 08:00 PM, 7th October 2024.</p>
-                    <p className="font-medium text-amber-700">Automatic penalties (including forfeiture of performance bond) will be imposed for failure to comply.</p>
+                    <p className="font-medium text-amber-700 mb-1">Only hand carry items are allowed to move out from the hall from 6:30 PM onwards, 7th August 2025. (Refer to Venue's Rules & Regulations)</p>
+                    <p className="font-medium text-amber-700 mb-1">Dismantling of stand can commence on 7:00 PM, 7th August 2025.</p>
+                    <p className="font-medium text-amber-700">Automatic penalties including forfeiture of performance bond will be imposed for failure to comply.</p>
                   </td>
                 </tr>
               </tbody>
@@ -104,8 +131,8 @@ export default function ExhibitionSchedulePage() {
           </div>
         </div>
         
-        <div className="mb-6">
-          <h3 className="text-lg font-bold text-blue-800 mb-4 bg-blue-100 py-2 px-4 rounded-lg">TEAR DOWN</h3>
+        <div className="mb-8">
+          <h3 className="text-lg font-bold text-blue-800 mb-4 bg-blue-100 py-2 px-4 rounded-lg">DISMANTLE</h3>
           
           <div className="overflow-x-auto mb-4">
             <table className="min-w-full border-collapse border border-gray-300">
@@ -118,15 +145,15 @@ export default function ExhibitionSchedulePage() {
               </thead>
               <tbody>
                 <tr>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">Thu, Aug 7 2025<br/>(Dismantling)</td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">6:00 PM - 11:00 PM</td>
-                  <td className="border border-gray-300 px-4 py-2 text-sm">Tear down</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">Thursday, 7th August 2025<br/>(Dismantle)</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">7:00 PM – 11:55 PM</td>
+                  <td className="border border-gray-300 px-4 py-2 text-sm">Dismantle</td>
                 </tr>
                 <tr>
                   <td className="border border-gray-300 px-4 py-2 text-sm" colSpan={3}>
-                    <p className="font-medium text-amber-700 mb-1">Exhibits items must be cleared from the stands by 7:00 PM, 7th Oct 2024 (the organiser/Official Contractor cannot be held responsible for any items left on your stands after this time).</p>
-                    <p className="font-medium text-amber-700 mb-1">Any leftover items will be disposed of by the organizer at your expense.</p>
-                    <p className="font-medium text-amber-700">The organiser/Official Contractor is not held responsible for any items left in the hall beyond 10:00 PM, Sat 7th Oct 2024.</p>
+                    <p className="font-medium text-amber-700 mb-1">Exhibits items must be cleared from the stands by 8:00PM, 7th August 2025, the organizer/ Official Contractor cannot be held responsible for any items left on your stand in the aisle or in the loading bay after this time.</p>
+                    <p className="font-medium text-amber-700 mb-1">Any debris left in the hall after 11:55 PM, 7th August 2025 will result in a penalty fee and a charge for disposal.</p>
+                    <p className="font-medium text-amber-700">The organiser/ Official Contractor is not held responsible for any items left in the hall beyond 11:55 PM, 7th August 2025.</p>
                   </td>
                 </tr>
               </tbody>
@@ -135,18 +162,14 @@ export default function ExhibitionSchedulePage() {
         </div>
         
         <div className="bg-gray-100 p-4 rounded-lg">
-          <h3 className="font-bold text-gray-800 mb-2">Notes:</h3>
-          <ul className="list-disc ml-6 space-y-1 text-gray-700">
-            <li>On exhibition days, exhibitors are permitted to enter the exhibition hall 1 hour before and 1 hour after official open hours.</li>
-            <li>Exhibitors reporting to their contractor must be at their stand prior to exhibition doors opening for security reasons. Only Exhibition authorized personnel with proper identification are permitted to enter.</li>
-            <li>Stand manning is a must. Unattended stands deny equal opportunity for meeting your targets and may deplete visitor experience.</li>
-            <li>This schedule is subject to any changes. Amendments to any changes will inform all concerned once it is available.</li>
-          </ul>
+          <h3 className="font-bold text-gray-800 mb-2">Note:</h3>
+          <p className="text-gray-700">
+            On exhibition days, exhibitors are permitted to enter the exhibition hall 1 hour before and stay 1 hour after official event hours. Exhibitors requiring to start earlier/stay later must obtain prior permission from the Organiser for security reasons. Only Exhibitors with valid exhibitors' passes are allowed entry to the Exhibition Hall before and during Exhibition hours.
+          </p>
+          <p className="mt-2 text-gray-700 font-medium">
+            **The exhibition schedule shall be updated from time to time. Kindly check with Organiser shall there be any updates, or we'll keep you informed**
+          </p>
         </div>
-        
-        <p className="mt-6 text-gray-600 text-sm italic">
-          For more detailed information, please refer to your Exhibitor Manual or contact the Exhibition Management.
-        </p>
       </div>
     </div>
   )

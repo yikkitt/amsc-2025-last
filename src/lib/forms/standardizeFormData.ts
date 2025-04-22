@@ -82,6 +82,14 @@ export function standardizeFormData(formData: Record<string, any>, formNumber: n
         );
       }
       break;
+      
+    case 9: // AV Equipment Form
+      // Handle security deposit if present
+      if (standardized.securityDeposit) {
+        standardized.security_deposit = standardized.securityDeposit;
+      }
+      // Already handled other items by standardizeItems
+      break;
   }
 
   // Ensure monetary values are properly standardized

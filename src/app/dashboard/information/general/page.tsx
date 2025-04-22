@@ -24,18 +24,18 @@ export default function GeneralInformationPage() {
             <h3 className="font-bold text-gray-900 mb-3">ORGANIZER</h3>
             <p className="text-gray-800 mb-1">Deltus Sdn Bhd</p>
             <p className="text-gray-700 mb-1">Unit C-2-22, DaMen USJ Komersial, Persiaran Kewajipan, Usj 1, 47500 Subang Jaya, Selangor</p>
-            <p className="text-gray-700 mb-1">Attn: Mr Gary Chai</p>
-            <p className="text-gray-700 mb-1">Tel: 03-8061 3811</p>
-            <p className="text-gray-700">Email: <a href="mailto:garychai@deltus.com" className="text-blue-600 hover:underline">garychai@deltus.com</a></p>
+            <p className="text-gray-700 mb-1">Attn: Gary Chai, Director</p>
+            <p className="text-gray-700 mb-1">Tel: 6016 538 9292</p>
+            <p className="text-gray-700">Email: <a href="mailto:garychai@thedeltus.com" className="text-blue-600 hover:underline">garychai@thedeltus.com</a></p>
           </div>
           
           <div>
             <h3 className="font-bold text-gray-900 mb-3">OFFICIAL CONTRACTOR</h3>
             <p className="text-gray-800 mb-1">Blue Circle Plus Sdn Bhd</p>
             <p className="text-gray-700 mb-1">B-3-10, Block B, Ativo Plaza, Jalan PJU 9/1, Damansara Avenue, 52200 Kuala Lumpur</p>
-            <p className="text-gray-700 mb-1">Attn: Mr. Francis Chia</p>
-            <p className="text-gray-700 mb-1">Tel: 60 11-2327 0795</p>
-            <p className="text-gray-700">Email: <a href="mailto:francis@bcpgroup.com.my" className="text-blue-600 hover:underline">francis@bcpgroup.com.my</a></p>
+            <p className="text-gray-700 mb-1">Attn: Mr. KM Chia</p>
+            <p className="text-gray-700 mb-1">Tel: 6012 971 1393</p>
+            <p className="text-gray-700">Email: <a href="mailto:kmchia@bcpgroup.com.my" className="text-blue-600 hover:underline">kmchia@bcpgroup.com.my</a></p>
           </div>
           
           <div>
@@ -50,10 +50,10 @@ export default function GeneralInformationPage() {
           <div>
             <h3 className="font-bold text-gray-900 mb-3">FREIGHT FORWARDER</h3>
             <p className="text-gray-800 mb-1">Curio Pack Sdn Bhd</p>
-            <p className="text-gray-700 mb-1">No. 3-2-26, Laman Seri Business Park, Nilam 2, Bandar Bukit Tinggi, 41200 Klang, Selangor</p>
-            <p className="text-gray-700 mb-1">Attn: Mr Chong Fook</p>
-            <p className="text-gray-700 mb-1">Tel: 603-3325 3777 Fax: 603-3325 3666</p>
-            <p className="text-gray-700">Email: <a href="mailto:ching@curiopack.com.my" className="text-blue-600 hover:underline">ching@curiopack.com.my</a></p>
+            <p className="text-gray-700 mb-1">B-2-20, Leboh Batu Nilam 2, Bandar Bukit Tinggi 41200 Klang, Selangor Darul Ehsan, MALAYSIA. </p>
+            <p className="text-gray-700 mb-1">Attn: Mr Ngiam</p>
+            <p className="text-gray-700 mb-1">Tel: 6012 390 6556 Fax: 603 3325 3666</p>
+            <p className="text-gray-700">Email: <a href="mailto:ctngiam@curiopack.com.my" className="text-blue-600 hover:underline">ctngiam@curiopack.com.my</a></p>
           </div>
           
           <div>
