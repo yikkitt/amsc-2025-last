@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import UserDataContainer from '@/components/UserDataContainer'
-import { isPastDeadline } from '@/lib/forms/submitHandler'
+import { isPastDeadline, syncFormWithSupabase } from '@/lib/forms/submitHandler'
 
 interface OrderItem {
   id: string
@@ -92,6 +92,7 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
           .map(item => ({
             id: item.id,
             description: item.description,
+            dimension: item.dimension,
             quantity: item.quantity,
             unitCost: item.unitCost,
             total: item.unitCost * item.quantity
@@ -106,25 +107,15 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
         }
       };
 
-      // Get current user ID
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error("You must be logged in to submit a form");
+      // Use syncFormWithSupabase instead of direct insertion
+      const result = await syncFormWithSupabase(formData);
+      
+      if (!result.success) {
+        throw new Error(result.message);
       }
-
-      // Submit to Supabase
-      const { error } = await supabase
-        .from('forms')
-        .insert({
-          user_id: user.id,
-          form_type: '4',
-          data: formData,
-          status: 'submitted',
-          submitted_at: new Date().toISOString()
-        });
-
-      if (error) throw error
-      // router.refresh()
+      
+      // Show success message
+      alert("Form submitted successfully!");
     } catch (error) {
       console.error('Error submitting form:', error)
     } finally {

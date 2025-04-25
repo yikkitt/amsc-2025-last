@@ -49,7 +49,22 @@ export default function PerformanceBondForm({ userData }: PerformanceBondFormPro
       company_name: formData.get('company') as string || userData?.company_name || '',
       booth_number: formData.get('booth_no') as string || userData?.booth_number || '',
       square_metre: sqm,
-      grand_total: calculatedAmount, // Use grand_total instead of amount
+      amount: calculatedAmount,
+      grand_total: calculatedAmount,
+      items: [
+        {
+          id: 'performance-bond-1',
+          description: "Performance Bond (Refundable) (For Non-Official Contractor)",
+          particular: "Performance Bond (Refundable) (For Non-Official Contractor)",
+          square_metre: sqm,
+          quantity: 1,
+          unitCost: calculatedAmount,
+          total: calculatedAmount,
+          amount: calculatedAmount
+        }
+      ],
+      subtotal: calculatedAmount,
+      late_charge: 0,
       auth_details: {
         name: formData.get('name') as string || '',
         designation: formData.get('designation') as string || '',
