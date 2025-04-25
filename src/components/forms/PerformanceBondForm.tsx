@@ -245,7 +245,13 @@ export default function PerformanceBondForm({ userData }: PerformanceBondFormPro
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium mb-2">Name</label>
-                  <input type="text" name="name" className="w-full border-2 rounded p-2" required />
+                  <input 
+                    type="text" 
+                    name="name" 
+                    className="w-full border-2 rounded p-2" 
+                    defaultValue={userData?.contact_person || ''}
+                    required 
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">Designation</label>
@@ -274,21 +280,44 @@ export default function PerformanceBondForm({ userData }: PerformanceBondFormPro
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Address</label>
-                <textarea name="address" className="w-full border-2 rounded p-2" rows={3} required />
+                <textarea 
+                  name="address" 
+                  className="w-full border-2 rounded p-2" 
+                  rows={3} 
+                  defaultValue={userData?.address || ''}
+                  required 
+                />
               </div>
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium mb-2">Tel</label>
-                  <input type="tel" name="tel" className="w-full border-2 rounded p-2" required />
+                  <input 
+                    type="tel" 
+                    name="tel" 
+                    className="w-full border-2 rounded p-2" 
+                    defaultValue={userData?.tel || ''}
+                    required 
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">Fax</label>
-                  <input type="tel" name="fax" className="w-full border-2 rounded p-2" />
+                  <input 
+                    type="tel" 
+                    name="fax" 
+                    className="w-full border-2 rounded p-2"
+                    defaultValue={userData?.fax || ''} 
+                  />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Email</label>
-                <input type="email" name="email" className="w-full border-2 rounded p-2" required />
+                <input 
+                  type="email" 
+                  name="email" 
+                  className="w-full border-2 rounded p-2" 
+                  defaultValue={userData?.email || ''}
+                  required 
+                />
               </div>
               <div className="grid grid-cols-2 gap-6">
                 <div>
@@ -297,7 +326,13 @@ export default function PerformanceBondForm({ userData }: PerformanceBondFormPro
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">Date</label>
-                  <input type="date" name="date" className="w-full border-2 rounded p-2" required />
+                  <input 
+                    type="date" 
+                    name="date" 
+                    className="w-full border-2 rounded p-2" 
+                    defaultValue={new Date().toISOString().split('T')[0]}
+                    required 
+                  />
                 </div>
               </div>
             </div>

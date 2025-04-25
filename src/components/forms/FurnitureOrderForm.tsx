@@ -81,7 +81,10 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
     setIsSubmitting(true)
     
     try {
-      const formData = {
+      const formElement = e.target as HTMLFormElement;
+      const formData = new FormData(formElement);
+      
+      const formDataObj = {
         form_type: 4,
         company_data: {
           company_name: userData?.company_name || '',
@@ -101,14 +104,21 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
         late_charge: lateCharge,
         grand_total: subtotal + lateCharge,
         auth_details: {
-          name: '',
-          designation: '',
-          date: new Date().toISOString(),
+          name: formData.get('auth_name')?.toString() || userData?.contact_person || '',
+          designation: formData.get('auth_designation')?.toString() || '',
+          company: formData.get('auth_company')?.toString() || userData?.company_name || '',
+          booth_number: formData.get('auth_booth')?.toString() || userData?.booth_number || '',
+          address: formData.get('auth_address')?.toString() || userData?.address || '',
+          email: formData.get('auth_email')?.toString() || userData?.email || '',
+          tel: formData.get('auth_tel')?.toString() || userData?.tel || '',
+          fax: formData.get('auth_fax')?.toString() || userData?.fax || '',
+          signature: formData.get('auth_signature')?.toString() || '',
+          date: formData.get('auth_date')?.toString() || new Date().toISOString().split('T')[0]
         }
       };
 
       // Use syncFormWithSupabase instead of direct insertion
-      const result = await syncFormWithSupabase(formData);
+      const result = await syncFormWithSupabase(formDataObj);
       
       if (!result.success) {
         throw new Error(result.message);
@@ -241,17 +251,27 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium mb-2">Name</label>
-                  <input type="text" className="w-full border-2 rounded p-2" />
+                  <input 
+                    type="text" 
+                    name="auth_name"
+                    className="w-full border-2 rounded p-2"
+                    defaultValue={userData?.contact_person || ''}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">Designation</label>
-                  <input type="text" className="w-full border-2 rounded p-2" />
+                  <input 
+                    type="text" 
+                    name="auth_designation"
+                    className="w-full border-2 rounded p-2" 
+                  />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Company</label>
                 <input 
-                  type="text" 
+                  type="text"
+                  name="auth_company" 
                   className="w-full border-2 rounded p-2"
                   defaultValue={userData?.company_name || ''}
                 />
@@ -259,37 +279,67 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
               <div>
                 <label className="block text-sm font-medium mb-2">Booth No</label>
                 <input 
-                  type="text" 
+                  type="text"
+                  name="auth_booth" 
                   className="w-full border-2 rounded p-2"
                   defaultValue={userData?.booth_number || ''}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Address</label>
-                <textarea className="w-full border-2 rounded p-2" rows={3} />
+                <textarea 
+                  name="auth_address"
+                  className="w-full border-2 rounded p-2" 
+                  rows={3}
+                  defaultValue={userData?.address || ''}
+                />
               </div>
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium mb-2">Tel</label>
-                  <input type="tel" className="w-full border-2 rounded p-2" />
+                  <input 
+                    type="tel"
+                    name="auth_tel" 
+                    className="w-full border-2 rounded p-2"
+                    defaultValue={userData?.tel || ''}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">Fax</label>
-                  <input type="tel" className="w-full border-2 rounded p-2" />
+                  <input 
+                    type="tel"
+                    name="auth_fax" 
+                    className="w-full border-2 rounded p-2"
+                    defaultValue={userData?.fax || ''}
+                  />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Email</label>
-                <input type="email" className="w-full border-2 rounded p-2" />
+                <input 
+                  type="email"
+                  name="auth_email" 
+                  className="w-full border-2 rounded p-2"
+                  defaultValue={userData?.email || ''}
+                />
               </div>
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium mb-2">Signature</label>
-                  <input type="text" className="w-full border-2 rounded p-2" />
+                  <input 
+                    type="text"
+                    name="auth_signature" 
+                    className="w-full border-2 rounded p-2" 
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">Date</label>
-                  <input type="date" className="w-full border-2 rounded p-2" />
+                  <input 
+                    type="date"
+                    name="auth_date" 
+                    className="w-full border-2 rounded p-2"
+                    defaultValue={new Date().toISOString().split('T')[0]}
+                  />
                 </div>
               </div>
             </div>
