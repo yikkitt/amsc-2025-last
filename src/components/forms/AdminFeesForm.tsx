@@ -46,10 +46,12 @@ export default function AdminFeesForm({ userData }: AdminFeesFormProps) {
       grand_total: calculatedAmount,
       items: [
         {
-          particular: "Admin Fee to Construct / Decorate Special Design Stand (Non-Refundable)",
+          description: "Admin Fee to Construct / Decorate Special Design Stand (Non-Refundable)",
+          quantity: 1,
+          unitCost: 50.00,
           price_per_sqm: 50.00,
           square_metre: sqm,
-          amount: calculatedAmount
+          total: calculatedAmount
         }
       ],
       auth_details: {
