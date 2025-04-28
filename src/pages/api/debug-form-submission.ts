@@ -12,14 +12,31 @@ export default async function handler(
 
   try {
     // Parse the request body
-    const { formData, userId: providedUserId } = req.body;
-    console.log('Received form data:', formData);
+    const { formData, userId: providedUserId, formType } = req.body;
+    
+    if (!formData) {
+      return res.status(400).json({ error: 'Missing form data' });
+    }
+    
+    console.log('Received form data:', JSON.stringify(formData));
     console.log('Provided user ID:', providedUserId);
+    console.log('Form type:', formType);
     
     // Create Supabase client with service role key for admin access
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!supabaseUrl || !supabaseServiceRoleKey) {
+      console.error('Missing Supabase URL or service role key');
+      return res.status(500).json({ 
+        error: 'Server configuration error', 
+        details: 'Missing required environment variables'
+      });
+    }
+    
     const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+      supabaseUrl,
+      supabaseServiceRoleKey,
       {
         auth: {
           autoRefreshToken: false,
@@ -35,37 +52,48 @@ export default async function handler(
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
       
-      // Verify the token and get the user ID
-      const { data: userData, error: authError } = await supabaseAdmin.auth.getUser(token);
-      
-      if (authError) {
-        console.error('Error verifying user token:', authError);
-        return res.status(401).json({ error: 'Unauthorized', details: authError.message });
+      try {
+        // Verify the token and get the user ID
+        const { data: userData, error: authError } = await supabaseAdmin.auth.getUser(token);
+        
+        if (authError) {
+          console.error('Error verifying user token:', authError);
+          // Continue with provided userId if available, don't fail the request
+          if (!userId) {
+            console.warn('No valid user ID available, proceeding with anonymous submission');
+          }
+        } else {
+          // Use the token's user ID if no user ID was provided
+          if (!userId && userData.user) {
+            userId = userData.user.id;
+            console.log('Using user ID from token:', userId);
+          }
+        }
+      } catch (tokenError) {
+        console.error('Error processing authentication token:', tokenError);
+        // Continue with provided userId
       }
-      
-      // Use the token's user ID if no user ID was provided
-      if (!userId) {
-        userId = userData.user?.id;
-      }
-      console.log('Verified user ID:', userId);
-    } else if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized - No valid authentication token provided and no user ID specified' });
+    }
+    
+    if (!userId) {
+      console.warn('No user ID available. Proceeding with an anonymous submission.');
+      userId = ''; // Use empty string for anonymous submissions
     }
     
     // Get form type from the data
-    const formType = formData.formType || 'unknown';
-    console.log('Form type:', formType);
+    const formTypeToUse = formType || formData.formType || formData.form_type || 'unknown';
+    console.log('Form type to use:', formTypeToUse);
     
     // Prepare the data to insert
     const submission = {
       user_id: userId,
-      form_type: formType,
+      form_type: formTypeToUse.toString(),
       data: formData,
       status: 'submitted',
       submitted_at: new Date().toISOString()
     };
     
-    console.log('Submitting to forms table:', submission);
+    console.log('Submitting to forms table:', JSON.stringify(submission, null, 2));
     
     // Insert into forms table using service role
     const { data, error } = await supabaseAdmin

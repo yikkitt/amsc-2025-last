@@ -26,6 +26,7 @@ const orderForms = [
   { id: 'form6', name: 'Form 6: Performance Bond', href: '/dashboard/order-forms/form6' },
   { id: 'form7', name: 'Form 7: Admin Fees', href: '/dashboard/order-forms/form7' },
   { id: 'form8', name: 'Form 8: Letter of Indemnity', href: '/dashboard/order-forms/indemnity-letter' },
+  { id: 'form9', name: 'Form 9: AV Equipment', href: '/dashboard/order-forms/form9' },
 ]
 
 const informationSections = [

@@ -4,9 +4,11 @@ import React, { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import UserDataContainer from '@/components/UserDataContainer'
 import { isPastDeadline } from '@/lib/forms/submitHandler'
-import { FormData } from '@/types/forms'
 import { syncFormWithSupabase } from '@/lib/forms/submitHandler'
 import { PdfButton } from '@/components/ui/PdfButton'
+import { User } from '@supabase/supabase-js'
+import { Dispatch, FormEvent, SetStateAction, useEffect } from 'react'
+import type { FormData as FormDataType } from 'undici'
 
 interface OrderItem {
   id: string
@@ -39,10 +41,10 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
   const formRef = useRef<HTMLDivElement>(null)
   
   const [orderItems, setOrderItems] = useState<OrderItem[]>([
-    { id: '901', description: 'RENTAL OF 42" LED TV', unitCost: 1000.00, quantity: 0, image: '/products/42-led-tv.jpg' },
-    { id: '902', description: 'RENTAL OF 55" LED TV', unitCost: 1500.00, quantity: 0, image: '/products/55-led-tv.jpg' },
-    { id: '903', description: 'RENTAL 65" LED TV', unitCost: 2000.00, quantity: 0, image: '/products/65-led-tv.jpg' },
-    { id: '904', description: 'RENTAL OF PORTABLE TV STAND', unitCost: 500.00, quantity: 0, image: '/products/tv-stand.jpg' },
+    { id: '901', description: '42" LED TV', unitCost: 1000.00, quantity: 0, image: '/products/42-led-tv.jpg' },
+    { id: '902', description: '55" LED TV', unitCost: 1500.00, quantity: 0, image: '/products/55-led-tv.jpg' },
+    { id: '903', description: '65" LED TV', unitCost: 2000.00, quantity: 0, image: '/products/65-led-tv.jpg' },
+    { id: '904', description: 'PORTABLE TV STAND', unitCost: 500.00, quantity: 0, image: '/products/tv-stand.jpg' },
   ])
   
   // Fixed security deposit amount
@@ -57,70 +59,89 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
   }
 
   const calculateSubtotal = () => {
-    return orderItems.reduce((sum, item) => sum + (item.unitCost * item.quantity), 0)
+    // Include regular items plus security deposit
+    return orderItems.reduce((sum, item) => sum + (item.unitCost * item.quantity), 0) + securityDeposit;
   }
 
-  // Calculate grand total including security deposit
+  // Calculate subtotal (items plus security deposit)
   const subtotal = calculateSubtotal();
   
   // Calculate late charge (30% of subtotal if past deadline)
   const isLateOrder = isPastDeadline(); 
   const lateCharge = isLateOrder ? subtotal * 0.3 : 0;
   
-  // Final grand total
-  const grandTotal = subtotal + lateCharge + securityDeposit;
+  // Final grand total 
+  const grandTotal = subtotal + lateCharge;
 
   // Prepare form data for submission and PDF generation
-  const prepareFormData = () => {
+  const prepareFormData = (form: HTMLFormElement) => {
     // Ensure all monetary values are valid numbers
     const validSubtotal = isNaN(subtotal) ? 0 : subtotal;
     const validLateCharge = isNaN(lateCharge) ? 0 : lateCharge;
-    const validGrandTotal = isNaN(grandTotal) ? validSubtotal + validLateCharge + securityDeposit : grandTotal;
+    const validGrandTotal = isNaN(grandTotal) ? validSubtotal + validLateCharge : grandTotal;
+    
+    const formDataObj = new FormData(form);
+    
+    // Create transformed items array - make sure items with quantity > 0 are included
+    const transformedItems = orderItems
+      .filter(item => item.quantity > 0)
+      .map(item => ({
+        id: item.id,
+        description: item.description,
+        quantity: parseInt(String(item.quantity)) || 0,
+        unitCost: parseFloat(String(item.unitCost)) || 0,
+        total: parseFloat(String(item.quantity * item.unitCost)) || 0
+      }));
+    
+    // Only add security deposit as a separate item if there are other items selected
+    const securityDepositItem = {
+      id: 'security-deposit',
+      description: "Security Deposit",
+      quantity: 1,
+      unitCost: securityDeposit,
+      total: securityDeposit
+    };
+    
+    // Combine all items
+    const allItems = [...transformedItems, securityDepositItem];
+    
+    // Log items to verify they're being included
+    console.log('Items to be submitted:', allItems);
     
     return {
       formType: 9,
+      form_type: '9',
+      orderItems: allItems, // Include items with the name orderItems as well
+      items: allItems, // Include items with the standard name items
       company_data: {
-        company_name: userData?.company_name || '',
-        booth_number: userData?.booth_number || '',
-        contact_person: userData?.contact_person || '',
-        email: userData?.email || '',
+        company_name: formDataObj.get('company') as string || userData?.company_name || '',
+        booth_number: formDataObj.get('booth_no') as string || userData?.booth_number || '',
+        contact_person: formDataObj.get('name') as string || userData?.contact_person || '',
+        email: formDataObj.get('email') as string || userData?.email || '',
+        tel: formDataObj.get('tel') as string || userData?.tel || '',
+        fax: formDataObj.get('fax') as string || userData?.fax || '',
+        address: formDataObj.get('address') as string || userData?.address || '',
       },
-      // Only include items with a quantity > 0 and ensure all numeric values are valid
-      items: [
-        ...orderItems
-          .filter(item => item.quantity > 0)
-          .map(item => ({
-            description: item.description,
-            quantity: parseInt(String(item.quantity)) || 0,
-            unitCost: parseFloat(String(item.unitCost)) || 0,
-            total: parseFloat(String(item.quantity * item.unitCost)) || 0
-          })),
-        // Add security deposit as a special item
-        {
-          description: "Security Deposit",
-          quantity: 1,
-          unitCost: securityDeposit,
-          total: securityDeposit
-        }
-      ],
       subtotal: validSubtotal,
       security_deposit: securityDeposit,
       late_charge: validLateCharge,
       grand_total: validGrandTotal,
       auth_details: {
-        name: '',
-        designation: '',
-        date: new Date().toISOString(),
+        name: formDataObj.get('name') as string || '',
+        designation: formDataObj.get('designation') as string || '',
+        date: formDataObj.get('date') as string || new Date().toISOString(),
+        signature: formDataObj.get('signature') as string || '',
       }
     };
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+  // Handle form submission
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
     
     try {
-      const formData = prepareFormData();
+      const formData = prepareFormData(e.target as HTMLFormElement);
       console.log('Submitting form data:', formData);
       
       // Verify grand_total is not null before submission
@@ -220,7 +241,7 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
                 {/* Subtotal row */}
                 <tr>
                   <td className="border border-gray-300 px-4 py-3 text-right font-medium" colSpan={3}>
-                    Subtotal
+                    Subtotal (including Security Deposit)
                   </td>
                   <td className="border border-gray-300 px-4 py-3 text-right font-medium">
                     {subtotal.toFixed(2)}
@@ -261,58 +282,139 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
             </ol>
           </div>
           
-          {/* Contact Information */}
-          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <p className="font-medium mb-2">Please retain a copy for your record & return this form via email to:</p>
-            <div className="mb-3">
-              <p className="font-bold">BLUE CIRCLE PLUS SDN BHD</p>
-              <p>Attn: Mr. Francis Chan / Ms. YJ Hoh</p>
-            </div>
-            <div className="mb-3">
-              <p>Email: francis@bcpgroup.com.my</p>
-              <p>or yijie@bcpgroup.com.my</p>
-            </div>
-            <p>Tel: +6011-2327 9795 / +6016-263 1150</p>
-          </div>
-          
           {/* Authorization Section */}
-          <div className="border-t border-gray-200 pt-6">
-            <h3 className="font-bold mb-4">AUTHORIZED BY:</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Name of Signatory:
-                </label>
-                <input
-                  type="text"
-                  className="w-full p-2 border border-gray-300 rounded"
-                  placeholder="Enter name of authorized representative"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Designation:
-                </label>
-                <input
-                  type="text"
-                  className="w-full p-2 border border-gray-300 rounded"
-                  placeholder="Enter designation"
-                />
-              </div>
-            </div>
+          <div className="mb-8">
+            <h4 className="font-bold mb-6 text-center">AUTHORIZATION</h4>
+            <p className="text-center mb-6">Please retain a copy for your record & return this form via email to:</p>
             
-            <div className="flex justify-between items-center">
-              <div className="text-sm text-gray-500">
-                <p>Date: {new Date().toLocaleDateString()}</p>
-              </div>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-              >
-                {isSubmitting ? 'Submitting...' : 'Submit Form'}
-              </button>
+            <div className="text-center mb-8">
+              <h5 className="font-bold mb-2">BLUE CIRCLE PLUS SDN BHD</h5>
+              <p className="mb-1">Attn: Mr. Francis Chan / Ms. YJ Hoh</p>
+              <p className="mb-1">Email: francis@bcpgroup.com.my</p>
+              <p className="mb-1">or yijie@bcpgroup.com.my</p>
+              <p>Tel: +6011-2327 9795 / +6016-263 1150</p>
             </div>
+
+            <div className="border-2 p-6 rounded-lg">
+              <h5 className="font-bold mb-4">Authorized Representative Applying:</h5>
+              <div className="grid grid-cols-1 gap-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Name</label>
+                    <input 
+                      type="text" 
+                      name="name" 
+                      className="w-full border-2 rounded p-2" 
+                      required 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Designation</label>
+                    <input 
+                      type="text" 
+                      name="designation" 
+                      className="w-full border-2 rounded p-2" 
+                      required 
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Company</label>
+                  <input 
+                    type="text" 
+                    name="company"
+                    className="w-full border-2 rounded p-2"
+                    defaultValue={userData?.company_name || ''}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Booth No</label>
+                  <input 
+                    type="text" 
+                    name="booth_no"
+                    className="w-full border-2 rounded p-2"
+                    defaultValue={userData?.booth_number || ''}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Address</label>
+                  <textarea 
+                    name="address" 
+                    className="w-full border-2 rounded p-2" 
+                    rows={3} 
+                    required 
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Tel</label>
+                    <input 
+                      type="tel" 
+                      name="tel" 
+                      className="w-full border-2 rounded p-2" 
+                      required 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Fax</label>
+                    <input 
+                      type="tel" 
+                      name="fax" 
+                      className="w-full border-2 rounded p-2" 
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Email</label>
+                  <input 
+                    type="email" 
+                    name="email" 
+                    className="w-full border-2 rounded p-2" 
+                    required 
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Signature</label>
+                    <input 
+                      type="text" 
+                      name="signature" 
+                      className="w-full border-2 rounded p-2" 
+                      required 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Date</label>
+                    <input 
+                      type="date" 
+                      name="date" 
+                      className="w-full border-2 rounded p-2" 
+                      required 
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Form Actions */}
+          <div className="flex justify-center space-x-6 mt-8">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="px-8 py-3 border-2 border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50"
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit Form'}
+            </button>
           </div>
         </form>
       ) : (

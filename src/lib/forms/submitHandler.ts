@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClientComponentClient } from '@/lib/supabase';
 import type { Database } from '@/types/supabase';
 import { supabase } from '@/lib/supabase/client';
 import { standardizeFormData, validateFormData } from './standardizeFormData';
@@ -115,6 +115,11 @@ export async function submitForm(
   try {
     const supabase = getSupabaseClient();
 
+    // Ensure formId is valid
+    if (isNaN(formId) || formId < 1 || formId > 9) {
+      throw new Error(`Invalid form type: ${formId}. Must be between 1 and 9.`);
+    }
+
     // Calculate subtotal based on items if present
     const subtotal = formData.items?.reduce(
       (acc: number, item: any) => acc + (parseFloat(item.total) || 0),
@@ -192,21 +197,34 @@ function normalizeItems(items: any[]) {
 /**
  * Synchronizes form data with Supabase
  * @param formData - The form data to submit
- * @param userId - The user ID (optional)
+ * @param formType - Optional form type if not included in formData
  * @returns Object with success status and message
  */
 export async function syncFormWithSupabase(
   formData: Record<string, any>,
-  userId?: string
+  formType?: string
 ): Promise<{ success: boolean; message: string }> {
   try {
     console.log("Syncing form data with Supabase:", formData);
-    console.log("User ID:", userId);
+    
+    // Get current user session and ID
+    const { data: sessionData } = await supabase.auth.getSession();
+    const user = sessionData?.session?.user;
+    
+    if (!user) {
+      console.warn("No authenticated user found - form will be submitted anonymously");
+    }
+    
+    const userId = user?.id;
+    console.log("User ID from auth session:", userId);
 
-    // Extract form number from formType
-    const formNumber = parseInt(String(formData.formType || formData.form_type || '0'), 10);
-    if (isNaN(formNumber) || formNumber < 1 || formNumber > 8) {
-      return { success: false, message: `Invalid form type: ${formData.formType}` };
+    // Extract form number from formType parameter or formData
+    const formTypeFromData = formData.formType || formData.form_type;
+    const formTypeToUse = formType || formTypeFromData;
+    
+    const formNumber = parseInt(String(formTypeToUse || '0'), 10);
+    if (isNaN(formNumber) || formNumber < 1 || formNumber > 9) {
+      return { success: false, message: `Invalid form type: ${formTypeToUse}` };
     }
     
     // Standardize the form data
@@ -219,34 +237,50 @@ export async function syncFormWithSupabase(
     }
 
     console.log("Standardized data:", standardizedData);
+    
+    // Make a copy of the form data and clean it before submission
+    const cleanedData = { ...standardizedData };
+    
+    // Remove problematic fields if they exist
+    delete cleanedData.id;
+    delete cleanedData.inserted_at;
+    delete cleanedData.updated_at;
+    
+    // Remove null or undefined values
+    Object.keys(cleanedData).forEach(key => {
+      if (cleanedData[key] === null || cleanedData[key] === undefined) {
+        delete cleanedData[key];
+      }
+    });
 
     // Try to submit to API endpoint first
     try {
       console.log("Attempting API submission");
       
-      const token = (await supabase.auth.getSession())?.data?.session?.access_token;
+      const token = sessionData?.session?.access_token;
       if (!token) {
-        throw new Error("No authentication token available");
+        console.warn("No authentication token available for API submission");
       }
 
       const response = await fetch("/api/debug-form-submission", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
-          formData: standardizedData,
+          formData: cleanedData,
           userId: userId,
+          formType: formNumber.toString()
         }),
       });
 
-      const result = await response.json();
-      
       if (!response.ok) {
-        throw new Error(result.message || "API submission failed");
+        const result = await response.json();
+        throw new Error(result.message || `API submission failed with status ${response.status}`);
       }
 
+      const result = await response.json();
       console.log("API submission successful:", result);
       return { success: true, message: "Form submitted successfully via API" };
     } catch (apiError) {
@@ -254,10 +288,12 @@ export async function syncFormWithSupabase(
       
       // Fall back to direct Supabase access
       const { error } = await supabase
-        .from('form_submissions')
+        .from('forms')
         .insert({
-          ...standardizedData,
-          user_id: userId,
+          form_type: formNumber.toString(),
+          user_id: userId || '',
+          data: cleanedData,
+          status: 'submitted',
           submitted_at: new Date().toISOString(),
         });
 

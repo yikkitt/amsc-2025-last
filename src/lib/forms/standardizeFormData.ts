@@ -1,4 +1,5 @@
 import { FormData } from '@/types/forms';
+import { standardizeAVEquipmentItems } from './standardizeItems';
 
 /**
  * Standardizes form data before submission to ensure consistency
@@ -84,11 +85,18 @@ export function standardizeFormData(formData: Record<string, any>, formNumber: n
       break;
       
     case 9: // AV Equipment Form
-      // Handle security deposit if present
+      console.log("Processing Form 9 (AV Equipment):", JSON.stringify(standardized, null, 2));
+      
+      // Use the specialized function for AV Equipment items
+      standardizeAVEquipmentItems(standardized);
+      
+      // Ensure the security deposit is properly included
       if (standardized.securityDeposit) {
         standardized.security_deposit = standardized.securityDeposit;
       }
-      // Already handled other items by standardizeItems
+      
+      // Log the result after standardization
+      console.log("After AV Equipment standardization:", JSON.stringify(standardized, null, 2));
       break;
   }
 
@@ -273,6 +281,12 @@ export function validateFormData(data: Record<string, any>): { valid: boolean; e
   // Basic validation
   if (!data.form_type) {
     errors.push("Missing form type");
+  } else {
+    // Check if form type is valid (1-9)
+    const formType = parseInt(data.form_type, 10);
+    if (isNaN(formType) || formType < 1 || formType > 9) {
+      errors.push(`Invalid form type: ${data.form_type}. Must be between 1 and 9.`);
+    }
   }
 
   if (!data.company_name) {

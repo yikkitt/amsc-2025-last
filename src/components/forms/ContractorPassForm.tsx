@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import Image from 'next/image'
 import UserDataContainer from '@/components/UserDataContainer';
+import { syncFormWithSupabase } from '@/lib/forms/submitHandler';
 
 interface ContractorPassFormProps {
   userData?: {
@@ -24,6 +25,8 @@ interface ContractorPassFormProps {
 export default function ContractorPassForm({ userData }: ContractorPassFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [quantity, setQuantity] = useState<number>(0);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [submittedData, setSubmittedData] = useState<any>(null);
   const router = useRouter();
   const supabase = getSupabaseBrowserClient();
 
@@ -42,12 +45,6 @@ export default function ContractorPassForm({ userData }: ContractorPassFormProps
     setIsSubmitting(true);
     try {
       const formData = new FormData(e.target as HTMLFormElement);
-      
-      // Get current user ID
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error("You must be logged in to submit a form");
-      }
       
       const formDataObj = {
         form_type: 2,
@@ -84,18 +81,19 @@ export default function ContractorPassForm({ userData }: ContractorPassFormProps
         }
       };
 
-      const { error } = await supabase
-        .from('forms')
-        .insert({
-          user_id: user.id,
-          form_type: '2',
-          data: formDataObj,
-          status: 'submitted',
-          submitted_at: new Date().toISOString()
-        });
-
-      if (error) throw error;
-      // router.refresh();
+      // Use syncFormWithSupabase instead of direct insert
+      const result = await syncFormWithSupabase(formDataObj);
+      
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+      
+      // Store submitted data for reference
+      setSubmittedData(formDataObj);
+      setFormSubmitted(true);
+      
+      // Show success message
+      alert("Form submitted successfully!");
     } catch (error) {
       console.error('Error submitting form:', error);
     } finally {

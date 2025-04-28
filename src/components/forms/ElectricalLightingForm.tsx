@@ -4,7 +4,7 @@ import React, { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import UserDataContainer from '@/components/UserDataContainer'
 import { isPastDeadline } from '@/lib/forms/submitHandler'
-import { FormData } from '@/types/forms'
+import type { FormData } from '@/types/forms'
 import { syncFormWithSupabase } from '@/lib/forms/submitHandler'
 import { PdfButton } from '@/components/ui/PdfButton'
 
@@ -34,10 +34,9 @@ interface ElectricalLightingFormProps {
 
 export default function ElectricalLightingForm({ userData }: ElectricalLightingFormProps) {
   const router = useRouter()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [formSubmitted, setFormSubmitted] = useState(false)
-  const [submittedData, setSubmittedData] = useState<any>(null)
-  const formRef = useRef<HTMLDivElement>(null)
+  const [submitted, setSubmitted] = useState(false)
+  const [currentlySubmitting, setCurrentlySubmitting] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
   
   const [orderItems, setOrderItems] = useState<OrderItem[]>([
     // SECTION A - INDIVIDUAL
@@ -88,82 +87,79 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
   const lateCharge = isLateOrder ? subtotal * 0.1 : 0;
   const grandTotal = subtotal + lateCharge; // Calculate here to ensure it's a valid number
 
-  // Prepare form data for submission and PDF generation
-  const prepareFormData = () => {
-    // Ensure all monetary values are valid numbers
-    const validSubtotal = isNaN(subtotal) ? 0 : subtotal;
-    const validLateCharge = isNaN(lateCharge) ? 0 : lateCharge;
-    const validGrandTotal = isNaN(grandTotal) ? validSubtotal + validLateCharge : grandTotal;
-    
-    return {
-      formType: 3,
-      company_data: {
-        company_name: userData?.company_name || '',
-        booth_number: userData?.booth_number || '',
-        contact_person: userData?.contact_person || '',
-        email: userData?.email || '',
-      },
-      // Only include items with a quantity > 0 and ensure all numeric values are valid
-      items: orderItems
-        .filter(item => item.quantity > 0)
-        .map(item => ({
-          description: item.description,
-          quantity: parseInt(String(item.quantity)) || 0,
-          unitCost: parseFloat(String(item.unitCost)) || 0,
-          total: parseFloat(String(item.quantity * item.unitCost)) || 0
-        })),
-      subtotal: validSubtotal,
-      late_charge: validLateCharge,
-      grand_total: validGrandTotal, // Never null
-      auth_details: {
-        name: '',
-        designation: '',
-        date: new Date().toISOString(),
-      }
-    };
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setIsSubmitting(true)
-    
-    try {
-      const formData = prepareFormData();
-      console.log('Submitting form data:', formData);
-      
-      // Verify grand_total is not null before submission
-      if (formData.grand_total === null || formData.grand_total === undefined || isNaN(formData.grand_total)) {
-        throw new Error("Invalid grand total amount. Please try again.");
+    setCurrentlySubmitting(true)
+
+    if (isPastDeadline()) {
+      alert('You cannot submit this form after the deadline. Contact the AMSC team if you have any questions.')
+      setCurrentlySubmitting(false)
+      return
+    }
+
+    const form = e.currentTarget
+    const formElements = form.elements as HTMLFormControlsCollection
+
+    // Validate monetary values
+    const moneyFields = [
+      'standardOutletPrice', 'standardAmountCharged', 
+      'floodLightPrice', 'floodLightAmountCharged', 
+      'specialWiringPrice', 'specialWiringAmountCharged', 
+      'bannerHangingPrice', 'bannerHangingAmountCharged'
+    ]
+
+    let allValid = true
+    moneyFields.forEach(field => {
+      const element = formElements.namedItem(field) as HTMLInputElement
+      if (element && element.value !== '') {
+        const value = parseFloat(element.value)
+        if (isNaN(value) || value < 0) {
+          alert(`Please enter a valid amount for ${field}`)
+          allValid = false
+        }
       }
-      
-      // Use the syncFormWithSupabase function for submission
-      const result = await syncFormWithSupabase(formData);
-      
-      if (!result.success) throw new Error(result.message);
-      
-      // Store submitted data for PDF generation
-      setSubmittedData(formData);
-      setFormSubmitted(true);
-      
-      // Show success message
-      alert("Form submitted successfully!");
-      
-      // Don't redirect immediately - stay on page so user can download PDF
+    })
+
+    if (!allValid) {
+      setCurrentlySubmitting(false)
+      return
+    }
+
+    // Prepare form values for submission
+    const formData = new FormData(form)
+
+    try {
+      await syncFormWithSupabase({
+        hasStandardOutlet: formData.get('hasStandardOutlet') === 'yes',
+        standardOutletAmount: formData.get('standardOutletAmount') ? Number(formData.get('standardOutletAmount')) : null,
+        standardOutletPrice: formData.get('standardOutletPrice') ? Number(formData.get('standardOutletPrice')) : null,
+        standardAmountCharged: formData.get('standardAmountCharged') ? Number(formData.get('standardAmountCharged')) : null,
+        
+        hasFloodLight: formData.get('hasFloodLight') === 'yes',
+        floodLightAmount: formData.get('floodLightAmount') ? Number(formData.get('floodLightAmount')) : null,
+        floodLightPrice: formData.get('floodLightPrice') ? Number(formData.get('floodLightPrice')) : null,
+        floodLightAmountCharged: formData.get('floodLightAmountCharged') ? Number(formData.get('floodLightAmountCharged')) : null,
+        
+        hasSpecialWiring: formData.get('hasSpecialWiring') === 'yes',
+        specialWiringAmount: formData.get('specialWiringAmount') ? Number(formData.get('specialWiringAmount')) : null,
+        specialWiringPrice: formData.get('specialWiringPrice') ? Number(formData.get('specialWiringPrice')) : null,
+        specialWiringAmountCharged: formData.get('specialWiringAmountCharged') ? Number(formData.get('specialWiringAmountCharged')) : null,
+        
+        hasBannerHanging: formData.get('hasBannerHanging') === 'yes',
+        bannerHangingAmount: formData.get('bannerHangingAmount') ? Number(formData.get('bannerHangingAmount')) : null,
+        bannerHangingPrice: formData.get('bannerHangingPrice') ? Number(formData.get('bannerHangingPrice')) : null,
+        bannerHangingAmountCharged: formData.get('bannerHangingAmountCharged') ? Number(formData.get('bannerHangingAmountCharged')) : null,
+        
+        notes: formData.get('notes')?.toString() || ''
+      }, "3")
+
+      setSubmitted(true)
+      router.refresh()
     } catch (error) {
       console.error('Error submitting form:', error)
-      let errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      // Check for specific error types from Supabase
-      if (errorMessage.includes('surcharge') || errorMessage.includes('column')) {
-        errorMessage = "There was a database field mismatch. Our team has been notified and will fix this issue.";
-      } else if (errorMessage.includes('duplicate key')) {
-        errorMessage = "You have already submitted this form. Please view your submissions in the dashboard.";
-      } else if (errorMessage.includes('violates not-null constraint')) {
-        errorMessage = "Required form fields are missing. Please ensure all required fields are filled.";
-      }
-      
-      alert(`Error submitting form: ${errorMessage}`);
+      alert('Error submitting form. Please try again.')
     } finally {
-      setIsSubmitting(false)
+      setCurrentlySubmitting(false)
     }
   }
 
@@ -173,7 +169,7 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
   }
 
   return (
-    <div ref={formRef} className="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-md">
+    <div className="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-md">
       {/* Form Header */}
       <div className="text-center mb-8 border-b border-gray-200 pb-6">
         <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 3</h1>
@@ -186,7 +182,7 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
       {/* User Data Container */}
       <UserDataContainer userData={userData} />
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-8" ref={formRef}>
         {/* Instructions */}
         <div className="space-y-2 text-sm bg-gray-50 p-4 rounded-lg">
           <p>1. This form must be completed and returned by every exhibitor. If service is not required, please endorse "NOT APPLICABLE" and return this form to the address below.</p>
@@ -291,7 +287,7 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
               <tr className="font-bold">
                 <td colSpan={4} className="border border-gray-300 p-2"></td>
                 <td className="border border-gray-300 p-2 text-right">Total Amount:</td>
-                <td className="border border-gray-300 p-2 text-center">{(subtotal + lateCharge).toFixed(2)}</td>
+                <td className="border border-gray-300 p-2 text-center">{grandTotal.toFixed(2)}</td>
               </tr>
             </tbody>
           </table>
@@ -331,14 +327,16 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
                   <label className="block text-sm font-medium mb-1 text-gray-700">Authorized by</label>
                   <input 
                     type="text" 
+                    name="auth_name"
                     className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                    defaultValue={userData?.company_name || ''}
+                    defaultValue={userData?.contact_person || ''}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700">Booth No</label>
                   <input 
                     type="text" 
+                    name="auth_booth"
                     className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
                     defaultValue={userData?.booth_number || ''}
                   />
@@ -346,20 +344,37 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1 text-gray-700">Designation</label>
-                <input type="text" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                <input 
+                  type="text" 
+                  name="auth_designation"
+                  className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">Company</label>
+                <input 
+                  type="text" 
+                  name="auth_company"
+                  className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                  defaultValue={userData?.company_name || ''}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1 text-gray-700">Company Address</label>
                 <textarea 
+                  name="auth_address"
                   className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
                   rows={2}
+                  defaultValue={userData?.address || ''}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1 text-gray-700">Email</label>
                 <input 
                   type="email" 
+                  name="auth_email"
                   className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  defaultValue={userData?.email || ''}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -367,26 +382,35 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
                   <label className="block text-sm font-medium mb-1 text-gray-700">Tel/Hp</label>
                   <input 
                     type="tel" 
+                    name="auth_tel"
                     className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    defaultValue={userData?.tel || ''}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700">Fax</label>
                   <input 
                     type="tel" 
+                    name="auth_fax"
                     className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    defaultValue={userData?.fax || ''}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700">Signature</label>
-                  <input type="text" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                  <input 
+                    type="text" 
+                    name="auth_signature"
+                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700">Date</label>
                   <input 
                     type="date" 
+                    name="auth_date"
                     className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     defaultValue={new Date().toISOString().split('T')[0]}
                   />
@@ -398,10 +422,10 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
 
         {/* Form Actions */}
         <div className="flex justify-center space-x-6">
-          {formSubmitted ? (
+          {submitted ? (
             <>
               <PdfButton
-                formData={submittedData}
+                formData={{}} // Pass empty object since submittedData was removed
                 formType={3}
                 containerRef={formRef}
                 className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
@@ -425,10 +449,10 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={currentlySubmitting}
                 className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
               >
-                {isSubmitting ? 'Submitting...' : 'Submit Form'}
+                {currentlySubmitting ? 'Submitting...' : 'Submit Form'}
               </button>
             </>
           )}
