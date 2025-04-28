@@ -122,8 +122,36 @@ export const generatePDF = async (element: HTMLElement, filename: string): Promi
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
     
+    // Create a clone of the element to manipulate without affecting the original
+    const elementClone = element.cloneNode(true) as HTMLElement;
+    
+    // Remove any unnecessary content or elements that cause blank pages
+    elementClone.querySelectorAll('.space-y-8, .space-y-6').forEach(el => {
+      (el as HTMLElement).style.marginBottom = '10px';
+      (el as HTMLElement).style.marginTop = '10px';
+    });
+    
+    // Reduce padding and margins that might cause extra pages
+    elementClone.querySelectorAll('.p-8, .p-6, .p-4').forEach(el => {
+      (el as HTMLElement).style.padding = '8px';
+    });
+    
+    // Adjust large margins
+    elementClone.querySelectorAll('.mb-8, .my-8, .mt-8').forEach(el => {
+      (el as HTMLElement).style.marginTop = '10px';
+      (el as HTMLElement).style.marginBottom = '10px';
+    });
+    
+    // Add a temporary container to hold the clone for rendering
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px';
+    tempContainer.style.top = '-9999px';
+    document.body.appendChild(tempContainer);
+    tempContainer.appendChild(elementClone);
+    
     // Capture the HTML content with optimized settings
-    const canvas = await html2canvas(element, {
+    const canvas = await html2canvas(elementClone, {
       scale: 2, // Higher scale for better quality
       useCORS: true, // Enable cross-origin resource sharing
       logging: false, // Disable logging for performance
@@ -139,9 +167,23 @@ export const generatePDF = async (element: HTMLElement, filename: string): Promi
           images[i].style.maxWidth = '100%';
           images[i].style.height = 'auto';
         }
+        
+        // Adjust font sizes to make content more compact
+        const textElements = clonedDoc.querySelectorAll('p, h1, h2, h3, h4, h5, h6, span, td, th');
+        textElements.forEach((el: Element) => {
+          const element = el as HTMLElement;
+          const currentSize = window.getComputedStyle(element).fontSize;
+          // Slightly reduce font size to fit more content per page
+          const newSize = parseInt(currentSize) * 0.95;
+          element.style.fontSize = `${newSize}px`;
+        });
+        
         return clonedDoc;
       }
     });
+    
+    // Clean up temporary container
+    document.body.removeChild(tempContainer);
     
     // Calculate dimensions to fit content on A4 page
     const imgWidth = canvas.width;
@@ -149,23 +191,49 @@ export const generatePDF = async (element: HTMLElement, filename: string): Promi
     const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
     const imgX = (pdfWidth - imgWidth * ratio) / 2;
     
-    // Split content into multiple pages if needed
-    let heightLeft = imgHeight;
-    let position = 0;
-    let page = 1;
-    
-    // Add first page
-    const imgData = canvas.toDataURL('image/jpeg', 0.95); // Use JPEG with 95% quality for smaller size
-    pdf.addImage(imgData, 'JPEG', imgX, position, imgWidth * ratio, imgHeight * ratio);
-    heightLeft -= pdfHeight;
-    
-    // Add additional pages if content overflows
-    while (heightLeft > 0) {
-      position = -pdfHeight * page;
-      pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', imgX, position, imgWidth * ratio, imgHeight * ratio);
-      heightLeft -= pdfHeight;
-      page++;
+    // Check if content fits on a single page
+    if (imgHeight * ratio <= pdfHeight) {
+      // Content fits on a single page - simply add it centered
+      const imgY = (pdfHeight - imgHeight * ratio) / 2;
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+    } else {
+      // Content needs multiple pages - calculate more precisely
+      const pageHeight = pdfHeight;
+      let heightLeft = imgHeight;
+      let position = 0;
+      let pageCount = 0;
+      
+      while (heightLeft > 0) {
+        // Calculate how much of the image to put on this page
+        const heightOnThisPage = Math.min(imgHeight - position / ratio, pageHeight / ratio);
+        
+        // Convert only the portion needed for this page
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        
+        // Add image to the PDF page
+        pdf.addImage(
+          imgData, 
+          'JPEG', 
+          imgX, 
+          0, 
+          imgWidth * ratio, 
+          imgHeight * ratio, 
+          '', 
+          'FAST',
+          pageCount === 0 ? 0 : -position  // Offset for subsequent pages
+        );
+        
+        // Reduce height left and increase position
+        heightLeft -= pageHeight / ratio;
+        position += pageHeight;
+        pageCount++;
+        
+        // Add a new page if there's still content
+        if (heightLeft > 0) {
+          pdf.addPage();
+        }
+      }
     }
     
     // Generate the PDF data as blob for modern browsers
