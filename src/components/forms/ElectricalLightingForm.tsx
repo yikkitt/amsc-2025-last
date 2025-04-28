@@ -230,8 +230,17 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
                     <td className="border border-gray-300 p-2 text-center">{item.id}</td>
                     <td className="border border-gray-300 p-2 relative">
                       <div className="relative group w-14 h-14 cursor-pointer">
-                        <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded">
-                          <span className="text-xs text-gray-500">No image</span>
+                        <img 
+                          src={"https://via.placeholder.com/100x100?text=" + encodeURIComponent(item.id)}
+                          alt={item.description}
+                          className="w-full h-full object-contain"
+                        />
+                        <div className="absolute top-0 left-0 w-0 h-0 bg-white opacity-0 group-hover:opacity-100 group-hover:w-48 group-hover:h-48 transition-all duration-200 z-10 overflow-hidden rounded shadow-lg">
+                          <img 
+                            src={"https://via.placeholder.com/200x200?text=" + encodeURIComponent(item.id)}
+                            alt={item.description} 
+                            className="w-full h-full object-contain"
+                          />
                         </div>
                       </div>
                     </td>
