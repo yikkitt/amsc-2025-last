@@ -28,9 +28,17 @@ export function standardizeFormData(formData: Record<string, any>, formNumber: n
 
   // Ensure form_type is consistently formatted
   standardized.form_type = formNumber.toString();
+  
+  // Ensure submitted_at field is present
+  if (!standardized.submitted_at) {
+    standardized.submitted_at = new Date().toISOString();
+  }
 
   // Standard company data normalization
   standardizeCompanyData(standardized);
+
+  // Standardize auth details across all forms
+  standardizeAuthDetails(standardized);
 
   // Standardize items regardless of what they're called
   standardizeItems(standardized);
@@ -53,14 +61,24 @@ export function standardizeFormData(formData: Record<string, any>, formNumber: n
       
     case 3: // Electrical & Lighting Form
       // Already handled by standardizeItems
+      // Ensure order items are included for the PDF and database
+      if (Array.isArray(standardized.orderItems) && !standardized.items) {
+        standardized.items = standardizeItems(standardized.orderItems);
+      }
       break;
       
     case 4: // Furniture Order Form
       // Already handled by standardizeItems
+      if (Array.isArray(standardized.orderItems) && !standardized.items) {
+        standardized.items = standardizeItems(standardized.orderItems);
+      }
       break;
       
     case 5: // Printing Order Form
       // Already handled by standardizeItems
+      if (Array.isArray(standardized.orderItems) && !standardized.items) {
+        standardized.items = standardizeItems(standardized.orderItems);
+      }
       break;
       
     case 6: // Performance Bond Form
@@ -74,6 +92,9 @@ export function standardizeFormData(formData: Record<string, any>, formNumber: n
       
     case 7: // Admin Fees Form
       // Already handled by standardizeItems
+      if (Array.isArray(standardized.orderItems) && !standardized.items) {
+        standardized.items = standardizeItems(standardized.orderItems);
+      }
       break;
       
     case 8: // Indemnity Letter Form
@@ -93,6 +114,11 @@ export function standardizeFormData(formData: Record<string, any>, formNumber: n
       // Ensure the security deposit is properly included
       if (standardized.securityDeposit) {
         standardized.security_deposit = standardized.securityDeposit;
+      }
+      
+      // Ensure order items are included for the PDF and database
+      if (Array.isArray(standardized.orderItems) && !standardized.items) {
+        standardized.items = standardizeItems(standardized.orderItems);
       }
       
       // Log the result after standardization
@@ -164,6 +190,43 @@ function standardizeCompanyData(data: Record<string, any>): void {
     data.company_data.tel = data.telephone;
   } else if (data.phone && !data.company_data.tel) {
     data.company_data.tel = data.phone;
+  }
+}
+
+/**
+ * Standardizes authorization details across different naming conventions
+ */
+function standardizeAuthDetails(data: Record<string, any>): void {
+  // Create auth_details object if it doesn't exist
+  if (!data.auth_details) {
+    data.auth_details = {};
+  }
+
+  // Handle name variations
+  if (data.name && !data.auth_details.name) {
+    data.auth_details.name = data.name;
+  } else if (data.auth_name && !data.auth_details.name) {
+    data.auth_details.name = data.auth_name;
+  } else if (data.authorizedBy && !data.auth_details.name) {
+    data.auth_details.name = data.authorizedBy;
+  }
+
+  // Handle designation variations
+  if (data.designation && !data.auth_details.designation) {
+    data.auth_details.designation = data.designation;
+  } else if (data.auth_designation && !data.auth_details.designation) {
+    data.auth_details.designation = data.auth_designation;
+  } else if (data.position && !data.auth_details.designation) {
+    data.auth_details.designation = data.position;
+  }
+
+  // Handle date variations
+  if (data.auth_date && !data.auth_details.date) {
+    data.auth_details.date = data.auth_date;
+  } else if (data.date && !data.auth_details.date) {
+    data.auth_details.date = data.date;
+  } else if (!data.auth_details.date) {
+    data.auth_details.date = new Date().toISOString().split('T')[0]; // Default to today in YYYY-MM-DD format
   }
 }
 

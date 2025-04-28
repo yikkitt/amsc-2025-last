@@ -50,8 +50,8 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
     { id: '108', description: '100W LED Metal Halide Floodlight', unitCost: 350.00, quantity: 0, image: '/products/halide-100w.jpg', section: 'SECTION A - INDIVIDUAL' },
     
     // LIGHTING CONNECTION
-    { id: 'LC1', description: 'Lighting Connection with cabling (Max 100w per bulb/tube)', unitCost: 100.00, quantity: 0, image: '/products/power-point-13a.jpg', section: 'LIGHTING CONNECTION' },
-    { id: 'LC2', description: 'Lighting Connection for LED strip / Bulb / Tube (Max 1mL or 1 bulb / tube per connection)', unitCost: 100.00, quantity: 0, image: '/products/led-long-arm.jpg', section: 'LIGHTING CONNECTION' },
+    { id: 'LC1', description: 'Lighting Connection with cabling (Max 100w per bulb/tube)', unitCost: 100.00, quantity: 0, image: '', section: 'LIGHTING CONNECTION' },
+    { id: 'LC2', description: 'Lighting Connection for LED strip / Bulb / Tube (Max 1mL or 1 bulb / tube per connection)', unitCost: 100.00, quantity: 0, image: '', section: 'LIGHTING CONNECTION' },
     
     // POWER POINT / ISOLATOR
     { id: '109', description: '13 Amp/230V single phase power point (max 500W & not for lighting)', unitCost: 110.00, quantity: 0, image: '/products/power-point-13a.jpg', section: 'POWER POINT / ISOLATOR' },
@@ -60,7 +60,7 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
     { id: '112', description: '15 Amp / 230V Single Phase Power Point 24 Hours usage (max 2KW & not for lighting)', unitCost: 580.00, quantity: 0, image: '/products/power-point-15a-24h.jpg', section: 'POWER POINT / ISOLATOR' },
     
     // TEMPORARY POWER SUPPLY
-    { id: 'TPS1', description: '13 Amp/230V single phase power point (Temporary power supply for set up)', unitCost: 150.00, quantity: 0, image: '/products/power-point-13a.jpg', section: 'TEMPORARY POWER SUPPLY' },
+    { id: 'TPS1', description: '13 Amp/230V single phase power point (Temporary power supply for set up)', unitCost: 150.00, quantity: 0, image: '', section: 'TEMPORARY POWER SUPPLY' },
   ])
   
   // Function to check if an item is the first of its section
@@ -150,7 +150,33 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
         bannerHangingPrice: formData.get('bannerHangingPrice') ? Number(formData.get('bannerHangingPrice')) : null,
         bannerHangingAmountCharged: formData.get('bannerHangingAmountCharged') ? Number(formData.get('bannerHangingAmountCharged')) : null,
         
-        notes: formData.get('notes')?.toString() || ''
+        notes: formData.get('notes')?.toString() || '',
+        
+        // Include standard company information
+        company_name: userData?.company_name || formData.get('auth_company')?.toString() || '',
+        booth_number: userData?.booth_number || formData.get('auth_booth')?.toString() || '',
+        
+        // Include contact information
+        contact_person: userData?.contact_person || formData.get('auth_name')?.toString() || '',
+        email: userData?.email || formData.get('auth_email')?.toString() || '',
+        tel: userData?.tel || formData.get('auth_tel')?.toString() || '',
+        fax: userData?.fax || formData.get('auth_fax')?.toString() || '',
+        address: userData?.address || formData.get('auth_address')?.toString() || '',
+        
+        // Include order items for standardization
+        orderItems: orderItems.filter(item => item.quantity > 0),
+        
+        // Include totals for consistency
+        subtotal: subtotal,
+        late_charge: lateCharge,
+        grand_total: grandTotal,
+        
+        // Include authorization details
+        auth_details: {
+          name: formData.get('auth_name')?.toString() || userData?.contact_person || '',
+          designation: formData.get('auth_designation')?.toString() || '',
+          date: formData.get('auth_date')?.toString() || new Date().toISOString().split('T')[0]
+        }
       }, "3")
 
       setSubmitted(true)
