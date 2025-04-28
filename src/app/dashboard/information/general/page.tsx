@@ -41,15 +41,19 @@ export default function GeneralInformationPage() {
           <div>
             <h3 className="font-bold text-gray-900 mb-3">THE ORGANIZER/MANAGEMENT</h3>
             <p className="text-gray-800 mb-1">THE MALAYSIAN SOCIETY OF AESTHETIC MEDICINE (MSAM)</p>
+            <p className="text-gray-700 mb-1">Suite 313, Lot PO5A, Empire Shopping Gallery, Jalan SS 16/1, 47500 Subang Jaya, Selangor</p>
+            <p className="text-gray-700 mb-1">Attn: MSAM</p>
+            <p className="text-gray-700 mb-1">Tel:+60 11-6209 1220</p>
+            <p className="text-gray-700">Email: <a href="mailto:secretariat@msam.com.my" className="text-blue-600 hover:underline">secretariat@msam.com.my</a></p>
           </div>
           
           <div>
             <h3 className="font-bold text-gray-900 mb-3">FREIGHT FORWARDER</h3>
-            <p className="text-gray-800 mb-1">WIZER & SPICK SDN BHD</p>
-            <p className="text-gray-700 mb-1">1-60, Jalan PUJ 3/7, Taman Perindustrian Puncak Jalil, 43300 Seri Kembangan, Selangor</p>
-            <p className="text-gray-700 mb-1">Attn: Ms Shary</p>
-            <p className="text-gray-700 mb-1">Tel: 603-8941 2402</p>
-            <p className="text-gray-700">Email: <a href="mailto:shary@wizer-spick.com" className="text-blue-600 hover:underline">shary@wizer-spick.com</a></p>
+            <p className="text-gray-800 mb-1">Curio Pack Sdn Bhd</p>
+            <p className="text-gray-700 mb-1">B-2-20, Leboh Batu Nilam 2, Bandar Bukit Tinggi 41200 Klang, Selangor Darul Ehsan, MALAYSIA. </p>
+            <p className="text-gray-700 mb-1">Attn: Mr Ngiam</p>
+            <p className="text-gray-700 mb-1">Tel: 6012 390 6556 Fax: 603 3325 3666</p>
+            <p className="text-gray-700">Email: <a href="mailto:ctngiam@curiopack.com.my" className="text-blue-600 hover:underline">ctngiam@curiopack.com.my</a></p>
           </div>
           
           <div>
