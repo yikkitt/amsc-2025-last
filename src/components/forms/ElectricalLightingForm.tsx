@@ -1,12 +1,13 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import UserDataContainer from '@/components/UserDataContainer'
 import { isPastDeadline } from '@/lib/forms/submitHandler'
 import type { FormData } from '@/types/forms'
 import { syncFormWithSupabase } from '@/lib/forms/submitHandler'
 import { PdfButton } from '@/components/ui/PdfButton'
+import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 
 interface OrderItem {
   id: string
@@ -36,7 +37,9 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
   const router = useRouter()
   const [submitted, setSubmitted] = useState(false)
   const [currentlySubmitting, setCurrentlySubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const formRef = useRef<HTMLFormElement>(null)
+  const supabase = getSupabaseBrowserClient()
   
   const [orderItems, setOrderItems] = useState<OrderItem[]>([
     // SECTION A - INDIVIDUAL
@@ -62,6 +65,41 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
     // TEMPORARY POWER SUPPLY
     { id: 'TPS1', description: '13 Amp/230V single phase power point (Temporary power supply for set up)', unitCost: 150.00, quantity: 0, image: '', section: 'TEMPORARY POWER SUPPLY' },
   ])
+  
+  // Check if the user has already submitted this form
+  useEffect(() => {
+    const checkPreviousSubmission = async () => {
+      setIsLoading(true)
+      try {
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (user) {
+          // Check if this form has already been submitted
+          const { data, error } = await supabase
+            .from('forms')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('form_type', '3')
+            .maybeSingle()
+            
+          if (error) {
+            console.error('Error checking previous submission:', error)
+          } else if (data) {
+            // Form was previously submitted
+            console.log('Found previous submission:', data)
+            setSubmitted(true)
+          }
+        }
+      } catch (error) {
+        console.error('Error checking previous submissions:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    checkPreviousSubmission()
+  }, [supabase])
   
   // Function to check if an item is the first of its section
   const isFirstInSection = (index: number): boolean => {
@@ -208,282 +246,295 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
       {/* User Data Container */}
       <UserDataContainer userData={userData} />
 
-      <form onSubmit={handleSubmit} className="space-y-8" ref={formRef}>
-        {/* Instructions */}
-        <div className="space-y-2 text-sm bg-gray-50 p-4 rounded-lg">
-          <p>1. This form must be completed and returned by every exhibitor. If service is not required, please endorse "NOT APPLICABLE" and return this form to the address below.</p>
-          <p>2. ORDER ONLY YOUR ADDITIONAL REQUIREMENTS.</p>
-          <p>3. For services not listed below, such as step-up/step-down transformers etc, please contact the Official Contractor for a quotation.</p>
-          <p>4. The supply at REGIONAL CONFERENCE OF DERMATOLOGY is 230V 50Hz AC and 415V TPN 50Hz AC.</p>
+      {isLoading ? (
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <span className="ml-3 text-gray-600">Checking submission status...</span>
         </div>
+      ) : submitted ? (
+        <div className="space-y-8">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+            <div className="text-green-600 font-semibold text-lg mb-2">
+              Form Successfully Submitted
+            </div>
+            <p className="text-gray-600">
+              You have already submitted this form. You can download a PDF copy or return to the dashboard.
+            </p>
+          </div>
+          <div className="flex justify-center space-x-6">
+            <PdfButton
+              formData={{}} // Pass empty object since submittedData was removed
+              formType={3}
+              containerRef={formRef}
+              className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
+            />
+            <button
+              type="button"
+              onClick={handleReturnToDashboard}
+              className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
+            >
+              Return to Dashboard
+            </button>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-8" ref={formRef}>
+          {/* Instructions */}
+          <div className="space-y-2 text-sm bg-gray-50 p-4 rounded-lg">
+            <p>1. This form must be completed and returned by every exhibitor. If service is not required, please endorse "NOT APPLICABLE" and return this form to the address below.</p>
+            <p>2. ORDER ONLY YOUR ADDITIONAL REQUIREMENTS.</p>
+            <p>3. For services not listed below, such as step-up/step-down transformers etc, please contact the Official Contractor for a quotation.</p>
+            <p>4. The supply at REGIONAL CONFERENCE OF DERMATOLOGY is 230V 50Hz AC and 415V TPN 50Hz AC.</p>
+          </div>
 
-        {/* Order Table */}
-        <div className="mb-8 overflow-x-auto">
-          <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
-            <thead>
-              <tr className="bg-blue-50">
-                <th className="border border-gray-300 p-2 text-center">NO</th>
-                <th className="border border-gray-300 p-2 text-center">IMAGE</th>
-                <th className="border border-gray-300 p-2 text-left">DESCRIPTION OF SERVICE / ITEMS</th>
-                <th className="border border-gray-300 p-2 text-center">UNIT COST (RM)</th>
-                <th className="border border-gray-300 p-2 text-center">QTY</th>
-                <th className="border border-gray-300 p-2 text-center">COST (RM)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orderItems.map((item, index) => (
-                <React.Fragment key={item.id}>
-                  {isFirstInSection(index) && (
-                    <tr key={`section-${index}`}>
-                      <td colSpan={6} className="border border-gray-300 p-2 font-bold bg-gray-50">
-                        {item.section}
-                        {item.section === 'SECTION A - INDIVIDUAL' && (
-                          <><br /><span className="text-sm font-normal">(Inclusive of electricity consumption)</span></>
-                        )}
-                        {item.section === 'LIGHTING CONNECTION' && (
-                          <><br /><span className="text-sm font-normal">Charges included supply electrical consumption. Wiring and maintenance are the responsibility of the contractor appointed by the Exhibitor.</span></>
-                        )}
-                        {item.section === 'POWER POINT / ISOLATOR' && (
-                          <><br /><span className="text-sm font-normal">Equipment and fittings on hire from the official contractor: Power point are used for single machinery / electrical appliances / exhibits only. STRICTLY NOT for lighting purposes.</span></>
-                        )}
-                        {item.section === 'TEMPORARY POWER SUPPLY' && (
-                          <><br /><span className="text-sm font-normal">(BUILD-UP ONLY)</span></>
-                        )}
-                      </td>
-                    </tr>
-                  )}
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-center">{item.id}</td>
-                    <td className="border border-gray-300 p-2 relative">
-                      <div className="relative group w-14 h-14 cursor-pointer">
-                        <img 
-                          src={item.image}
-                          alt={item.description}
-                          className="w-full h-full object-contain"
-                          onError={(e) => {
-                            // Fall back to a generic image or placeholder if the image fails to load
-                            e.currentTarget.src = "https://via.placeholder.com/100x100?text=No+Image";
-                            e.currentTarget.onerror = null; // Prevent infinite fallback loop
-                          }}
-                        />
-                        <div className="absolute top-0 left-0 w-0 h-0 bg-white opacity-0 group-hover:opacity-100 group-hover:w-48 group-hover:h-48 transition-all duration-200 z-10 overflow-hidden rounded shadow-lg">
+          {/* Order Table */}
+          <div className="mb-8 overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
+              <thead>
+                <tr className="bg-blue-50">
+                  <th className="border border-gray-300 p-2 text-center">NO</th>
+                  <th className="border border-gray-300 p-2 text-center">IMAGE</th>
+                  <th className="border border-gray-300 p-2 text-left">DESCRIPTION OF SERVICE / ITEMS</th>
+                  <th className="border border-gray-300 p-2 text-center">UNIT COST (RM)</th>
+                  <th className="border border-gray-300 p-2 text-center">QTY</th>
+                  <th className="border border-gray-300 p-2 text-center">COST (RM)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orderItems.map((item, index) => (
+                  <React.Fragment key={item.id}>
+                    {isFirstInSection(index) && (
+                      <tr key={`section-${index}`}>
+                        <td colSpan={6} className="border border-gray-300 p-2 font-bold bg-gray-50">
+                          {item.section}
+                          {item.section === 'SECTION A - INDIVIDUAL' && (
+                            <><br /><span className="text-sm font-normal">(Inclusive of electricity consumption)</span></>
+                          )}
+                          {item.section === 'LIGHTING CONNECTION' && (
+                            <><br /><span className="text-sm font-normal">Charges included supply electrical consumption. Wiring and maintenance are the responsibility of the contractor appointed by the Exhibitor.</span></>
+                          )}
+                          {item.section === 'POWER POINT / ISOLATOR' && (
+                            <><br /><span className="text-sm font-normal">Equipment and fittings on hire from the official contractor: Power point are used for single machinery / electrical appliances / exhibits only. STRICTLY NOT for lighting purposes.</span></>
+                          )}
+                          {item.section === 'TEMPORARY POWER SUPPLY' && (
+                            <><br /><span className="text-sm font-normal">(BUILD-UP ONLY)</span></>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+                    <tr>
+                      <td className="border border-gray-300 p-2 text-center">{item.id}</td>
+                      <td className="border border-gray-300 p-2 relative">
+                        <div className="relative group w-14 h-14 cursor-pointer">
                           <img 
                             src={item.image}
-                            alt={item.description} 
+                            alt={item.description}
                             className="w-full h-full object-contain"
                             onError={(e) => {
                               // Fall back to a generic image or placeholder if the image fails to load
-                              e.currentTarget.src = "https://via.placeholder.com/200x200?text=No+Image";
+                              e.currentTarget.src = "https://via.placeholder.com/100x100?text=No+Image";
                               e.currentTarget.onerror = null; // Prevent infinite fallback loop
                             }}
                           />
+                          <div className="absolute top-0 left-0 w-0 h-0 bg-white opacity-0 group-hover:opacity-100 group-hover:w-48 group-hover:h-48 transition-all duration-200 z-10 overflow-hidden rounded shadow-lg">
+                            <img 
+                              src={item.image}
+                              alt={item.description} 
+                              className="w-full h-full object-contain"
+                              onError={(e) => {
+                                // Fall back to a generic image or placeholder if the image fails to load
+                                e.currentTarget.src = "https://via.placeholder.com/200x200?text=No+Image";
+                                e.currentTarget.onerror = null; // Prevent infinite fallback loop
+                              }}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="border border-gray-300 p-2">{item.description}</td>
-                    <td className="border border-gray-300 p-2 text-center">{item.unitCost.toFixed(2)}</td>
-                    <td className="border border-gray-300 p-2">
-                      <input
-                        type="number"
-                        min="0"
-                        step="any"
-                        className="w-20 text-center border border-gray-300 rounded p-1 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 mx-auto block"
-                        value={item.quantity}
-                        onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
-                      />
-                    </td>
-                    <td className="border border-gray-300 p-2 text-center">
-                      {(item.unitCost * item.quantity).toFixed(2)}
-                    </td>
-                  </tr>
-                </React.Fragment>
-              ))}
-              <tr>
-                <td colSpan={4} className="border border-gray-300 p-2"></td>
-                <td className="border border-gray-300 p-2 text-right font-medium">Subtotal:</td>
-                <td className="border border-gray-300 p-2 text-center">{subtotal.toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td colSpan={4} className="border border-gray-300 p-2 text-center italic">
-                  A SURCHARGE OF 10% will be imposed for orders received after June 30, 2025.
-                </td>
-                <td className="border border-gray-300 p-2 text-right font-medium">Late Charge (10%):</td>
-                <td className="border border-gray-300 p-2 text-center">{lateCharge.toFixed(2)}</td>
-              </tr>
-              <tr className="font-bold">
-                <td colSpan={4} className="border border-gray-300 p-2"></td>
-                <td className="border border-gray-300 p-2 text-right">Total Amount:</td>
-                <td className="border border-gray-300 p-2 text-center">{grandTotal.toFixed(2)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Important Notes */}
-        <div className="mb-8 bg-blue-50 p-4 rounded-lg">
-          <h4 className="font-semibold text-blue-700 mb-4">PLEASE NOTE:</h4>
-          <ol className="list-decimal list-inside space-y-2 text-gray-700">
-            <li>All items are on rental basis.</li>
-            <li>Exhibitors/Contractors who are bringing in their own light fittings are required to order lighting connections from the Official Electrical Contractor. Power outlets are not to be used for lighting purposes.</li>
-            <li>Exhibitors with very sensitive equipment are advised to bring their own stabilizer or UPS for protection of frequency fluctuations as the Organiser shall not be responsible for any damage to the exhibitors' equipment. One socket is for one exhibit only. Multi-point connection is not allowed to prevent the risk of power overload.</li>
-            <li>A <strong>SURCHARGE OF 10%</strong> will be imposed for orders received after September 2, 2024.</li>
-            <li>A <strong>SURCHARGE OF 50%</strong> will be imposed for orders received on site or on-site alteration/relocation, and is subject to availability.</li>
-            <li>All electrical installations must be undertaken by the Official Contractor.</li>
-            <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be received by this Order Form. All bank charges must be borne by remitter. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-3, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 800 984924. Bank Swift Code: CIBBMYKL</li>
-          </ol>
-        </div>
-
-        {/* Authorization Section */}
-        <div className="mb-8">
-          <p className="mb-6 text-center text-gray-700">Please retain a copy for your record & return this form via email to:</p>
-          
-          <div className="mb-8 text-center bg-gray-50 py-4 rounded-lg">
-            <h5 className="font-bold text-blue-600 mb-2">BLUE CIRCLE PLUS SDN BHD</h5>
-            <p className="mb-1">Attn: Mr. Francis Chan / Ms. YJ Hoh</p>
-            <p className="mb-1">Email: francis@bcpgroup.com.my</p>
-            <p className="mb-1">or yijie@bcpgroup.com.my</p>
-            <p>Tel: +6011-2327 9795 / +6016-263 1150</p>
+                      </td>
+                      <td className="border border-gray-300 p-2">{item.description}</td>
+                      <td className="border border-gray-300 p-2 text-center">{item.unitCost.toFixed(2)}</td>
+                      <td className="border border-gray-300 p-2">
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          className="w-20 text-center border border-gray-300 rounded p-1 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 mx-auto block"
+                          value={item.quantity}
+                          onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
+                        />
+                      </td>
+                      <td className="border border-gray-300 p-2 text-center">
+                        {(item.unitCost * item.quantity).toFixed(2)}
+                      </td>
+                    </tr>
+                  </React.Fragment>
+                ))}
+                <tr>
+                  <td colSpan={4} className="border border-gray-300 p-2"></td>
+                  <td className="border border-gray-300 p-2 text-right font-medium">Subtotal:</td>
+                  <td className="border border-gray-300 p-2 text-center">{subtotal.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td colSpan={4} className="border border-gray-300 p-2 text-center italic">
+                    A SURCHARGE OF 10% will be imposed for orders received after June 30, 2025.
+                  </td>
+                  <td className="border border-gray-300 p-2 text-right font-medium">Late Charge (10%):</td>
+                  <td className="border border-gray-300 p-2 text-center">{lateCharge.toFixed(2)}</td>
+                </tr>
+                <tr className="font-bold">
+                  <td colSpan={4} className="border border-gray-300 p-2"></td>
+                  <td className="border border-gray-300 p-2 text-right">Total Amount:</td>
+                  <td className="border border-gray-300 p-2 text-center">{grandTotal.toFixed(2)}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
-          <div className="border border-gray-200 rounded-lg p-6 shadow-sm">
-            <h5 className="font-bold mb-4 text-blue-600">Authorized Representative Applying:</h5>
-            <div className="grid grid-cols-1 gap-4">
-              <div className="grid grid-cols-2 gap-4">
+          {/* Important Notes */}
+          <div className="mb-8 bg-blue-50 p-4 rounded-lg">
+            <h4 className="font-semibold text-blue-700 mb-4">PLEASE NOTE:</h4>
+            <ol className="list-decimal list-inside space-y-2 text-gray-700">
+              <li>All items are on rental basis.</li>
+              <li>Exhibitors/Contractors who are bringing in their own light fittings are required to order lighting connections from the Official Electrical Contractor. Power outlets are not to be used for lighting purposes.</li>
+              <li>Exhibitors with very sensitive equipment are advised to bring their own stabilizer or UPS for protection of frequency fluctuations as the Organiser shall not be responsible for any damage to the exhibitors' equipment. One socket is for one exhibit only. Multi-point connection is not allowed to prevent the risk of power overload.</li>
+              <li>A <strong>SURCHARGE OF 10%</strong> will be imposed for orders received after September 2, 2024.</li>
+              <li>A <strong>SURCHARGE OF 50%</strong> will be imposed for orders received on site or on-site alteration/relocation, and is subject to availability.</li>
+              <li>All electrical installations must be undertaken by the Official Contractor.</li>
+              <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be received by this Order Form. All bank charges must be borne by remitter. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-3, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 800 984924. Bank Swift Code: CIBBMYKL</li>
+            </ol>
+          </div>
+
+          {/* Authorization Section */}
+          <div className="mb-8">
+            <p className="mb-6 text-center text-gray-700">Please retain a copy for your record & return this form via email to:</p>
+            
+            <div className="mb-8 text-center bg-gray-50 py-4 rounded-lg">
+              <h5 className="font-bold text-blue-600 mb-2">BLUE CIRCLE PLUS SDN BHD</h5>
+              <p className="mb-1">Attn: Mr. Francis Chan / Ms. YJ Hoh</p>
+              <p className="mb-1">Email: francis@bcpgroup.com.my</p>
+              <p className="mb-1">or yijie@bcpgroup.com.my</p>
+              <p>Tel: +6011-2327 9795 / +6016-263 1150</p>
+            </div>
+
+            <div className="border border-gray-200 rounded-lg p-6 shadow-sm">
+              <h5 className="font-bold mb-4 text-blue-600">Authorized Representative Applying:</h5>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Authorized by</label>
+                    <input 
+                      type="text" 
+                      name="auth_name"
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                      defaultValue={userData?.contact_person || ''}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Booth No</label>
+                    <input 
+                      type="text" 
+                      name="auth_booth"
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                      defaultValue={userData?.booth_number || ''}
+                    />
+                  </div>
+                </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Authorized by</label>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Designation</label>
                   <input 
                     type="text" 
-                    name="auth_name"
-                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                    defaultValue={userData?.contact_person || ''}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Booth No</label>
-                  <input 
-                    type="text" 
-                    name="auth_booth"
-                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                    defaultValue={userData?.booth_number || ''}
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700">Designation</label>
-                <input 
-                  type="text" 
-                  name="auth_designation"
-                  className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700">Company</label>
-                <input 
-                  type="text" 
-                  name="auth_company"
-                  className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                  defaultValue={userData?.company_name || ''}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700">Company Address</label>
-                <textarea 
-                  name="auth_address"
-                  className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                  rows={2}
-                  defaultValue={userData?.address || ''}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700">Email</label>
-                <input 
-                  type="email" 
-                  name="auth_email"
-                  className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  defaultValue={userData?.email || ''}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Tel/Hp</label>
-                  <input 
-                    type="tel" 
-                    name="auth_tel"
-                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    defaultValue={userData?.tel || ''}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Fax</label>
-                  <input 
-                    type="tel" 
-                    name="auth_fax"
-                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    defaultValue={userData?.fax || ''}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Signature</label>
-                  <input 
-                    type="text" 
-                    name="auth_signature"
+                    name="auth_designation"
                     className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Date</label>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Company</label>
                   <input 
-                    type="date" 
-                    name="auth_date"
-                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    defaultValue={new Date().toISOString().split('T')[0]}
+                    type="text" 
+                    name="auth_company"
+                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                    defaultValue={userData?.company_name || ''}
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Company Address</label>
+                  <textarea 
+                    name="auth_address"
+                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                    rows={2}
+                    defaultValue={userData?.address || ''}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Email</label>
+                  <input 
+                    type="email" 
+                    name="auth_email"
+                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    defaultValue={userData?.email || ''}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Tel/Hp</label>
+                    <input 
+                      type="tel" 
+                      name="auth_tel"
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      defaultValue={userData?.tel || ''}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Fax</label>
+                    <input 
+                      type="tel" 
+                      name="auth_fax"
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      defaultValue={userData?.fax || ''}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Signature</label>
+                    <input 
+                      type="text" 
+                      name="auth_signature"
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Date</label>
+                    <input 
+                      type="date" 
+                      name="auth_date"
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      defaultValue={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Form Actions */}
-        <div className="flex justify-center space-x-6">
-          {submitted ? (
-            <>
-              <PdfButton
-                formData={{}} // Pass empty object since submittedData was removed
-                formType={3}
-                containerRef={formRef}
-                className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
-              />
-              <button
-                type="button"
-                onClick={handleReturnToDashboard}
-                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
-              >
-                Return to Dashboard
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => router.back()}
-                className="px-8 py-3 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={currentlySubmitting}
-                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
-              >
-                {currentlySubmitting ? 'Submitting...' : 'Submit Form'}
-              </button>
-            </>
-          )}
-        </div>
-      </form>
+          {/* Form Actions */}
+          <div className="flex justify-center space-x-6">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="px-8 py-3 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={currentlySubmitting}
+              className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            >
+              {currentlySubmitting ? 'Submitting...' : 'Submit Form'}
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 } 

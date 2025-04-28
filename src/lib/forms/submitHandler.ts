@@ -227,6 +227,39 @@ export async function syncFormWithSupabase(
       return { success: false, message: `Invalid form type: ${formTypeToUse}` };
     }
     
+    // Check if this form has already been submitted by this user
+    if (userId) {
+      const { data: existingSubmission, error: checkError } = await supabase
+        .from('forms')
+        .select('id, submitted_at')
+        .eq('user_id', userId)
+        .eq('form_type', formNumber.toString())
+        .maybeSingle();
+        
+      if (checkError) {
+        console.error("Error checking for existing submission:", checkError);
+      } else if (existingSubmission) {
+        // Form was already submitted
+        let formattedDate = "previously";
+        
+        if (existingSubmission.submitted_at) {
+          const submittedDate = new Date(existingSubmission.submitted_at);
+          formattedDate = submittedDate.toLocaleDateString(undefined, { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        }
+        
+        return { 
+          success: false, 
+          message: `You have already submitted this form ${formattedDate}. Please view your submissions in the dashboard.` 
+        };
+      }
+    }
+    
     // Standardize the form data
     const standardizedData = standardizeFormData(formData, formNumber);
     
