@@ -78,9 +78,6 @@
     "child_process": false
   },
   "overrides": {
-    "@supabase/auth-helpers-nextjs": {
-      "@supabase/ssr": "^0.1.0"
-    },
     "glob": "^10.3.10",
     "rimraf": "^5.0.5"
   }

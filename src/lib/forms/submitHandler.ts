@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { createClientComponentClient } from '@/lib/supabase';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import type { Database } from '@/types/supabase';
 import { supabase } from '@/lib/supabase/client';
 import { standardizeFormData, validateFormData } from './standardizeFormData';

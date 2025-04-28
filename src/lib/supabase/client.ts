@@ -1,4 +1,4 @@
-import { createClientComponentClient } from '@/lib/supabase';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import type { Database } from '@/types/supabase';
 
 // Singleton instance to prevent "Multiple GoTrueClient instances detected" warnings
