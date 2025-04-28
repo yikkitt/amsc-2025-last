@@ -40,27 +40,27 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
   
   const [orderItems, setOrderItems] = useState<OrderItem[]>([
     // SECTION A - INDIVIDUAL
-    { id: '101', description: '12W LED spotlight', unitCost: 105.00, quantity: 0, image: '/products/power-point-15a-24h.jpg', section: 'SECTION A - INDIVIDUAL' },
-    { id: '102', description: '12W LED Long Arm spotlight', unitCost: 115.00, quantity: 0, image: '/products/power-point-15a-24h.jpg', section: 'SECTION A - INDIVIDUAL' },
-    { id: '103', description: '15W LED Spotlight', unitCost: 125.00, quantity: 0, image: '/products/power-point-15a-24h.jpg', section: 'SECTION A - INDIVIDUAL' },
-    { id: '104', description: '15W LED Long Arm Spotlight', unitCost: 135.00, quantity: 0, image: '/products/power-point-15a-24h.jpg', section: 'SECTION A - INDIVIDUAL' },
-    { id: '105', description: '9W LED Downlight', unitCost: 130.00, quantity: 0, image: '/products/power-point-15a-24h.jpg', section: 'SECTION A - INDIVIDUAL' },
-    { id: '106', description: '40W Fluorescent Light (Full or Loose Set)', unitCost: 80.00, quantity: 0, image: '/products/power-point-15a-24h.jpg', section: 'SECTION A - INDIVIDUAL' },
-    { id: '107', description: '50W LED Metal Halide Floodlight', unitCost: 300.00, quantity: 0, image: '/products/power-point-15a-24h.jpg', section: 'SECTION A - INDIVIDUAL' },
-    { id: '108', description: '100W LED Metal Halide Floodlight', unitCost: 350.00, quantity: 0, image: '/products/power-point-15a-24h.jpg', section: 'SECTION A - INDIVIDUAL' },
+    { id: '101', description: '12W LED spotlight', unitCost: 105.00, quantity: 0, image: '/products/led-spotlight.jpg', section: 'SECTION A - INDIVIDUAL' },
+    { id: '102', description: '12W LED Long Arm spotlight', unitCost: 115.00, quantity: 0, image: '/products/led-long-arm.jpg', section: 'SECTION A - INDIVIDUAL' },
+    { id: '103', description: '15W LED Spotlight', unitCost: 125.00, quantity: 0, image: '/products/led-spotlight-2.jpg', section: 'SECTION A - INDIVIDUAL' },
+    { id: '104', description: '15W LED Long Arm Spotlight', unitCost: 135.00, quantity: 0, image: '/products/led-long-arm-2.jpg', section: 'SECTION A - INDIVIDUAL' },
+    { id: '105', description: '9W LED Downlight', unitCost: 130.00, quantity: 0, image: '/products/led-downlight.jpg', section: 'SECTION A - INDIVIDUAL' },
+    { id: '106', description: '40W Fluorescent Light (Full or Loose Set)', unitCost: 80.00, quantity: 0, image: '/products/fluorescent.jpg', section: 'SECTION A - INDIVIDUAL' },
+    { id: '107', description: '50W LED Metal Halide Floodlight', unitCost: 300.00, quantity: 0, image: '/products/halide-50w.jpg', section: 'SECTION A - INDIVIDUAL' },
+    { id: '108', description: '100W LED Metal Halide Floodlight', unitCost: 350.00, quantity: 0, image: '/products/halide-100w.jpg', section: 'SECTION A - INDIVIDUAL' },
     
     // LIGHTING CONNECTION
-    { id: 'LC1', description: 'Lighting Connection with cabling (Max 100w per bulb/tube)', unitCost: 100.00, quantity: 0, image: '/products/power-point-15a-24h.jpg', section: 'LIGHTING CONNECTION' },
-    { id: 'LC2', description: 'Lighting Connection for LED strip / Bulb / Tube (Max 1mL or 1 bulb / tube per connection)', unitCost: 100.00, quantity: 0, image: '/products/power-point-15a-24h.jpg', section: 'LIGHTING CONNECTION' },
+    { id: 'LC1', description: 'Lighting Connection with cabling (Max 100w per bulb/tube)', unitCost: 100.00, quantity: 0, image: '/products/power-point-13a.jpg', section: 'LIGHTING CONNECTION' },
+    { id: 'LC2', description: 'Lighting Connection for LED strip / Bulb / Tube (Max 1mL or 1 bulb / tube per connection)', unitCost: 100.00, quantity: 0, image: '/products/led-long-arm.jpg', section: 'LIGHTING CONNECTION' },
     
     // POWER POINT / ISOLATOR
-    { id: '109', description: '13 Amp/230V single phase power point (max 500W & not for lighting)', unitCost: 110.00, quantity: 0, image: '/products/power-point-15a-24h.jpg', section: 'POWER POINT / ISOLATOR' },
-    { id: '110', description: '13 Amp / 230V Single Phase Power Point 24 Hours usage (max 500W & not for lighting)', unitCost: 330.00, quantity: 0, image: '/products/power-point-15a-24h.jpg', section: 'POWER POINT / ISOLATOR' },
-    { id: '111', description: '15 Amp/230V single phase outlet (max 2KW & not for lighting)', unitCost: 135.00, quantity: 0, image: '/products/power-point-15a-24h.jpg', section: 'POWER POINT / ISOLATOR' },
+    { id: '109', description: '13 Amp/230V single phase power point (max 500W & not for lighting)', unitCost: 110.00, quantity: 0, image: '/products/power-point-13a.jpg', section: 'POWER POINT / ISOLATOR' },
+    { id: '110', description: '13 Amp / 230V Single Phase Power Point 24 Hours usage (max 500W & not for lighting)', unitCost: 330.00, quantity: 0, image: '/products/power-point-13a-24h.jpg', section: 'POWER POINT / ISOLATOR' },
+    { id: '111', description: '15 Amp/230V single phase outlet (max 2KW & not for lighting)', unitCost: 135.00, quantity: 0, image: '/products/power-point-15a.jpg', section: 'POWER POINT / ISOLATOR' },
     { id: '112', description: '15 Amp / 230V Single Phase Power Point 24 Hours usage (max 2KW & not for lighting)', unitCost: 580.00, quantity: 0, image: '/products/power-point-15a-24h.jpg', section: 'POWER POINT / ISOLATOR' },
     
     // TEMPORARY POWER SUPPLY
-    { id: 'TPS1', description: '13 Amp/230V single phase power point (Temporary power supply for set up)', unitCost: 150.00, quantity: 0, image: '/products/power-point-15a-24h.jpg', section: 'TEMPORARY POWER SUPPLY' },
+    { id: 'TPS1', description: '13 Amp/230V single phase power point (Temporary power supply for set up)', unitCost: 150.00, quantity: 0, image: '/products/power-point-13a.jpg', section: 'TEMPORARY POWER SUPPLY' },
   ])
   
   // Function to check if an item is the first of its section
