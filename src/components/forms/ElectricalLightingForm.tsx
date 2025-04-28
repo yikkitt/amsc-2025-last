@@ -229,19 +229,56 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
                   <tr>
                     <td className="border border-gray-300 p-2 text-center">{item.id}</td>
                     <td className="border border-gray-300 p-2 relative">
-                      <div className="relative group w-14 h-14 cursor-pointer">
-                        <img 
-                          src={"https://via.placeholder.com/100x100?text=" + encodeURIComponent(item.id)}
-                          alt={item.description}
-                          className="w-full h-full object-contain"
-                        />
-                        <div className="absolute top-0 left-0 w-0 h-0 bg-white opacity-0 group-hover:opacity-100 group-hover:w-48 group-hover:h-48 transition-all duration-200 z-10 overflow-hidden rounded shadow-lg">
-                          <img 
-                            src={"https://via.placeholder.com/200x200?text=" + encodeURIComponent(item.id)}
-                            alt={item.description} 
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
+                      <div className="relative group w-14 h-14 flex items-center justify-center bg-gray-100 rounded">
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          width="24" 
+                          height="24" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          strokeWidth="2" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          className="text-gray-400"
+                        >
+                          {item.section === 'SECTION A - INDIVIDUAL' && (
+                            <>
+                              <path d="M12 2v8"></path>
+                              <path d="M8 10V4"></path>
+                              <path d="M16 10V4"></path>
+                              <path d="M6 14h12"></path>
+                              <path d="M6 18h12"></path>
+                              <circle cx="12" cy="22" r="2"></circle>
+                            </>
+                          )}
+                          {item.section === 'LIGHTING CONNECTION' && (
+                            <>
+                              <circle cx="12" cy="12" r="10"></circle>
+                              <path d="M12 2v4"></path>
+                              <path d="M12 18v4"></path>
+                              <path d="m4.93 4.93 2.83 2.83"></path>
+                              <path d="m16.24 16.24 2.83 2.83"></path>
+                              <path d="M2 12h4"></path>
+                              <path d="M18 12h4"></path>
+                              <path d="m4.93 19.07 2.83-2.83"></path>
+                              <path d="m16.24 7.76 2.83-2.83"></path>
+                            </>
+                          )}
+                          {(item.section === 'POWER POINT / ISOLATOR' || item.section === 'TEMPORARY POWER SUPPLY') && (
+                            <>
+                              <path d="M12 22v-6"></path>
+                              <path d="M10 16h4"></path>
+                              <path d="M5 6v4"></path>
+                              <path d="M19 6v4"></path>
+                              <path d="M5 10h14"></path>
+                              <path d="M8 2h8"></path>
+                              <path d="M15 2v4"></path>
+                              <path d="M9 2v4"></path>
+                            </>
+                          )}
+                        </svg>
+                        <span className="absolute bottom-1 text-xs text-gray-500">{item.id}</span>
                       </div>
                     </td>
                     <td className="border border-gray-300 p-2">{item.description}</td>
