@@ -8,6 +8,7 @@ import { syncFormWithSupabase, checkPreviousFormSubmission } from '@/lib/forms/s
 import { PdfButton } from '@/components/ui/PdfButton'
 import Link from 'next/link'
 import Image from 'next/image'
+import FormDisclaimer from '@/components/ui/FormDisclaimer'
 
 interface FasciaNameFormProps {
   userData?: {
@@ -281,6 +282,8 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
                 </div>
               </div>
             </div>
+
+            <FormDisclaimer />
 
             <div className="flex justify-center space-x-6">
               <PdfButton

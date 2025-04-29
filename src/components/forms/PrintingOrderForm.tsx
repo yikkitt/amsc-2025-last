@@ -7,6 +7,7 @@ import UserDataContainer from '@/components/UserDataContainer'
 import { syncFormWithSupabase } from '@/lib/forms/submitHandler'
 import { PdfButton } from '@/components/ui/PdfButton'
 import Link from 'next/link'
+import FormDisclaimer from '@/components/ui/FormDisclaimer'
 
 interface OrderItem {
   id: string
@@ -228,9 +229,19 @@ export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) 
             <span className="ml-3 text-gray-600">Checking submission status...</span>
           </div>
         ) : submitted ? (
-          <div>
-            {/* Order Table - Read Only */}
-            <div className="overflow-x-auto mb-8">
+          <div className="space-y-8">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+              <div className="text-green-600 font-semibold text-lg mb-2">
+                Form Successfully Submitted
+              </div>
+              <p className="text-gray-600">
+                You have already submitted this form. You can download a PDF copy or return to the dashboard.
+              </p>
+            </div>
+
+            {/* Display submitted order details in read-only mode */}
+            <div className="mb-8 overflow-x-auto">
+              <h3 className="text-lg font-semibold mb-4">Submitted Details:</h3>
               <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
                 <thead>
                   <tr className="bg-blue-50">
@@ -244,38 +255,46 @@ export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) 
                   </tr>
                 </thead>
                 <tbody>
-                  {orderItems.map((item) => (
-                    <tr key={item.id}>
-                      <td className="border border-gray-300 p-2">{item.id}</td>
-                      <td className="border border-gray-300 p-2 relative">
-                        <div className="relative group w-14 h-14">
-                          <img 
-                            src={item.image} 
-                            alt={item.description}
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-                      </td>
-                      <td className="border border-gray-300 p-2">{item.description}</td>
-                      <td className="border border-gray-300 p-2 whitespace-pre-line">{item.printableSize}</td>
-                      <td className="border border-gray-300 p-2 text-right">{item.unitPrice.toFixed(2)}/{item.unit}</td>
-                      <td className="border border-gray-300 p-2 text-center">{item.quantity}</td>
-                      <td className="border border-gray-300 p-2 text-right">
-                        {(item.unitPrice * item.quantity).toFixed(2)}
-                      </td>
-                    </tr>
+                  {orderItems
+                    .filter(item => item.quantity > 0)
+                    .map((item) => (
+                      <tr key={item.id}>
+                        <td className="border border-gray-300 p-2">{item.id}</td>
+                        <td className="border border-gray-300 p-2 relative">
+                          <div className="relative group w-14 h-14">
+                            <img 
+                              src={item.image} 
+                              alt={item.description}
+                              className="w-full h-full object-contain"
+                              onError={(e) => {
+                                e.currentTarget.src = "https://via.placeholder.com/100x100?text=No+Image"
+                                e.currentTarget.onerror = null
+                              }}
+                            />
+                          </div>
+                        </td>
+                        <td className="border border-gray-300 p-2">{item.description}</td>
+                        <td className="border border-gray-300 p-2 whitespace-pre-line">{item.printableSize}</td>
+                        <td className="border border-gray-300 p-2 text-right">{item.unitPrice.toFixed(2)}/{item.unit}</td>
+                        <td className="border border-gray-300 p-2 text-center">{item.quantity}</td>
+                        <td className="border border-gray-300 p-2 text-right">
+                          {(item.unitPrice * item.quantity).toFixed(2)}
+                        </td>
+                      </tr>
                   ))}
                   <tr>
                     <td colSpan={6} className="border border-gray-300 p-2 text-right font-bold">Sub Total</td>
                     <td className="border border-gray-300 p-2 text-right">{calculateSubTotal().toFixed(2)}</td>
                   </tr>
-                  <tr>
-                    <td colSpan={5} className="border border-gray-300 p-2 text-center italic text-sm text-gray-600">
-                      Order made after deadline is subjected to 50% surcharge
-                    </td>
-                    <td className="border border-gray-300 p-2 text-right font-medium">Surcharge (50%):</td>
-                    <td className="border border-gray-300 p-2 text-right">{calculateSurcharge().toFixed(2)}</td>
-                  </tr>
+                  {calculateSurcharge() > 0 && (
+                    <tr>
+                      <td colSpan={5} className="border border-gray-300 p-2 text-center italic text-sm text-gray-600">
+                        Order made after deadline is subjected to 50% surcharge
+                      </td>
+                      <td className="border border-gray-300 p-2 text-right font-medium">Surcharge (50%):</td>
+                      <td className="border border-gray-300 p-2 text-right">{calculateSurcharge().toFixed(2)}</td>
+                    </tr>
+                  )}
                   <tr className="font-bold">
                     <td colSpan={6} className="border border-gray-300 p-2 text-right">Grand Total</td>
                     <td className="border border-gray-300 p-2 text-right">{calculateGrandTotal().toFixed(2)}</td>
@@ -284,24 +303,29 @@ export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) 
               </table>
             </div>
 
-            <div className="mt-4 space-y-4">
-              <div className="text-green-600 font-medium">Form submitted successfully!</div>
-              <div className="flex gap-4">
-                <PdfButton
-                  formData={submittedData}
-                  formType={5}
-                  containerRef={containerRef}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  Download PDF
-                </PdfButton>
-                <Link
-                  href="/dashboard"
-                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-                >
-                  Return to Dashboard
-                </Link>
-              </div>
+            <FormDisclaimer />
+
+            <div className="flex justify-center space-x-6">
+              <PdfButton
+                formData={{
+                  form_type: 5,
+                  company_data: submittedData?.company_data || {},
+                  items: submittedData?.items || [],
+                  subtotal: submittedData?.subtotal || 0,
+                  late_charge: submittedData?.late_charge || 0,
+                  grand_total: submittedData?.grand_total || 0,
+                  auth_details: submittedData?.auth_details || {}
+                }}
+                formType={5}
+                containerRef={containerRef}
+                className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
+              />
+              <Link
+                href="/dashboard"
+                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
+              >
+                Return to Dashboard
+              </Link>
             </div>
           </div>
         ) : (

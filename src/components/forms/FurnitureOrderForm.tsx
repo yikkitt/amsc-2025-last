@@ -7,6 +7,7 @@ import UserDataContainer from '@/components/UserDataContainer'
 import { syncFormWithSupabase, checkPreviousFormSubmission } from '@/lib/forms/submitHandler'
 import { PdfButton } from '../ui/PdfButton'
 import Link from 'next/link'
+import FormDisclaimer from '@/components/ui/FormDisclaimer'
 
 interface OrderItem {
   id: string
@@ -247,8 +248,9 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
               </p>
             </div>
 
-            {/* Display submitted order items in read-only mode */}
+            {/* Display submitted order details in read-only mode */}
             <div className="mb-8 overflow-x-auto">
+              <h3 className="text-lg font-semibold mb-4">Submitted Details:</h3>
               <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
                 <thead>
                   <tr className="bg-blue-50">
@@ -262,43 +264,47 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
                   </tr>
                 </thead>
                 <tbody>
-                  {orderItems.map((item) => (
-                    <tr key={item.id} className={item.quantity > 0 ? 'bg-gray-50' : 'text-gray-400'}>
-                      <td className="border border-gray-300 p-2">{item.id}</td>
-                      <td className="border border-gray-300 p-2 relative">
-                        <div className="relative group w-14 h-14 cursor-pointer">
-                          <img 
-                            src={item.image} 
-                            alt={item.description}
-                            className="w-full h-full object-contain"
-                            onError={(e) => {
-                              e.currentTarget.src = "https://via.placeholder.com/100x100?text=No+Image"
-                              e.currentTarget.onerror = null
-                            }}
-                          />
-                        </div>
-                      </td>
-                      <td className="border border-gray-300 p-2">{item.description}</td>
-                      <td className="border border-gray-300 p-2">{item.dimension}</td>
-                      <td className="border border-gray-300 p-2 text-right">{item.unitCost.toFixed(2)}</td>
-                      <td className="border border-gray-300 p-2 text-center">{item.quantity}</td>
-                      <td className="border border-gray-300 p-2 text-right">
-                        {(item.unitCost * item.quantity).toFixed(2)}
-                      </td>
-                    </tr>
+                  {orderItems
+                    .filter(item => item.quantity > 0)
+                    .map((item) => (
+                      <tr key={item.id}>
+                        <td className="border border-gray-300 p-2">{item.id}</td>
+                        <td className="border border-gray-300 p-2 relative">
+                          <div className="relative group w-14 h-14">
+                            <img 
+                              src={item.image} 
+                              alt={item.description}
+                              className="w-full h-full object-contain"
+                              onError={(e) => {
+                                e.currentTarget.src = "https://via.placeholder.com/100x100?text=No+Image"
+                                e.currentTarget.onerror = null
+                              }}
+                            />
+                          </div>
+                        </td>
+                        <td className="border border-gray-300 p-2">{item.description}</td>
+                        <td className="border border-gray-300 p-2">{item.dimension}</td>
+                        <td className="border border-gray-300 p-2 text-right">{item.unitCost.toFixed(2)}</td>
+                        <td className="border border-gray-300 p-2 text-center">{item.quantity}</td>
+                        <td className="border border-gray-300 p-2 text-right">
+                          {(item.unitCost * item.quantity).toFixed(2)}
+                        </td>
+                      </tr>
                   ))}
                   <tr>
                     <td colSpan={5} className="border border-gray-300 p-2"></td>
                     <td className="border border-gray-300 p-2 text-right font-medium">Subtotal:</td>
                     <td className="border border-gray-300 p-2 text-right">{subtotal.toFixed(2)}</td>
                   </tr>
-                  <tr>
-                    <td colSpan={5} className="border border-gray-300 p-2 text-center italic">
-                      A SURCHARGE OF 30% will be imposed for orders received after June 30, 2025.
-                    </td>
-                    <td className="border border-gray-300 p-2 text-right font-medium">Late Charge (30%):</td>
-                    <td className="border border-gray-300 p-2 text-right">{lateCharge.toFixed(2)}</td>
-                  </tr>
+                  {lateCharge > 0 && (
+                    <tr>
+                      <td colSpan={5} className="border border-gray-300 p-2 text-center italic text-sm text-gray-600">
+                        A SURCHARGE OF 30% will be imposed for orders received after June 30, 2025.
+                      </td>
+                      <td className="border border-gray-300 p-2 text-right font-medium">Late Charge (30%):</td>
+                      <td className="border border-gray-300 p-2 text-right">{lateCharge.toFixed(2)}</td>
+                    </tr>
+                  )}
                   <tr className="font-bold">
                     <td colSpan={5} className="border border-gray-300 p-2"></td>
                     <td className="border border-gray-300 p-2 text-right">Total Amount:</td>
@@ -308,9 +314,25 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
               </table>
             </div>
 
+            <FormDisclaimer />
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 text-center">
+              <p className="text-yellow-800">
+                If you wish to make any changes, please email us at info@bcpgroup.com.my
+              </p>
+            </div>
+
             <div className="flex justify-center space-x-6">
               <PdfButton
-                formData={submittedData || {}}
+                formData={{
+                  form_type: 4,
+                  company_data: submittedData?.company_data || {},
+                  items: submittedData?.items || [],
+                  subtotal: submittedData?.subtotal || 0,
+                  late_charge: submittedData?.late_charge || 0,
+                  grand_total: submittedData?.grand_total || 0,
+                  auth_details: submittedData?.auth_details || {}
+                }}
                 formType={4}
                 containerRef={containerRef}
                 className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
@@ -563,6 +585,11 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
               >
                 {isSubmitting ? 'Submitting...' : 'Submit Form'}
               </button>
+            </div>
+
+            {/* Footer */}
+            <div className="text-center text-sm text-gray-600 mt-8 pt-4 border-t border-gray-200">
+              <p>All data collected will be used solely for this event and marketing purposes.</p>
             </div>
           </form>
         )}

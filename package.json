@@ -1,23 +1,24 @@
 {
-  "name": "amsc-2025-exhibitor-manual",
+  "name": "amsc-2025-last",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node ./node_modules/next/dist/bin/next dev",
+    "dev": "next dev",
     "dev:local": "next dev",
     "dev:watch": "nodemon",
     "prebuild": "node ./prebuild.js",
-    "build": "node ./node_modules/next/dist/bin/next build",
-    "start": "node ./node_modules/next/dist/bin/next start",
-    "lint": "node ./node_modules/next/dist/bin/next lint",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "clean": "node clean-cache.js",
     "clean:build": "node clean-build.js",
-    "vercel-build": "node ./prebuild.js && next build",
+    "vercel-build": "node prebuild.js && next build",
     "setup": "node setup-deploy.js",
-    "prepare-deploy": "node setup-deploy.js"
+    "prepare-deploy": "node setup-deploy.js",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",

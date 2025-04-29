@@ -7,6 +7,7 @@ import UserDataContainer from '@/components/UserDataContainer'
 import { syncFormWithSupabase } from '@/lib/forms/submitHandler'
 import { PdfButton } from '@/components/ui/PdfButton'
 import Link from 'next/link'
+import FormDisclaimer from '@/components/ui/FormDisclaimer'
 
 interface AVEquipmentItem {
   id: number
@@ -290,6 +291,8 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
                 </div>
               </div>
             </div>
+
+            <FormDisclaimer />
 
             <div className="flex justify-center space-x-6">
               <PdfButton

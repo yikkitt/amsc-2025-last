@@ -6,6 +6,8 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import UserDataContainer from '@/components/UserDataContainer'
 import { syncFormWithSupabase } from '@/lib/forms/submitHandler'
 import { PdfButton } from '@/components/ui/PdfButton'
+import Link from 'next/link'
+import FormDisclaimer from '@/components/ui/FormDisclaimer'
 
 interface PerformanceBondFormProps {
   userData?: {
@@ -339,8 +341,8 @@ export default function PerformanceBondForm({ userData }: PerformanceBondFormPro
           </div>
         </div>
 
-        {/* Form Actions */}
-        <div className="flex justify-center space-x-6 mt-8">
+        {/* Display submitted data */}
+        <div className="mb-8">
           {formSubmitted ? (
             <>
               <PdfButton
@@ -349,13 +351,12 @@ export default function PerformanceBondForm({ userData }: PerformanceBondFormPro
                 containerRef={formRef}
                 className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
               />
-              <button
-                type="button"
-                onClick={() => router.push('/dashboard/order-forms')}
+              <Link
+                href="/dashboard/order-forms"
                 className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
               >
                 Return to Dashboard
-              </button>
+              </Link>
             </>
           ) : (
             <>
@@ -376,6 +377,8 @@ export default function PerformanceBondForm({ userData }: PerformanceBondFormPro
             </>
           )}
         </div>
+
+        <FormDisclaimer />
       </form>
     </div>
   )

@@ -7,6 +7,7 @@ import { syncFormWithSupabase, checkPreviousFormSubmission } from '@/lib/forms/s
 import { PdfButton } from '@/components/ui/PdfButton'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import FormDisclaimer from '@/components/ui/FormDisclaimer'
 
 interface OrderItem {
   id: string
@@ -255,8 +256,9 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
               </p>
             </div>
 
-            {/* Display submitted order items in read-only mode */}
+            {/* Display submitted order details in read-only mode */}
             <div className="mb-8 overflow-x-auto">
+              <h3 className="text-lg font-semibold mb-4">Submitted Details:</h3>
               <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
                 <thead>
                   <tr className="bg-blue-50">
@@ -269,33 +271,15 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
                   </tr>
                 </thead>
                 <tbody>
-                  {orderItems.map((item, index) => (
-                    <React.Fragment key={item.id}>
-                      {isFirstInSection(index) && (
-                        <tr key={`section-${index}`}>
-                          <td colSpan={6} className="border border-gray-300 p-2 font-bold bg-gray-50">
-                            {item.section}
-                            {item.section === 'SECTION A - INDIVIDUAL' && (
-                              <><br /><span className="text-sm font-normal">(Inclusive of electricity consumption)</span></>
-                            )}
-                            {item.section === 'LIGHTING CONNECTION' && (
-                              <><br /><span className="text-sm font-normal">Charges included supply electrical consumption. Wiring and maintenance are the responsibility of the contractor appointed by the Exhibitor.</span></>
-                            )}
-                            {item.section === 'POWER POINT / ISOLATOR' && (
-                              <><br /><span className="text-sm font-normal">Equipment and fittings on hire from the official contractor: Power point are used for single machinery / electrical appliances / exhibits only. STRICTLY NOT for lighting purposes.</span></>
-                            )}
-                            {item.section === 'TEMPORARY POWER SUPPLY' && (
-                              <><br /><span className="text-sm font-normal">(BUILD-UP ONLY)</span></>
-                            )}
-                          </td>
-                        </tr>
-                      )}
-                      <tr className={item.quantity > 0 ? 'bg-gray-50' : 'text-gray-400'}>
+                  {orderItems
+                    .filter(item => item.quantity > 0)
+                    .map((item) => (
+                      <tr key={item.id}>
                         <td className="border border-gray-300 p-2 text-center">{item.id}</td>
                         <td className="border border-gray-300 p-2 relative">
                           <div className="relative group w-14 h-14">
                             <img 
-                              src={item.image}
+                              src={item.image} 
                               alt={item.description}
                               className="w-full h-full object-contain"
                               onError={(e) => {
@@ -308,24 +292,21 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
                         <td className="border border-gray-300 p-2">{item.description}</td>
                         <td className="border border-gray-300 p-2 text-center">{item.unitCost.toFixed(2)}</td>
                         <td className="border border-gray-300 p-2 text-center">{item.quantity}</td>
-                        <td className="border border-gray-300 p-2 text-center">
-                          {(item.unitCost * item.quantity).toFixed(2)}
-                        </td>
+                        <td className="border border-gray-300 p-2 text-center">{(item.unitCost * item.quantity).toFixed(2)}</td>
                       </tr>
-                    </React.Fragment>
                   ))}
                   <tr>
                     <td colSpan={4} className="border border-gray-300 p-2"></td>
                     <td className="border border-gray-300 p-2 text-right font-medium">Subtotal:</td>
                     <td className="border border-gray-300 p-2 text-center">{subtotal.toFixed(2)}</td>
                   </tr>
-                  <tr>
-                    <td colSpan={4} className="border border-gray-300 p-2 text-center italic">
-                      A SURCHARGE OF 10% will be imposed for orders received after June 30, 2025.
-                    </td>
-                    <td className="border border-gray-300 p-2 text-right font-medium">Late Charge (10%):</td>
-                    <td className="border border-gray-300 p-2 text-center">{lateCharge.toFixed(2)}</td>
-                  </tr>
+                  {lateCharge > 0 && (
+                    <tr>
+                      <td colSpan={4} className="border border-gray-300 p-2"></td>
+                      <td className="border border-gray-300 p-2 text-right font-medium">Late Charge (10%):</td>
+                      <td className="border border-gray-300 p-2 text-center">{lateCharge.toFixed(2)}</td>
+                    </tr>
+                  )}
                   <tr className="font-bold">
                     <td colSpan={4} className="border border-gray-300 p-2"></td>
                     <td className="border border-gray-300 p-2 text-right">Total Amount:</td>
@@ -333,6 +314,14 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
                   </tr>
                 </tbody>
               </table>
+            </div>
+
+            <FormDisclaimer />
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 text-center">
+              <p className="text-yellow-800">
+                If you wish to make any changes, please email us at info@bcpgroup.com.my
+              </p>
             </div>
 
             <div className="flex justify-center space-x-6">
@@ -403,46 +392,24 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
                           </td>
                         </tr>
                       )}
-                      <tr>
+                      <tr className={item.quantity > 0 ? 'bg-gray-50' : 'text-gray-400'}>
                         <td className="border border-gray-300 p-2 text-center">{item.id}</td>
                         <td className="border border-gray-300 p-2 relative">
-                          <div className="relative group w-14 h-14 cursor-pointer">
+                          <div className="relative group w-14 h-14">
                             <img 
                               src={item.image}
                               alt={item.description}
                               className="w-full h-full object-contain"
                               onError={(e) => {
-                                // Fall back to a generic image or placeholder if the image fails to load
                                 e.currentTarget.src = "https://via.placeholder.com/100x100?text=No+Image"
-                                e.currentTarget.onerror = null // Prevent infinite fallback loop
+                                e.currentTarget.onerror = null
                               }}
                             />
-                            <div className="absolute top-0 left-0 w-0 h-0 bg-white opacity-0 group-hover:opacity-100 group-hover:w-48 group-hover:h-48 transition-all duration-200 z-10 overflow-hidden rounded shadow-lg">
-                              <img 
-                                src={item.image}
-                                alt={item.description} 
-                                className="w-full h-full object-contain"
-                                onError={(e) => {
-                                  // Fall back to a generic image or placeholder if the image fails to load
-                                  e.currentTarget.src = "https://via.placeholder.com/200x200?text=No+Image"
-                                  e.currentTarget.onerror = null // Prevent infinite fallback loop
-                                }}
-                              />
-                            </div>
                           </div>
                         </td>
                         <td className="border border-gray-300 p-2">{item.description}</td>
                         <td className="border border-gray-300 p-2 text-center">{item.unitCost.toFixed(2)}</td>
-                        <td className="border border-gray-300 p-2">
-                          <input
-                            type="number"
-                            min="0"
-                            step="any"
-                            className="w-20 text-center border border-gray-300 rounded p-1 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 mx-auto block"
-                            value={item.quantity}
-                            onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
-                          />
-                        </td>
+                        <td className="border border-gray-300 p-2 text-center">{item.quantity}</td>
                         <td className="border border-gray-300 p-2 text-center">
                           {(item.unitCost * item.quantity).toFixed(2)}
                         </td>
@@ -622,6 +589,11 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
               >
                 {isSubmitting ? 'Submitting...' : 'Submit Form'}
               </button>
+            </div>
+
+            {/* Footer */}
+            <div className="text-center text-sm text-gray-600 mt-8 pt-4 border-t border-gray-200">
+              <p>All data collected will be used solely for this event and marketing purposes.</p>
             </div>
           </form>
         )}
