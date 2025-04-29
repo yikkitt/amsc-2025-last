@@ -9,14 +9,12 @@
     "SUPABASE_SERVICE_ROLE_KEY": "",
     "NODE_ENV": "production",
     "NEXT_PUBLIC_APP_NAME": "AMSC 2025 Exhibitor Manual",
-    "NEXT_DISABLE_SOURCEMAPS": "true",
-    "DATABASE_URL": "${env.DATABASE_URL}"
+    "NEXT_DISABLE_SOURCEMAPS": "true"
   },
   "build": {
     "env": {
       "NEXT_PUBLIC_SUPABASE_URL": "https://kiotgupdmepdyiscbrmb.supabase.co",
-      "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtpb3RndXBkbWVwZHlpc2Nicm1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM5OTc4MDQsImV4cCI6MjA1OTU3MzgwNH0.USrVcvc8lzraMh4a4BpaTSope81DwX4EsYCxMddC1I8",
-      "DATABASE_URL": "${env.DATABASE_URL}"
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtpb3RndXBkbWVwZHlpc2Nicm1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM5OTc4MDQsImV4cCI6MjA1OTU3MzgwNH0.USrVcvc8lzraMh4a4BpaTSope81DwX4EsYCxMddC1I8"
     }
   },
   "headers": [
