@@ -318,12 +318,6 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
 
             <FormDisclaimer />
 
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 text-center">
-              <p className="text-yellow-800">
-                If you wish to make any changes, please email us at info@bcpgroup.com.my
-              </p>
-            </div>
-
             <div className="flex justify-center space-x-6">
               <PdfButton
                 formData={{
