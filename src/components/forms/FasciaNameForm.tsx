@@ -1,8 +1,11 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
+import React, { useState, FormEvent, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import FormDownloadButton from '../ui/FormDownloadButton';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import UserDataContainer from '@/components/UserDataContainer'
+import { isPastDeadline, syncFormWithSupabase, checkPreviousFormSubmission } from '@/lib/forms/submitHandler'
+import { PdfButton } from '@/components/ui/PdfButton'
 
 interface FasciaNameFormProps {
   userData?: {
@@ -13,11 +16,16 @@ interface FasciaNameFormProps {
   } | null;
 }
 
-const FasciaNameForm = ({ userData }: FasciaNameFormProps) => {
-  const router = useRouter();
-  const formRef = useRef<HTMLDivElement>(null);
-  const [fasciaText, setFasciaText] = useState('');
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
+  const router = useRouter()
+  const supabase = createClientComponentClient()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [formSubmitted, setFormSubmitted] = useState(false)
+  const [submittedData, setSubmittedData] = useState<any>(null)
+  const formRef = useRef<HTMLDivElement>(null)
+  const [fasciaText, setFasciaText] = useState<string>(''.padEnd(25, ' '))
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
   
   // Initialize inputRefs with the correct length (25 boxes)
   useEffect(() => {
@@ -49,6 +57,26 @@ const FasciaNameForm = ({ userData }: FasciaNameFormProps) => {
       }
     }));
   }, [fasciaText, userData]);
+
+  // Check if form has been previously submitted
+  useEffect(() => {
+    const checkPreviousSubmission = async () => {
+      setIsLoading(true)
+      try {
+        const { isSubmitted, data } = await checkPreviousFormSubmission("1", supabase)
+        setFormSubmitted(isSubmitted)
+        if (isSubmitted && data) {
+          setSubmittedData(data.data || {})
+        }
+      } catch (error) {
+        console.error('Error checking previous submissions:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    checkPreviousSubmission()
+  }, [supabase])
 
   // Handle input change and auto-focus to next box
   const handleInputChange = (index: number, value: string) => {
@@ -118,6 +146,63 @@ const FasciaNameForm = ({ userData }: FasciaNameFormProps) => {
     }
   };
 
+  // Handle navigation back to order forms after viewing PDF
+  const handleReturnToDashboard = () => {
+    router.push('/dashboard/order-forms');
+  }
+
+  // Handle form submission
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      const formData = {
+        form_type: 1,
+        company_data: {
+          company_name: userData?.company_name || '',
+          booth_number: userData?.booth_number || '',
+          contact_person: userData?.contact_person || '',
+          email: userData?.email || '',
+        },
+        fascia_name: fasciaText.trim(),
+        items: [],
+      };
+      
+      console.log('Submitting form data:', formData);
+      
+      // Use the syncFormWithSupabase function for submission
+      const result = await syncFormWithSupabase(formData);
+      
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+      
+      // Store submitted data for PDF generation
+      setSubmittedData(formData);
+      setFormSubmitted(true);
+      
+      // Show success message
+      alert("Form submitted successfully!");
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      let errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      // Check for specific error types from Supabase
+      if (errorMessage.includes('violates not-null constraint')) {
+        errorMessage = "Required form fields are missing. Please ensure all required fields are filled.";
+      } else if (errorMessage.includes('duplicate key')) {
+        errorMessage = "You have already submitted this form. Please view your submissions in the dashboard.";
+      } else if (errorMessage.includes('column')) {
+        errorMessage = "There was a database field mismatch. Our team has been notified and will fix this issue.";
+      }
+      
+      alert(`Error submitting form: ${errorMessage}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div ref={formRef} className="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-md">
       {/* Form Header */}
@@ -129,99 +214,112 @@ const FasciaNameForm = ({ userData }: FasciaNameFormProps) => {
         <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
       </div>
 
-      {/* User Data Display */}
-      <div className="mb-8 p-4 bg-gray-50 rounded-lg">
-        <h3 className="font-semibold mb-4">Exhibitor Information</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm font-medium text-gray-500">Company Name</p>
-            <p className="font-medium">{userData?.company_name || 'N/A'}</p>
+      {/* User Data Container */}
+      <UserDataContainer userData={userData} />
+
+      {isLoading ? (
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <span className="ml-3 text-gray-600">Checking submission status...</span>
+        </div>
+      ) : formSubmitted ? (
+        <div className="space-y-8">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+            <div className="text-green-600 font-semibold text-lg mb-2">
+              Form Successfully Submitted
+            </div>
+            <p className="text-gray-600">
+              You have already submitted this form. You can download a PDF copy or return to the dashboard.
+            </p>
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Booth Number</p>
-            <p className="font-medium">{userData?.booth_number || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Contact Person</p>
-            <p className="font-medium">{userData?.contact_person || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Email</p>
-            <p className="font-medium">{userData?.email || 'N/A'}</p>
+          <div className="flex justify-center space-x-6">
+            <PdfButton
+              formData={submittedData || {}}
+              formType={1}
+              containerRef={formRef}
+              className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
+            />
+            <button
+              type="button"
+              onClick={handleReturnToDashboard}
+              className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
+            >
+              Return to Dashboard
+            </button>
           </div>
         </div>
-      </div>
-
-      {/* Instructions */}
-      <div className="mb-8 p-4 bg-gray-50 rounded-lg">
-        <p className="text-gray-700 mb-4">This form must be completed and returned by all Standard Shell Scheme exhibitors.</p>
-        <p className="font-bold mb-4">PLEASE USE BLOCK LETTERS</p>
-        <label className="block font-bold">
-          1. FASCIA NAME (A maximum of 25 letterings only can be accommodated)
-        </label>
-      </div>
-
-      {/* Fascia Name Input */}
-      <div className="mb-8">
-        <div className="flex flex-col gap-2">
-          {/* First row: 13 boxes */}
-          <div className="flex gap-1 justify-center">
-            {Array(13).fill(0).map((_, i) => (
-              <input
-                key={i}
-                ref={el => { inputRefs.current[i] = el }}
-                type="text"
-                maxLength={1}
-                className="w-10 h-10 border border-gray-300 rounded text-center uppercase font-bold focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                value={fasciaText[i] || ''}
-                onChange={(e) => handleInputChange(i, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(i, e)}
-                onPaste={(e) => handlePaste(i, e)}
-                autoComplete="off"
-              />
-            ))}
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Instructions */}
+          <div className="mb-8 p-4 bg-gray-50 rounded-lg">
+            <p className="text-gray-700 mb-4">This form must be completed and returned by all Standard Shell Scheme exhibitors.</p>
+            <p className="font-bold mb-4">PLEASE USE BLOCK LETTERS</p>
+            <label className="block font-bold">
+              1. FASCIA NAME (A maximum of 25 letterings only can be accommodated)
+            </label>
           </div>
-          {/* Second row: 12 boxes */}
-          <div className="flex gap-1 justify-center">
-            {Array(12).fill(0).map((_, i) => (
-              <input
-                key={i + 13}
-                ref={el => { inputRefs.current[i + 13] = el }}
-                type="text"
-                maxLength={1}
-                className="w-10 h-10 border border-gray-300 rounded text-center uppercase font-bold focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                value={fasciaText[i + 13] || ''}
-                onChange={(e) => handleInputChange(i + 13, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(i + 13, e)}
-                onPaste={(e) => handlePaste(i + 13, e)}
-                autoComplete="off"
-              />
-            ))}
+
+          {/* Fascia Name Input */}
+          <div className="mb-8">
+            <div className="flex flex-col gap-2">
+              {/* First row: 13 boxes */}
+              <div className="flex gap-1 justify-center">
+                {Array(13).fill(0).map((_, i) => (
+                  <input
+                    key={i}
+                    ref={el => { inputRefs.current[i] = el }}
+                    type="text"
+                    maxLength={1}
+                    className="w-10 h-10 border border-gray-300 rounded text-center uppercase font-bold focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    value={fasciaText[i] || ''}
+                    onChange={(e) => handleInputChange(i, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(i, e)}
+                    onPaste={(e) => handlePaste(i, e)}
+                    autoComplete="off"
+                  />
+                ))}
+              </div>
+              {/* Second row: 12 boxes */}
+              <div className="flex gap-1 justify-center">
+                {Array(12).fill(0).map((_, i) => (
+                  <input
+                    key={i + 13}
+                    ref={el => { inputRefs.current[i + 13] = el }}
+                    type="text"
+                    maxLength={1}
+                    className="w-10 h-10 border border-gray-300 rounded text-center uppercase font-bold focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    value={fasciaText[i + 13] || ''}
+                    onChange={(e) => handleInputChange(i + 13, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(i + 13, e)}
+                    onPaste={(e) => handlePaste(i + 13, e)}
+                    autoComplete="off"
+                  />
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Important Notes */}
-      <div className="mb-8 bg-blue-50 p-4 rounded-lg">
-        <h4 className="font-semibold text-blue-700 mb-4">Important Note:</h4>
-        <ol className="list-decimal list-inside space-y-2 text-gray-700">
-          <li>Fascia Name will be in upper case, standard 70mm high sticker English letterings (maximum 25 letterings)</li>
-          <li>Failure to submit the request after the deadline, the name on signed contract will be used</li>
-          <li>Any changes on site will be charged RM 100.00/set of fascia name</li>
-        </ol>
-      </div>
+          {/* Important Notes */}
+          <div className="mb-8 bg-blue-50 p-4 rounded-lg">
+            <h4 className="font-semibold text-blue-700 mb-4">Important Note:</h4>
+            <ol className="list-decimal list-inside space-y-2 text-gray-700">
+              <li>Fascia Name will be in upper case, standard 70mm high sticker English letterings (maximum 25 letterings)</li>
+              <li>Failure to submit the request after the deadline, the name on signed contract will be used</li>
+              <li>Any changes on site will be charged RM 100.00/set of fascia name</li>
+            </ol>
+          </div>
 
-      {/* Download Button Only */}
-      <div className="flex justify-center mt-6">
-        <FormDownloadButton
-          formData={formData}
-          formType={1}
-          containerRef={formRef}
-          className="w-full md:w-auto"
-        />
-      </div>
+          {/* Download Button Only */}
+          <div className="flex justify-center mt-6">
+            <PdfButton
+              formData={formData}
+              formType={1}
+              containerRef={formRef}
+              className="w-full md:w-auto"
+            />
+          </div>
+        </form>
+      )}
     </div>
-  );
-};
-
-export default FasciaNameForm; 
+  )
+} 

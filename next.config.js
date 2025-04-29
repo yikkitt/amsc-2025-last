@@ -19,19 +19,12 @@ const nextConfig = {
   experimental: {
     // Disable CSS optimization that's causing build errors with critters
     optimizeCss: false,
-    legacyBrowsers: false, // Don't support legacy browsers
     // Enable optimizations for faster loading
     scrollRestoration: true, // Enable scroll restoration for better UX
     adjustFontFallbacks: true, // Improve font display
     adjustFontFallbacksWithSizeAdjust: true, // Better font size adjustments
-    // Enables server components where applicable
-    serverComponents: true,
     // Enables more efficient code splitting
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
-    // Font loading optimizations
-    fontLoaders: [
-      { loader: '@next/font/google', options: { subsets: ['latin'] } },
-    ],
   },
   images: {
     remotePatterns: [
@@ -49,8 +42,6 @@ const nextConfig = {
     contentDispositionType: 'attachment', // Better caching for images
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-  // Set to 'standalone' to support pages with dynamic server usage (cookies)
-  output: 'standalone',
   
   // Add webpack configuration to handle Node.js built-in modules (Webpack 5 compatible)
   webpack: (config, { isServer }) => {

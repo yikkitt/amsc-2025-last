@@ -180,6 +180,53 @@ export async function submitForm(
   }
 }
 
+/**
+ * Check if a form has been previously submitted by the current user
+ * @param formType - The form type to check (e.g., "1", "2", "3", etc.)
+ * @param supabase - Supabase client instance
+ * @returns Object with isSubmitted status and data if found
+ */
+export async function checkPreviousFormSubmission(
+  formType: string | number,
+  supabase: SupabaseClient
+): Promise<{ isSubmitted: boolean; data?: any }> {
+  try {
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.log("No authenticated user found when checking previous submission");
+      return { isSubmitted: false };
+    }
+    
+    // Normalize form type to string
+    const formTypeStr = String(formType);
+    
+    // Check if this form has already been submitted
+    const { data, error } = await supabase
+      .from('forms')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('form_type', formTypeStr)
+      .maybeSingle();
+      
+    if (error) {
+      console.error('Error checking previous submission:', error);
+      return { isSubmitted: false };
+    }
+    
+    if (data) {
+      console.log(`Found previous submission for form ${formTypeStr}:`, data);
+      return { isSubmitted: true, data };
+    }
+    
+    return { isSubmitted: false };
+  } catch (error) {
+    console.error('Error checking previous submission:', error);
+    return { isSubmitted: false };
+  }
+}
+
 // Helper function to normalize items data with strict number handling
 function normalizeItems(items: any[]) {
   if (!items || !Array.isArray(items)) return [];

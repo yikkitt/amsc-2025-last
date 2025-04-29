@@ -1,14 +1,14 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState, FormEvent, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import UserDataContainer from '@/components/UserDataContainer'
-import { isPastDeadline } from '@/lib/forms/submitHandler'
-import { syncFormWithSupabase } from '@/lib/forms/submitHandler'
+import { isPastDeadline, syncFormWithSupabase, checkPreviousFormSubmission } from '@/lib/forms/submitHandler'
 import { PdfButton } from '@/components/ui/PdfButton'
 import { User } from '@supabase/supabase-js'
-import { Dispatch, FormEvent, SetStateAction, useEffect } from 'react'
-import type { FormData as FormDataType } from 'undici'
+import { Dispatch, SetStateAction } from 'react'
+import SubmissionNotification from '@/components/ui/SubmissionNotification'
 
 interface OrderItem {
   id: string
@@ -35,7 +35,9 @@ interface AVEquipmentFormProps {
 
 export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
   const router = useRouter()
+  const supabase = createClientComponentClient()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [formSubmitted, setFormSubmitted] = useState(false)
   const [submittedData, setSubmittedData] = useState<any>(null)
   const formRef = useRef<HTMLDivElement>(null)
@@ -49,6 +51,26 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
   
   // Fixed security deposit amount
   const securityDeposit = 2000.00;
+
+  // Check if form has been previously submitted
+  useEffect(() => {
+    const checkPreviousSubmission = async () => {
+      setIsLoading(true)
+      try {
+        const { isSubmitted, data } = await checkPreviousFormSubmission("9", supabase)
+        setFormSubmitted(isSubmitted)
+        if (isSubmitted && data) {
+          setSubmittedData(data.data || {})
+        }
+      } catch (error) {
+        console.error('Error checking previous submissions:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    checkPreviousSubmission()
+  }, [supabase])
 
   const handleQuantityChange = (id: string, value: number) => {
     setOrderItems(items =>
@@ -73,108 +95,92 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
   // Final grand total 
   const grandTotal = subtotal + lateCharge;
 
-  // Prepare form data for submission and PDF generation
-  const prepareFormData = (form: HTMLFormElement) => {
-    // Ensure all monetary values are valid numbers
-    const validSubtotal = isNaN(subtotal) ? 0 : subtotal;
-    const validLateCharge = isNaN(lateCharge) ? 0 : lateCharge;
-    const validGrandTotal = isNaN(grandTotal) ? validSubtotal + validLateCharge : grandTotal;
-    
-    const formDataObj = new FormData(form);
-    
-    // Create transformed items array - make sure items with quantity > 0 are included
-    const transformedItems = orderItems
-      .filter(item => item.quantity > 0)
-      .map(item => ({
-        id: item.id,
-        description: item.description,
-        quantity: parseInt(String(item.quantity)) || 0,
-        unitCost: parseFloat(String(item.unitCost)) || 0,
-        total: parseFloat(String(item.quantity * item.unitCost)) || 0
-      }));
-    
-    // Only add security deposit as a separate item if there are other items selected
-    const securityDepositItem = {
-      id: 'security-deposit',
-      description: "Security Deposit",
-      quantity: 1,
-      unitCost: securityDeposit,
-      total: securityDeposit
-    };
-    
-    // Combine all items
-    const allItems = [...transformedItems, securityDepositItem];
-    
-    // Log items to verify they're being included
-    console.log('Items to be submitted:', allItems);
-    
-    return {
-      formType: 9,
-      form_type: '9',
-      orderItems: allItems, // Include items with the name orderItems as well
-      items: allItems, // Include items with the standard name items
-      company_data: {
-        company_name: formDataObj.get('company') as string || userData?.company_name || '',
-        booth_number: formDataObj.get('booth_no') as string || userData?.booth_number || '',
-        contact_person: formDataObj.get('name') as string || userData?.contact_person || '',
-        email: formDataObj.get('email') as string || userData?.email || '',
-        tel: formDataObj.get('tel') as string || userData?.tel || '',
-        fax: formDataObj.get('fax') as string || userData?.fax || '',
-        address: formDataObj.get('address') as string || userData?.address || '',
-      },
-      subtotal: validSubtotal,
-      security_deposit: securityDeposit,
-      late_charge: validLateCharge,
-      grand_total: validGrandTotal,
-      auth_details: {
-        name: formDataObj.get('name') as string || '',
-        designation: formDataObj.get('designation') as string || '',
-        date: formDataObj.get('date') as string || new Date().toISOString(),
-        signature: formDataObj.get('signature') as string || '',
-      }
-    };
-  };
-
-  // Handle form submission
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+    e.preventDefault()
+    setIsSubmitting(true)
     
     try {
-      const formData = prepareFormData(e.target as HTMLFormElement);
-      console.log('Submitting form data:', formData);
+      const formData = new FormData(e.target as HTMLFormElement)
       
-      // Verify grand_total is not null before submission
-      if (formData.grand_total === null || formData.grand_total === undefined || isNaN(formData.grand_total)) {
-        throw new Error("Invalid grand total amount. Please try again.");
+      // Validate required fields
+      const requiredFields = [
+        'auth_name',
+        'auth_designation',
+        'auth_company',
+        'auth_booth',
+        'auth_address',
+        'auth_email',
+        'auth_tel'
+      ];
+
+      const missingFields = requiredFields.filter(field => !formData.get(field));
+      if (missingFields.length > 0) {
+        throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`);
       }
+
+      const formDataObj = {
+        form_type: 9,
+        company_data: {
+          company_name: userData?.company_name || '',
+          booth_number: userData?.booth_number || '',
+          contact_person: userData?.contact_person || '',
+          email: userData?.email || '',
+          tel: userData?.tel || '',
+          fax: userData?.fax || '',
+          address: userData?.address || '',
+        },
+        items: orderItems
+          .filter(item => item.quantity > 0)
+          .map(item => ({
+            id: item.id,
+            description: item.description,
+            quantity: item.quantity,
+            unitCost: item.unitCost,
+            total: item.unitCost * item.quantity
+          })),
+        subtotal: subtotal,
+        security_deposit: securityDeposit,
+        late_charge: lateCharge,
+        grand_total: grandTotal,
+        auth_details: {
+          name: formData.get('auth_name')?.toString() || userData?.contact_person || '',
+          designation: formData.get('auth_designation')?.toString() || '',
+          company: formData.get('auth_company')?.toString() || userData?.company_name || '',
+          booth_number: formData.get('auth_booth')?.toString() || userData?.booth_number || '',
+          address: formData.get('auth_address')?.toString() || userData?.address || '',
+          email: formData.get('auth_email')?.toString() || userData?.email || '',
+          tel: formData.get('auth_tel')?.toString() || userData?.tel || '',
+          fax: formData.get('auth_fax')?.toString() || userData?.fax || '',
+          signature: formData.get('auth_signature')?.toString() || '',
+          date: formData.get('auth_date')?.toString() || new Date().toISOString()
+        }
+      }
+
+      const result = await syncFormWithSupabase(formDataObj)
       
-      // Use the syncFormWithSupabase function for submission
-      const result = await syncFormWithSupabase(formData);
-      
-      if (!result.success) throw new Error(result.message);
-      
-      // Store submitted data for PDF generation
-      setSubmittedData(formData);
-      setFormSubmitted(true);
+      if (!result.success) {
+        throw new Error(result.message)
+      }
+
+      setSubmittedData(formDataObj)
+      setFormSubmitted(true)
       
       // Show success message
-      alert("Form submitted successfully!");
-      
-      // Don't redirect immediately - stay on page so user can download PDF
+      alert("Form submitted successfully!")
     } catch (error) {
       console.error('Error submitting form:', error)
-      let errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      let errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      
       // Check for specific error types from Supabase
-      if (errorMessage.includes('surcharge') || errorMessage.includes('column')) {
-        errorMessage = "There was a database field mismatch. Our team has been notified and will fix this issue.";
+      if (errorMessage.includes('violates not-null constraint')) {
+        errorMessage = "Required form fields are missing. Please ensure all required fields are filled."
       } else if (errorMessage.includes('duplicate key')) {
-        errorMessage = "You have already submitted this form. Please view your submissions in the dashboard.";
-      } else if (errorMessage.includes('violates not-null constraint')) {
-        errorMessage = "Required form fields are missing. Please ensure all required fields are filled.";
+        errorMessage = "You have already submitted this form. Please view your submissions in the dashboard."
+      } else if (errorMessage.includes('column')) {
+        errorMessage = "There was a database field mismatch. Our team has been notified and will fix this issue."
       }
       
-      alert(`Error submitting form: ${errorMessage}`);
+      alert(`Error submitting form: ${errorMessage}`)
     } finally {
       setIsSubmitting(false)
     }
@@ -199,7 +205,19 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
       {/* User Data Container */}
       <UserDataContainer userData={userData} />
 
-      {!formSubmitted ? (
+      {isLoading ? (
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <span className="ml-3 text-gray-600">Checking submission status...</span>
+        </div>
+      ) : formSubmitted ? (
+        <SubmissionNotification
+          submittedData={submittedData}
+          formType={9}
+          containerRef={formRef}
+          onReturnToDashboard={handleReturnToDashboard}
+        />
+      ) : (
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Order Table */}
           <div className="mb-8 overflow-x-auto">
@@ -272,7 +290,7 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
           </div>
           
           {/* Important Notes */}
-          <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+          <div className="bg-amber-50 p-4 rounded-lg border border-amber-200 pdf-exclude">
             <h3 className="font-bold text-amber-800 mb-2">Important Notes:</h3>
             <ol className="list-decimal list-inside space-y-1 text-amber-800">
               <li>All items are on rental basis.</li>
@@ -285,9 +303,9 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
           {/* Authorization Section */}
           <div className="mb-8">
             <h4 className="font-bold mb-6 text-center">AUTHORIZATION</h4>
-            <p className="text-center mb-6">Please retain a copy for your record & return this form via email to:</p>
+            <p className="text-center mb-6 pdf-exclude">Please retain a copy for your record & return this form via email to:</p>
             
-            <div className="text-center mb-8">
+            <div className="text-center mb-8 pdf-exclude">
               <h5 className="font-bold mb-2">BLUE CIRCLE PLUS SDN BHD</h5>
               <p className="mb-1">Attn: Mr. Francis Chan / Ms. YJ Hoh</p>
               <p className="mb-1">Email: francis@bcpgroup.com.my</p>
@@ -303,8 +321,9 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
                     <label className="block text-sm font-medium mb-2">Name</label>
                     <input 
                       type="text" 
-                      name="name" 
+                      name="auth_name" 
                       className="w-full border-2 rounded p-2" 
+                      defaultValue={userData?.contact_person || ''}
                       required 
                     />
                   </div>
@@ -312,7 +331,7 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
                     <label className="block text-sm font-medium mb-2">Designation</label>
                     <input 
                       type="text" 
-                      name="designation" 
+                      name="auth_designation" 
                       className="w-full border-2 rounded p-2" 
                       required 
                     />
@@ -322,7 +341,7 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
                   <label className="block text-sm font-medium mb-2">Company</label>
                   <input 
                     type="text" 
-                    name="company"
+                    name="auth_company"
                     className="w-full border-2 rounded p-2"
                     defaultValue={userData?.company_name || ''}
                     required
@@ -332,7 +351,7 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
                   <label className="block text-sm font-medium mb-2">Booth No</label>
                   <input 
                     type="text" 
-                    name="booth_no"
+                    name="auth_booth"
                     className="w-full border-2 rounded p-2"
                     defaultValue={userData?.booth_number || ''}
                     required
@@ -341,9 +360,10 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
                 <div>
                   <label className="block text-sm font-medium mb-2">Address</label>
                   <textarea 
-                    name="address" 
+                    name="auth_address" 
                     className="w-full border-2 rounded p-2" 
-                    rows={3} 
+                    rows={3}
+                    defaultValue={userData?.address || ''}
                     required 
                   />
                 </div>
@@ -352,8 +372,9 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
                     <label className="block text-sm font-medium mb-2">Tel</label>
                     <input 
                       type="tel" 
-                      name="tel" 
+                      name="auth_tel" 
                       className="w-full border-2 rounded p-2" 
+                      defaultValue={userData?.tel || ''}
                       required 
                     />
                   </div>
@@ -361,8 +382,9 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
                     <label className="block text-sm font-medium mb-2">Fax</label>
                     <input 
                       type="tel" 
-                      name="fax" 
-                      className="w-full border-2 rounded p-2" 
+                      name="auth_fax" 
+                      className="w-full border-2 rounded p-2"
+                      defaultValue={userData?.fax || ''} 
                     />
                   </div>
                 </div>
@@ -370,8 +392,9 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
                   <label className="block text-sm font-medium mb-2">Email</label>
                   <input 
                     type="email" 
-                    name="email" 
+                    name="auth_email" 
                     className="w-full border-2 rounded p-2" 
+                    defaultValue={userData?.email || ''}
                     required 
                   />
                 </div>
@@ -380,7 +403,7 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
                     <label className="block text-sm font-medium mb-2">Signature</label>
                     <input 
                       type="text" 
-                      name="signature" 
+                      name="auth_signature" 
                       className="w-full border-2 rounded p-2" 
                       required 
                     />
@@ -389,8 +412,9 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
                     <label className="block text-sm font-medium mb-2">Date</label>
                     <input 
                       type="date" 
-                      name="date" 
-                      className="w-full border-2 rounded p-2" 
+                      name="auth_date" 
+                      className="w-full border-2 rounded p-2"
+                      defaultValue={new Date().toISOString().split('T')[0]}
                       required 
                     />
                   </div>
@@ -400,7 +424,7 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
           </div>
 
           {/* Form Actions */}
-          <div className="flex justify-center space-x-6 mt-8">
+          <div className="flex justify-center space-x-6 pdf-exclude">
             <button
               type="button"
               onClick={() => router.back()}
@@ -417,33 +441,6 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
             </button>
           </div>
         </form>
-      ) : (
-        <div className="space-y-8">
-          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-            <h3 className="font-bold text-green-800 mb-2">Form Submitted Successfully!</h3>
-            <p className="text-green-700">
-              Your AV Equipment order has been successfully submitted. You can download a PDF copy for your records.
-            </p>
-          </div>
-          
-          <div className="flex justify-between">
-            <button
-              onClick={handleReturnToDashboard}
-              className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-            >
-              Return to Dashboard
-            </button>
-            
-            {submittedData && (
-              <PdfButton
-                formData={submittedData}
-                formType={9}
-                containerRef={formRef}
-                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              />
-            )}
-          </div>
-        </div>
       )}
     </div>
   )

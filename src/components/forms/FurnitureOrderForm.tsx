@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { getSupabaseBrowserClient } from '@/lib/supabase/client'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import UserDataContainer from '@/components/UserDataContainer'
-import { isPastDeadline, syncFormWithSupabase } from '@/lib/forms/submitHandler'
+import { syncFormWithSupabase, isPastDeadline, checkPreviousFormSubmission } from '@/lib/forms/submitHandler'
+import { PdfButton } from '../ui/PdfButton'
 
 interface OrderItem {
   id: string
@@ -32,8 +33,12 @@ interface FurnitureOrderFormProps {
 
 export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps) {
   const router = useRouter()
-  const supabase = getSupabaseBrowserClient()
+  const supabase = createClientComponentClient()
+  const formRef = useRef<HTMLFormElement>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [submitted, setSubmitted] = useState(false)
+  const [submittedData, setSubmittedData] = useState<any>(null)
   const [orderItems, setOrderItems] = useState<OrderItem[]>([
     { id: '201', description: 'Information Desk', dimension: '1030 x 540 x 760 mm', unitCost: 80.00, quantity: 0, image: '/products/info-desk.jpg' },
     { id: '202', description: 'Lockable Cupboard', dimension: '1030 x 540 x 760mm H', unitCost: 115.00, quantity: 0, image: '/products/lockable-cupboard.jpg' },
@@ -58,6 +63,23 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
     { id: '222', description: 'AMES Discussion Table', dimension: '800 x 800 x 750 mm H', unitCost: 125.00, quantity: 0, image: '/products/ames-table.jpg' },
     { id: '223', description: 'Wooden Leg Chair (White/Black)', dimension: '470 x 420 x 820 mm H', unitCost: 75.00, quantity: 0, image: '/products/wooden-leg-chair.jpg' },
   ])
+
+  // Check if form has been previously submitted
+  useEffect(() => {
+    const checkPreviousSubmission = async () => {
+      setIsLoading(true)
+      try {
+        const { isSubmitted } = await checkPreviousFormSubmission("4", supabase)
+        setSubmitted(isSubmitted)
+      } catch (error) {
+        console.error('Error checking previous submissions:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    checkPreviousSubmission()
+  }, [supabase])
 
   const handleQuantityChange = (id: string, value: number) => {
     setOrderItems(items =>
@@ -84,11 +106,32 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
       const formElement = e.target as HTMLFormElement;
       const formData = new FormData(formElement);
       
+      // Validate required fields
+      const requiredFields = [
+        'auth_name',
+        'auth_designation',
+        'auth_company',
+        'auth_booth',
+        'auth_address',
+        'auth_email',
+        'auth_tel'
+      ];
+
+      const missingFields = requiredFields.filter(field => !formData.get(field));
+      if (missingFields.length > 0) {
+        throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      }
+
       const formDataObj = {
         form_type: 4,
         company_data: {
           company_name: userData?.company_name || '',
           booth_number: userData?.booth_number || '',
+          contact_person: userData?.contact_person || '',
+          email: userData?.email || '',
+          tel: userData?.tel || '',
+          fax: userData?.fax || '',
+          address: userData?.address || '',
         },
         items: orderItems
           .filter(item => item.quantity > 0)
@@ -113,24 +156,43 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
           tel: formData.get('auth_tel')?.toString() || userData?.tel || '',
           fax: formData.get('auth_fax')?.toString() || userData?.fax || '',
           signature: formData.get('auth_signature')?.toString() || '',
-          date: formData.get('auth_date')?.toString() || new Date().toISOString().split('T')[0]
+          date: formData.get('auth_date')?.toString() || new Date().toISOString()
         }
       };
 
-      // Use syncFormWithSupabase instead of direct insertion
       const result = await syncFormWithSupabase(formDataObj);
       
       if (!result.success) {
         throw new Error(result.message);
       }
+
+      setSubmittedData(formDataObj);
+      setSubmitted(true);
       
       // Show success message
       alert("Form submitted successfully!");
     } catch (error) {
-      console.error('Error submitting form:', error)
+      console.error('Error submitting form:', error);
+      let errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      // Check for specific error types from Supabase
+      if (errorMessage.includes('violates not-null constraint')) {
+        errorMessage = "Required form fields are missing. Please ensure all required fields are filled.";
+      } else if (errorMessage.includes('duplicate key')) {
+        errorMessage = "You have already submitted this form. Please view your submissions in the dashboard.";
+      } else if (errorMessage.includes('column')) {
+        errorMessage = "There was a database field mismatch. Our team has been notified and will fix this issue.";
+      }
+      
+      alert(`Error submitting form: ${errorMessage}`);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
+  }
+
+  // Handle navigation back to order forms after viewing PDF
+  const handleReturnToDashboard = () => {
+    router.push('/dashboard/order-forms');
   }
 
   return (
@@ -147,223 +209,256 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
       {/* User Data Container */}
       <UserDataContainer userData={userData} />
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Instructions */}
-        <div className="space-y-2 text-sm">
-          <p>This form must be completed and returned by every exhibitor. If service is not required, please endorse "NOT APPLICABLE" and return this form to the address below.</p>
-          <p className="font-bold">*ORDER ONLY YOUR ADDITIONAL REQUIREMENTS.</p>
+      {isLoading ? (
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <span className="ml-3 text-gray-600">Checking submission status...</span>
         </div>
+      ) : submitted ? (
+        <div className="space-y-8">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+            <div className="text-green-600 font-semibold text-lg mb-2">
+              Form Successfully Submitted
+            </div>
+            <p className="text-gray-600">
+              You have already submitted this form. You can download a PDF copy or return to the dashboard.
+            </p>
+          </div>
+          <div className="flex justify-center space-x-6">
+            <PdfButton
+              formData={submittedData}
+              formType={4}
+              containerRef={formRef}
+              className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
+            />
+            <button
+              type="button"
+              onClick={handleReturnToDashboard}
+              className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
+            >
+              Return to Dashboard
+            </button>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-8" ref={formRef}>
+          {/* Instructions */}
+          <div className="space-y-2 text-sm">
+            <p>This form must be completed and returned by every exhibitor. If service is not required, please endorse "NOT APPLICABLE" and return this form to the address below.</p>
+            <p className="font-bold">*ORDER ONLY YOUR ADDITIONAL REQUIREMENTS.</p>
+          </div>
 
-        {/* Order Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse border">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="border p-2 text-left">NO</th>
-                <th className="border p-2 text-left">IMAGE</th>
-                <th className="border p-2 text-left">DESCRIPTION OF SERVICE / ITEMS</th>
-                <th className="border p-2 text-left">DIMENSION (L x W x H)</th>
-                <th className="border p-2 text-right">UNIT COST (RM)</th>
-                <th className="border p-2 text-center">QTY</th>
-                <th className="border p-2 text-right">COST (RM)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orderItems.map((item) => (
-                <tr key={item.id}>
-                  <td className="border p-2">{item.id}</td>
-                  <td className="border p-2 relative">
-                    <div className="relative group w-14 h-14 cursor-pointer">
-                      <img 
-                        src={item.image} 
-                        alt={item.description}
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                          // Fall back to a generic image or placeholder if the image fails to load
-                          e.currentTarget.src = "https://via.placeholder.com/100x100?text=No+Image";
-                          e.currentTarget.onerror = null; // Prevent infinite fallback loop
-                        }}
-                      />
-                      <div className="absolute top-0 left-0 w-0 h-0 bg-white opacity-0 group-hover:opacity-100 group-hover:w-48 group-hover:h-48 transition-all duration-200 z-10 overflow-hidden rounded shadow-lg">
+          {/* Order Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="border p-2 text-left">NO</th>
+                  <th className="border p-2 text-left">IMAGE</th>
+                  <th className="border p-2 text-left">DESCRIPTION OF SERVICE / ITEMS</th>
+                  <th className="border p-2 text-left">DIMENSION (L x W x H)</th>
+                  <th className="border p-2 text-right">UNIT COST (RM)</th>
+                  <th className="border p-2 text-center">QTY</th>
+                  <th className="border p-2 text-right">COST (RM)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orderItems.map((item) => (
+                  <tr key={item.id}>
+                    <td className="border p-2">{item.id}</td>
+                    <td className="border p-2 relative">
+                      <div className="relative group w-14 h-14 cursor-pointer">
                         <img 
                           src={item.image} 
-                          alt={item.description} 
+                          alt={item.description}
                           className="w-full h-full object-contain"
                           onError={(e) => {
                             // Fall back to a generic image or placeholder if the image fails to load
-                            e.currentTarget.src = "https://via.placeholder.com/200x200?text=No+Image";
+                            e.currentTarget.src = "https://via.placeholder.com/100x100?text=No+Image";
                             e.currentTarget.onerror = null; // Prevent infinite fallback loop
                           }}
                         />
+                        <div className="absolute top-0 left-0 w-0 h-0 bg-white opacity-0 group-hover:opacity-100 group-hover:w-48 group-hover:h-48 transition-all duration-200 z-10 overflow-hidden rounded shadow-lg">
+                          <img 
+                            src={item.image} 
+                            alt={item.description} 
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                              // Fall back to a generic image or placeholder if the image fails to load
+                              e.currentTarget.src = "https://via.placeholder.com/200x200?text=No+Image";
+                              e.currentTarget.onerror = null; // Prevent infinite fallback loop
+                            }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="border p-2">{item.description}</td>
-                  <td className="border p-2">{item.dimension}</td>
-                  <td className="border p-2 text-right">{item.unitCost.toFixed(2)}</td>
-                  <td className="border p-2">
-                    <input
-                      type="number"
-                      min="0"
-                      step="any"
-                      value={item.quantity}
-                      onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
-                      className="w-20 text-center border rounded p-1"
-                    />
-                  </td>
-                  <td className="border p-2 text-right">
-                    {(item.unitCost * item.quantity).toFixed(2)}
-                  </td>
+                    </td>
+                    <td className="border p-2">{item.description}</td>
+                    <td className="border p-2">{item.dimension}</td>
+                    <td className="border p-2 text-right">{item.unitCost.toFixed(2)}</td>
+                    <td className="border p-2">
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={item.quantity}
+                        onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
+                        className="w-20 text-center border rounded p-1"
+                      />
+                    </td>
+                    <td className="border p-2 text-right">
+                      {(item.unitCost * item.quantity).toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+                <tr className="font-bold bg-gray-50">
+                  <td colSpan={6} className="border p-2 text-right">TOTAL COST (RM)</td>
+                  <td className="border p-2 text-right">{subtotal.toFixed(2)}</td>
                 </tr>
-              ))}
-              <tr className="font-bold bg-gray-50">
-                <td colSpan={6} className="border p-2 text-right">TOTAL COST (RM)</td>
-                <td className="border p-2 text-right">{subtotal.toFixed(2)}</td>
-              </tr>
-              <tr className="font-bold bg-gray-50">
-                <td colSpan={6} className="border p-2 text-right">LATE CHARGE (RM)</td>
-                <td className="border p-2 text-right">{lateCharge.toFixed(2)}</td>
-              </tr>
-              <tr className="font-bold bg-gray-50">
-                <td colSpan={6} className="border p-2 text-right">TOTAL COST INCLUDING LATE CHARGE (RM)</td>
-                <td className="border p-2 text-right">{(subtotal + lateCharge).toFixed(2)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-         {/* Authorization Section */}
-         <div className="mb-8">
-          <h4 className="font-bold mb-6 text-center">AUTHORIZATION</h4>
-          <p className="text-center mb-6">Please retain a copy for your record & return this form via email to:</p>
-          
-          <div className="text-center mb-8">
-            <h5 className="font-bold mb-2">BLUE CIRCLE PLUS SDN BHD</h5>
-            <p className="mb-1">Attn: Mr. Francis Chan / Ms. YJ Hoh</p>
-            <p className="mb-1">Email: francis@bcpgroup.com.my</p>
-            <p className="mb-1">or yijie@bcpgroup.com.my</p>
-            <p>Tel: +6011-2327 9795 / +6016-263 1150</p>
+                <tr className="font-bold bg-gray-50">
+                  <td colSpan={6} className="border p-2 text-right">LATE CHARGE (RM)</td>
+                  <td className="border p-2 text-right">{lateCharge.toFixed(2)}</td>
+                </tr>
+                <tr className="font-bold bg-gray-50">
+                  <td colSpan={6} className="border p-2 text-right">TOTAL COST INCLUDING LATE CHARGE (RM)</td>
+                  <td className="border p-2 text-right">{(subtotal + lateCharge).toFixed(2)}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
-          <div className="border-2 p-6 rounded-lg">
-            <h5 className="font-bold mb-4">Authorized Representative Applying:</h5>
-            <div className="grid grid-cols-1 gap-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Name</label>
-                  <input 
-                    type="text" 
-                    name="auth_name"
-                    className="w-full border-2 rounded p-2"
-                    defaultValue={userData?.contact_person || ''}
-                  />
+           {/* Authorization Section */}
+           <div className="mb-8">
+            <h4 className="font-bold mb-6 text-center">AUTHORIZATION</h4>
+            <p className="text-center mb-6">Please retain a copy for your record & return this form via email to:</p>
+            
+            <div className="text-center mb-8">
+              <h5 className="font-bold mb-2">BLUE CIRCLE PLUS SDN BHD</h5>
+              <p className="mb-1">Attn: Mr. Francis Chan / Ms. YJ Hoh</p>
+              <p className="mb-1">Email: francis@bcpgroup.com.my</p>
+              <p className="mb-1">or yijie@bcpgroup.com.my</p>
+              <p>Tel: +6011-2327 9795 / +6016-263 1150</p>
+            </div>
+
+            <div className="border-2 p-6 rounded-lg">
+              <h5 className="font-bold mb-4">Authorized Representative Applying:</h5>
+              <div className="grid grid-cols-1 gap-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Name</label>
+                    <input 
+                      type="text" 
+                      name="auth_name"
+                      className="w-full border-2 rounded p-2"
+                      defaultValue={userData?.contact_person || ''}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Designation</label>
+                    <input 
+                      type="text" 
+                      name="auth_designation"
+                      className="w-full border-2 rounded p-2" 
+                    />
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Designation</label>
-                  <input 
-                    type="text" 
-                    name="auth_designation"
-                    className="w-full border-2 rounded p-2" 
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Company</label>
-                <input 
-                  type="text"
-                  name="auth_company" 
-                  className="w-full border-2 rounded p-2"
-                  defaultValue={userData?.company_name || ''}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Booth No</label>
-                <input 
-                  type="text"
-                  name="auth_booth" 
-                  className="w-full border-2 rounded p-2"
-                  defaultValue={userData?.booth_number || ''}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Address</label>
-                <textarea 
-                  name="auth_address"
-                  className="w-full border-2 rounded p-2" 
-                  rows={3}
-                  defaultValue={userData?.address || ''}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Tel</label>
-                  <input 
-                    type="tel"
-                    name="auth_tel" 
-                    className="w-full border-2 rounded p-2"
-                    defaultValue={userData?.tel || ''}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Fax</label>
-                  <input 
-                    type="tel"
-                    name="auth_fax" 
-                    className="w-full border-2 rounded p-2"
-                    defaultValue={userData?.fax || ''}
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Email</label>
-                <input 
-                  type="email"
-                  name="auth_email" 
-                  className="w-full border-2 rounded p-2"
-                  defaultValue={userData?.email || ''}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Signature</label>
+                  <label className="block text-sm font-medium mb-2">Company</label>
                   <input 
                     type="text"
-                    name="auth_signature" 
-                    className="w-full border-2 rounded p-2" 
+                    name="auth_company" 
+                    className="w-full border-2 rounded p-2"
+                    defaultValue={userData?.company_name || ''}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Date</label>
+                  <label className="block text-sm font-medium mb-2">Booth No</label>
                   <input 
-                    type="date"
-                    name="auth_date" 
+                    type="text"
+                    name="auth_booth" 
                     className="w-full border-2 rounded p-2"
-                    defaultValue={new Date().toISOString().split('T')[0]}
+                    defaultValue={userData?.booth_number || ''}
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Address</label>
+                  <textarea 
+                    name="auth_address"
+                    className="w-full border-2 rounded p-2" 
+                    rows={3}
+                    defaultValue={userData?.address || ''}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Tel</label>
+                    <input 
+                      type="tel"
+                      name="auth_tel" 
+                      className="w-full border-2 rounded p-2"
+                      defaultValue={userData?.tel || ''}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Fax</label>
+                    <input 
+                      type="tel"
+                      name="auth_fax" 
+                      className="w-full border-2 rounded p-2"
+                      defaultValue={userData?.fax || ''}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Email</label>
+                  <input 
+                    type="email"
+                    name="auth_email" 
+                    className="w-full border-2 rounded p-2"
+                    defaultValue={userData?.email || ''}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Signature</label>
+                    <input 
+                      type="text"
+                      name="auth_signature" 
+                      className="w-full border-2 rounded p-2" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Date</label>
+                    <input 
+                      type="date"
+                      name="auth_date" 
+                      className="w-full border-2 rounded p-2"
+                      defaultValue={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Form Actions */}
-        <div className="flex justify-center space-x-6">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="px-8 py-3 border-2 border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50"
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit Form'}
-          </button>
-        </div>
-      </form>
+          {/* Form Actions */}
+          <div className="flex justify-center space-x-6">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="px-8 py-3 border-2 border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50"
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit Form'}
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   )
 } 

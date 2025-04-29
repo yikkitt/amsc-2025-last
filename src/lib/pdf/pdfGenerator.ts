@@ -198,39 +198,34 @@ export const generatePDF = async (element: HTMLElement, filename: string): Promi
       const imgData = canvas.toDataURL('image/jpeg', 0.95);
       pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
     } else {
-      // Content needs multiple pages - calculate more precisely
-      const pageHeight = pdfHeight;
-      let heightLeft = imgHeight;
+      // Content needs multiple pages - split content properly
+      let remainingHeight = imgHeight;
       let position = 0;
-      let pageCount = 0;
       
-      while (heightLeft > 0) {
-        // Calculate how much of the image to put on this page
-        const heightOnThisPage = Math.min(imgHeight - position / ratio, pageHeight / ratio);
+      // Process each page
+      while (remainingHeight > 0) {
+        // Calculate height for this page (in PDF units)
+        const pageHeightInPx = pdfHeight / ratio;
         
-        // Convert only the portion needed for this page
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        
-        // Add image to the PDF page
+        // Add image to the PDF, using sourceY parameter to get the right portion
         pdf.addImage(
-          imgData, 
+          canvas, 
           'JPEG', 
           imgX, 
           0, 
           imgWidth * ratio, 
           imgHeight * ratio, 
-          '', 
-          'FAST',
-          pageCount === 0 ? 0 : -position  // Offset for subsequent pages
+          undefined, // alias
+          'FAST', // compression
+          position // rotation (sourceY position in the canvas)
         );
         
-        // Reduce height left and increase position
-        heightLeft -= pageHeight / ratio;
-        position += pageHeight;
-        pageCount++;
+        // Reduce remaining height
+        remainingHeight -= pageHeightInPx;
+        position += pageHeightInPx;
         
         // Add a new page if there's still content
-        if (heightLeft > 0) {
+        if (remainingHeight > 0) {
           pdf.addPage();
         }
       }

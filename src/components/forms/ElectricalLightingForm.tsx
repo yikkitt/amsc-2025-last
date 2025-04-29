@@ -38,7 +38,8 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
   const [submitted, setSubmitted] = useState(false)
   const [currentlySubmitting, setCurrentlySubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const formRef = useRef<HTMLFormElement>(null)
+  const [submittedData, setSubmittedData] = useState<any>(null)
+  const formRef = useRef<HTMLDivElement>(null)
   const supabase = getSupabaseBrowserClient()
   
   const [orderItems, setOrderItems] = useState<OrderItem[]>([
@@ -135,88 +136,42 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
       return
     }
 
-    const form = e.currentTarget
-    const formElements = form.elements as HTMLFormControlsCollection
-
-    // Validate monetary values
-    const moneyFields = [
-      'standardOutletPrice', 'standardAmountCharged', 
-      'floodLightPrice', 'floodLightAmountCharged', 
-      'specialWiringPrice', 'specialWiringAmountCharged', 
-      'bannerHangingPrice', 'bannerHangingAmountCharged'
-    ]
-
-    let allValid = true
-    moneyFields.forEach(field => {
-      const element = formElements.namedItem(field) as HTMLInputElement
-      if (element && element.value !== '') {
-        const value = parseFloat(element.value)
-        if (isNaN(value) || value < 0) {
-          alert(`Please enter a valid amount for ${field}`)
-          allValid = false
-        }
-      }
-    })
-
-    if (!allValid) {
-      setCurrentlySubmitting(false)
-      return
-    }
-
-    // Prepare form values for submission
-    const formData = new FormData(form)
-
     try {
-      await syncFormWithSupabase({
-        hasStandardOutlet: formData.get('hasStandardOutlet') === 'yes',
-        standardOutletAmount: formData.get('standardOutletAmount') ? Number(formData.get('standardOutletAmount')) : null,
-        standardOutletPrice: formData.get('standardOutletPrice') ? Number(formData.get('standardOutletPrice')) : null,
-        standardAmountCharged: formData.get('standardAmountCharged') ? Number(formData.get('standardAmountCharged')) : null,
-        
-        hasFloodLight: formData.get('hasFloodLight') === 'yes',
-        floodLightAmount: formData.get('floodLightAmount') ? Number(formData.get('floodLightAmount')) : null,
-        floodLightPrice: formData.get('floodLightPrice') ? Number(formData.get('floodLightPrice')) : null,
-        floodLightAmountCharged: formData.get('floodLightAmountCharged') ? Number(formData.get('floodLightAmountCharged')) : null,
-        
-        hasSpecialWiring: formData.get('hasSpecialWiring') === 'yes',
-        specialWiringAmount: formData.get('specialWiringAmount') ? Number(formData.get('specialWiringAmount')) : null,
-        specialWiringPrice: formData.get('specialWiringPrice') ? Number(formData.get('specialWiringPrice')) : null,
-        specialWiringAmountCharged: formData.get('specialWiringAmountCharged') ? Number(formData.get('specialWiringAmountCharged')) : null,
-        
-        hasBannerHanging: formData.get('hasBannerHanging') === 'yes',
-        bannerHangingAmount: formData.get('bannerHangingAmount') ? Number(formData.get('bannerHangingAmount')) : null,
-        bannerHangingPrice: formData.get('bannerHangingPrice') ? Number(formData.get('bannerHangingPrice')) : null,
-        bannerHangingAmountCharged: formData.get('bannerHangingAmountCharged') ? Number(formData.get('bannerHangingAmountCharged')) : null,
-        
-        notes: formData.get('notes')?.toString() || '',
-        
-        // Include standard company information
-        company_name: userData?.company_name || formData.get('auth_company')?.toString() || '',
-        booth_number: userData?.booth_number || formData.get('auth_booth')?.toString() || '',
-        
-        // Include contact information
-        contact_person: userData?.contact_person || formData.get('auth_name')?.toString() || '',
-        email: userData?.email || formData.get('auth_email')?.toString() || '',
-        tel: userData?.tel || formData.get('auth_tel')?.toString() || '',
-        fax: userData?.fax || formData.get('auth_fax')?.toString() || '',
-        address: userData?.address || formData.get('auth_address')?.toString() || '',
-        
-        // Include order items for standardization
-        orderItems: orderItems.filter(item => item.quantity > 0),
-        
-        // Include totals for consistency
+      const formData = new FormData(e.currentTarget)
+      const formDataObj = {
+        form_type: 3,
+        company_data: {
+          company_name: userData?.company_name || '',
+          booth_number: userData?.booth_number || '',
+          contact_person: userData?.contact_person || '',
+          email: userData?.email || '',
+          tel: userData?.tel || '',
+          fax: userData?.fax || '',
+          address: userData?.address || '',
+        },
+        items: orderItems.filter(item => item.quantity > 0),
         subtotal: subtotal,
         late_charge: lateCharge,
         grand_total: grandTotal,
-        
-        // Include authorization details
         auth_details: {
           name: formData.get('auth_name')?.toString() || userData?.contact_person || '',
           designation: formData.get('auth_designation')?.toString() || '',
-          date: formData.get('auth_date')?.toString() || new Date().toISOString().split('T')[0]
+          company: formData.get('auth_company')?.toString() || userData?.company_name || '',
+          address: formData.get('auth_address')?.toString() || userData?.address || '',
+          email: formData.get('auth_email')?.toString() || userData?.email || '',
+          tel: formData.get('auth_tel')?.toString() || userData?.tel || '',
+          fax: formData.get('auth_fax')?.toString() || userData?.fax || '',
+          date: formData.get('auth_date')?.toString() || new Date().toISOString(),
         }
-      }, "3")
+      }
 
+      const result = await syncFormWithSupabase(formDataObj)
+      
+      if (!result.success) {
+        throw new Error(result.message)
+      }
+
+      setSubmittedData(formDataObj)
       setSubmitted(true)
       router.refresh()
     } catch (error) {
@@ -233,7 +188,7 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
   }
 
   return (
-    <div className="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-md">
+    <div ref={formRef} className="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-md">
       {/* Form Header */}
       <div className="text-center mb-8 border-b border-gray-200 pb-6">
         <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 3</h1>
@@ -263,7 +218,7 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
           </div>
           <div className="flex justify-center space-x-6">
             <PdfButton
-              formData={{}} // Pass empty object since submittedData was removed
+              formData={submittedData}
               formType={3}
               containerRef={formRef}
               className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
@@ -278,168 +233,168 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
           </div>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-8" ref={formRef}>
-          {/* Instructions */}
-          <div className="space-y-2 text-sm bg-gray-50 p-4 rounded-lg">
-            <p>1. This form must be completed and returned by every exhibitor. If service is not required, please endorse "NOT APPLICABLE" and return this form to the address below.</p>
-            <p>2. ORDER ONLY YOUR ADDITIONAL REQUIREMENTS.</p>
-            <p>3. For services not listed below, such as step-up/step-down transformers etc, please contact the Official Contractor for a quotation.</p>
-            <p>4. The supply at REGIONAL CONFERENCE OF DERMATOLOGY is 230V 50Hz AC and 415V TPN 50Hz AC.</p>
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Instructions */}
+        <div className="space-y-2 text-sm bg-gray-50 p-4 rounded-lg">
+          <p>1. This form must be completed and returned by every exhibitor. If service is not required, please endorse "NOT APPLICABLE" and return this form to the address below.</p>
+          <p>2. ORDER ONLY YOUR ADDITIONAL REQUIREMENTS.</p>
+          <p>3. For services not listed below, such as step-up/step-down transformers etc, please contact the Official Contractor for a quotation.</p>
+          <p>4. The supply at REGIONAL CONFERENCE OF DERMATOLOGY is 230V 50Hz AC and 415V TPN 50Hz AC.</p>
+        </div>
 
-          {/* Order Table */}
-          <div className="mb-8 overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
-              <thead>
-                <tr className="bg-blue-50">
-                  <th className="border border-gray-300 p-2 text-center">NO</th>
-                  <th className="border border-gray-300 p-2 text-center">IMAGE</th>
-                  <th className="border border-gray-300 p-2 text-left">DESCRIPTION OF SERVICE / ITEMS</th>
-                  <th className="border border-gray-300 p-2 text-center">UNIT COST (RM)</th>
-                  <th className="border border-gray-300 p-2 text-center">QTY</th>
-                  <th className="border border-gray-300 p-2 text-center">COST (RM)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orderItems.map((item, index) => (
-                  <React.Fragment key={item.id}>
-                    {isFirstInSection(index) && (
-                      <tr key={`section-${index}`}>
-                        <td colSpan={6} className="border border-gray-300 p-2 font-bold bg-gray-50">
-                          {item.section}
-                          {item.section === 'SECTION A - INDIVIDUAL' && (
-                            <><br /><span className="text-sm font-normal">(Inclusive of electricity consumption)</span></>
-                          )}
-                          {item.section === 'LIGHTING CONNECTION' && (
-                            <><br /><span className="text-sm font-normal">Charges included supply electrical consumption. Wiring and maintenance are the responsibility of the contractor appointed by the Exhibitor.</span></>
-                          )}
-                          {item.section === 'POWER POINT / ISOLATOR' && (
-                            <><br /><span className="text-sm font-normal">Equipment and fittings on hire from the official contractor: Power point are used for single machinery / electrical appliances / exhibits only. STRICTLY NOT for lighting purposes.</span></>
-                          )}
-                          {item.section === 'TEMPORARY POWER SUPPLY' && (
-                            <><br /><span className="text-sm font-normal">(BUILD-UP ONLY)</span></>
-                          )}
-                        </td>
-                      </tr>
-                    )}
-                    <tr>
-                      <td className="border border-gray-300 p-2 text-center">{item.id}</td>
-                      <td className="border border-gray-300 p-2 relative">
-                        <div className="relative group w-14 h-14 cursor-pointer">
+        {/* Order Table */}
+        <div className="mb-8 overflow-x-auto">
+          <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
+            <thead>
+              <tr className="bg-blue-50">
+                <th className="border border-gray-300 p-2 text-center">NO</th>
+                <th className="border border-gray-300 p-2 text-center">IMAGE</th>
+                <th className="border border-gray-300 p-2 text-left">DESCRIPTION OF SERVICE / ITEMS</th>
+                <th className="border border-gray-300 p-2 text-center">UNIT COST (RM)</th>
+                <th className="border border-gray-300 p-2 text-center">QTY</th>
+                <th className="border border-gray-300 p-2 text-center">COST (RM)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orderItems.map((item, index) => (
+                <React.Fragment key={item.id}>
+                  {isFirstInSection(index) && (
+                    <tr key={`section-${index}`}>
+                      <td colSpan={6} className="border border-gray-300 p-2 font-bold bg-gray-50">
+                        {item.section}
+                        {item.section === 'SECTION A - INDIVIDUAL' && (
+                          <><br /><span className="text-sm font-normal">(Inclusive of electricity consumption)</span></>
+                        )}
+                        {item.section === 'LIGHTING CONNECTION' && (
+                          <><br /><span className="text-sm font-normal">Charges included supply electrical consumption. Wiring and maintenance are the responsibility of the contractor appointed by the Exhibitor.</span></>
+                        )}
+                        {item.section === 'POWER POINT / ISOLATOR' && (
+                          <><br /><span className="text-sm font-normal">Equipment and fittings on hire from the official contractor: Power point are used for single machinery / electrical appliances / exhibits only. STRICTLY NOT for lighting purposes.</span></>
+                        )}
+                        {item.section === 'TEMPORARY POWER SUPPLY' && (
+                          <><br /><span className="text-sm font-normal">(BUILD-UP ONLY)</span></>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-center">{item.id}</td>
+                    <td className="border border-gray-300 p-2 relative">
+                      <div className="relative group w-14 h-14 cursor-pointer">
+                        <img 
+                          src={item.image}
+                          alt={item.description}
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            // Fall back to a generic image or placeholder if the image fails to load
+                            e.currentTarget.src = "https://via.placeholder.com/100x100?text=No+Image";
+                            e.currentTarget.onerror = null; // Prevent infinite fallback loop
+                          }}
+                        />
+                        <div className="absolute top-0 left-0 w-0 h-0 bg-white opacity-0 group-hover:opacity-100 group-hover:w-48 group-hover:h-48 transition-all duration-200 z-10 overflow-hidden rounded shadow-lg">
                           <img 
                             src={item.image}
-                            alt={item.description}
+                            alt={item.description} 
                             className="w-full h-full object-contain"
                             onError={(e) => {
                               // Fall back to a generic image or placeholder if the image fails to load
-                              e.currentTarget.src = "https://via.placeholder.com/100x100?text=No+Image";
+                              e.currentTarget.src = "https://via.placeholder.com/200x200?text=No+Image";
                               e.currentTarget.onerror = null; // Prevent infinite fallback loop
                             }}
                           />
-                          <div className="absolute top-0 left-0 w-0 h-0 bg-white opacity-0 group-hover:opacity-100 group-hover:w-48 group-hover:h-48 transition-all duration-200 z-10 overflow-hidden rounded shadow-lg">
-                            <img 
-                              src={item.image}
-                              alt={item.description} 
-                              className="w-full h-full object-contain"
-                              onError={(e) => {
-                                // Fall back to a generic image or placeholder if the image fails to load
-                                e.currentTarget.src = "https://via.placeholder.com/200x200?text=No+Image";
-                                e.currentTarget.onerror = null; // Prevent infinite fallback loop
-                              }}
-                            />
-                          </div>
                         </div>
-                      </td>
-                      <td className="border border-gray-300 p-2">{item.description}</td>
-                      <td className="border border-gray-300 p-2 text-center">{item.unitCost.toFixed(2)}</td>
-                      <td className="border border-gray-300 p-2">
-                        <input
-                          type="number"
-                          min="0"
-                          step="any"
-                          className="w-20 text-center border border-gray-300 rounded p-1 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 mx-auto block"
-                          value={item.quantity}
-                          onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
-                        />
-                      </td>
-                      <td className="border border-gray-300 p-2 text-center">
-                        {(item.unitCost * item.quantity).toFixed(2)}
-                      </td>
-                    </tr>
-                  </React.Fragment>
-                ))}
-                <tr>
-                  <td colSpan={4} className="border border-gray-300 p-2"></td>
-                  <td className="border border-gray-300 p-2 text-right font-medium">Subtotal:</td>
-                  <td className="border border-gray-300 p-2 text-center">{subtotal.toFixed(2)}</td>
-                </tr>
-                <tr>
-                  <td colSpan={4} className="border border-gray-300 p-2 text-center italic">
-                    A SURCHARGE OF 10% will be imposed for orders received after June 30, 2025.
-                  </td>
-                  <td className="border border-gray-300 p-2 text-right font-medium">Late Charge (10%):</td>
-                  <td className="border border-gray-300 p-2 text-center">{lateCharge.toFixed(2)}</td>
-                </tr>
-                <tr className="font-bold">
-                  <td colSpan={4} className="border border-gray-300 p-2"></td>
-                  <td className="border border-gray-300 p-2 text-right">Total Amount:</td>
+                      </div>
+                    </td>
+                    <td className="border border-gray-300 p-2">{item.description}</td>
+                    <td className="border border-gray-300 p-2 text-center">{item.unitCost.toFixed(2)}</td>
+                    <td className="border border-gray-300 p-2">
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        className="w-20 text-center border border-gray-300 rounded p-1 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 mx-auto block"
+                        value={item.quantity}
+                        onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
+                      />
+                    </td>
+                    <td className="border border-gray-300 p-2 text-center">
+                      {(item.unitCost * item.quantity).toFixed(2)}
+                    </td>
+                  </tr>
+                </React.Fragment>
+              ))}
+              <tr>
+                <td colSpan={4} className="border border-gray-300 p-2"></td>
+                <td className="border border-gray-300 p-2 text-right font-medium">Subtotal:</td>
+                <td className="border border-gray-300 p-2 text-center">{subtotal.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td colSpan={4} className="border border-gray-300 p-2 text-center italic">
+                  A SURCHARGE OF 10% will be imposed for orders received after June 30, 2025.
+                </td>
+                <td className="border border-gray-300 p-2 text-right font-medium">Late Charge (10%):</td>
+                <td className="border border-gray-300 p-2 text-center">{lateCharge.toFixed(2)}</td>
+              </tr>
+              <tr className="font-bold">
+                <td colSpan={4} className="border border-gray-300 p-2"></td>
+                <td className="border border-gray-300 p-2 text-right">Total Amount:</td>
                   <td className="border border-gray-300 p-2 text-center">{grandTotal.toFixed(2)}</td>
-                </tr>
-              </tbody>
-            </table>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Important Notes */}
+        <div className="mb-8 bg-blue-50 p-4 rounded-lg">
+          <h4 className="font-semibold text-blue-700 mb-4">PLEASE NOTE:</h4>
+          <ol className="list-decimal list-inside space-y-2 text-gray-700">
+            <li>All items are on rental basis.</li>
+            <li>Exhibitors/Contractors who are bringing in their own light fittings are required to order lighting connections from the Official Electrical Contractor. Power outlets are not to be used for lighting purposes.</li>
+            <li>Exhibitors with very sensitive equipment are advised to bring their own stabilizer or UPS for protection of frequency fluctuations as the Organiser shall not be responsible for any damage to the exhibitors' equipment. One socket is for one exhibit only. Multi-point connection is not allowed to prevent the risk of power overload.</li>
+            <li>A <strong>SURCHARGE OF 10%</strong> will be imposed for orders received after September 2, 2024.</li>
+            <li>A <strong>SURCHARGE OF 50%</strong> will be imposed for orders received on site or on-site alteration/relocation, and is subject to availability.</li>
+            <li>All electrical installations must be undertaken by the Official Contractor.</li>
+            <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be received by this Order Form. All bank charges must be borne by remitter. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-3, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 800 984924. Bank Swift Code: CIBBMYKL</li>
+          </ol>
+        </div>
+
+        {/* Authorization Section */}
+        <div className="mb-8">
+          <p className="mb-6 text-center text-gray-700">Please retain a copy for your record & return this form via email to:</p>
+          
+          <div className="mb-8 text-center bg-gray-50 py-4 rounded-lg">
+            <h5 className="font-bold text-blue-600 mb-2">BLUE CIRCLE PLUS SDN BHD</h5>
+            <p className="mb-1">Attn: Mr. Francis Chan / Ms. YJ Hoh</p>
+            <p className="mb-1">Email: francis@bcpgroup.com.my</p>
+            <p className="mb-1">or yijie@bcpgroup.com.my</p>
+            <p>Tel: +6011-2327 9795 / +6016-263 1150</p>
           </div>
 
-          {/* Important Notes */}
-          <div className="mb-8 bg-blue-50 p-4 rounded-lg">
-            <h4 className="font-semibold text-blue-700 mb-4">PLEASE NOTE:</h4>
-            <ol className="list-decimal list-inside space-y-2 text-gray-700">
-              <li>All items are on rental basis.</li>
-              <li>Exhibitors/Contractors who are bringing in their own light fittings are required to order lighting connections from the Official Electrical Contractor. Power outlets are not to be used for lighting purposes.</li>
-              <li>Exhibitors with very sensitive equipment are advised to bring their own stabilizer or UPS for protection of frequency fluctuations as the Organiser shall not be responsible for any damage to the exhibitors' equipment. One socket is for one exhibit only. Multi-point connection is not allowed to prevent the risk of power overload.</li>
-              <li>A <strong>SURCHARGE OF 10%</strong> will be imposed for orders received after September 2, 2024.</li>
-              <li>A <strong>SURCHARGE OF 50%</strong> will be imposed for orders received on site or on-site alteration/relocation, and is subject to availability.</li>
-              <li>All electrical installations must be undertaken by the Official Contractor.</li>
-              <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be received by this Order Form. All bank charges must be borne by remitter. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-3, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 800 984924. Bank Swift Code: CIBBMYKL</li>
-            </ol>
-          </div>
-
-          {/* Authorization Section */}
-          <div className="mb-8">
-            <p className="mb-6 text-center text-gray-700">Please retain a copy for your record & return this form via email to:</p>
-            
-            <div className="mb-8 text-center bg-gray-50 py-4 rounded-lg">
-              <h5 className="font-bold text-blue-600 mb-2">BLUE CIRCLE PLUS SDN BHD</h5>
-              <p className="mb-1">Attn: Mr. Francis Chan / Ms. YJ Hoh</p>
-              <p className="mb-1">Email: francis@bcpgroup.com.my</p>
-              <p className="mb-1">or yijie@bcpgroup.com.my</p>
-              <p>Tel: +6011-2327 9795 / +6016-263 1150</p>
-            </div>
-
-            <div className="border border-gray-200 rounded-lg p-6 shadow-sm">
-              <h5 className="font-bold mb-4 text-blue-600">Authorized Representative Applying:</h5>
-              <div className="grid grid-cols-1 gap-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700">Authorized by</label>
-                    <input 
-                      type="text" 
+          <div className="border border-gray-200 rounded-lg p-6 shadow-sm">
+            <h5 className="font-bold mb-4 text-blue-600">Authorized Representative Applying:</h5>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Authorized by</label>
+                  <input 
+                    type="text" 
                       name="auth_name"
-                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
                       defaultValue={userData?.contact_person || ''}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700">Booth No</label>
-                    <input 
-                      type="text" 
-                      name="auth_booth"
-                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                      defaultValue={userData?.booth_number || ''}
-                    />
-                  </div>
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Designation</label>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Booth No</label>
+                  <input 
+                    type="text" 
+                      name="auth_booth"
+                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                    defaultValue={userData?.booth_number || ''}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">Designation</label>
                   <input 
                     type="text" 
                     name="auth_designation"
@@ -454,86 +409,86 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
                     className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
                     defaultValue={userData?.company_name || ''}
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Company Address</label>
-                  <textarea 
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">Company Address</label>
+                <textarea 
                     name="auth_address"
-                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                    rows={2}
+                  className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                  rows={2}
                     defaultValue={userData?.address || ''}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">Email</label>
+                <input 
+                  type="email" 
+                    name="auth_email"
+                  className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    defaultValue={userData?.email || ''}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Tel/Hp</label>
+                  <input 
+                    type="tel" 
+                      name="auth_tel"
+                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      defaultValue={userData?.tel || ''}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Email</label>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Fax</label>
                   <input 
-                    type="email" 
-                    name="auth_email"
+                    type="tel" 
+                      name="auth_fax"
                     className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    defaultValue={userData?.email || ''}
+                      defaultValue={userData?.fax || ''}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700">Tel/Hp</label>
-                    <input 
-                      type="tel" 
-                      name="auth_tel"
-                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      defaultValue={userData?.tel || ''}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700">Fax</label>
-                    <input 
-                      type="tel" 
-                      name="auth_fax"
-                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      defaultValue={userData?.fax || ''}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700">Signature</label>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Signature</label>
                     <input 
                       type="text" 
                       name="auth_signature"
                       className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700">Date</label>
-                    <input 
-                      type="date" 
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Date</label>
+                  <input 
+                    type="date" 
                       name="auth_date"
-                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      defaultValue={new Date().toISOString().split('T')[0]}
-                    />
-                  </div>
+                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    defaultValue={new Date().toISOString().split('T')[0]}
+                  />
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Form Actions */}
-          <div className="flex justify-center space-x-6">
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="px-8 py-3 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
+        {/* Form Actions */}
+        <div className="flex justify-center space-x-6">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="px-8 py-3 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
               disabled={currentlySubmitting}
-              className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
-            >
+                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
               {currentlySubmitting ? 'Submitting...' : 'Submit Form'}
-            </button>
-          </div>
-        </form>
+              </button>
+        </div>
+      </form>
       )}
     </div>
   );
