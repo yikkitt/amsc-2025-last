@@ -207,6 +207,39 @@ export default function ContractorPassForm({ userData }: ContractorPassFormProps
                 You have already submitted this form. You can download a PDF copy or return to the dashboard.
               </p>
             </div>
+
+            {/* Display submitted order details in read-only mode */}
+            <div className="mb-8 overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
+                <thead>
+                  <tr className="bg-blue-50">
+                    <th className="border border-gray-300 p-2 text-center">Item</th>
+                    <th className="border border-gray-300 p-2 text-center">Quantity</th>
+                    <th className="border border-gray-300 p-2 text-center">Unit Price (RM)</th>
+                    <th className="border border-gray-300 p-2 text-center">Total (RM)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className={quantity > 0 ? 'bg-gray-50' : 'text-gray-400'}>
+                    <td className="border border-gray-300 p-2">Contractor Pass</td>
+                    <td className="border border-gray-300 p-2 text-center">{quantity}</td>
+                    <td className="border border-gray-300 p-2 text-center">25.00</td>
+                    <td className="border border-gray-300 p-2 text-center">{total.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td colSpan={2} className="border border-gray-300 p-2"></td>
+                    <td className="border border-gray-300 p-2 text-right">Late Surcharge:<br/>(if applicable)</td>
+                    <td className="border border-gray-300 p-2 text-center">{lateSurcharge.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td colSpan={2} className="border border-gray-300 p-2"></td>
+                    <td className="border border-gray-300 p-2 text-right font-bold">Total Amount:</td>
+                    <td className="border border-gray-300 p-2 text-center font-bold">{grandTotal.toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
             <div className="flex justify-center space-x-6">
               <PdfButton
                 formData={submittedData || {}}

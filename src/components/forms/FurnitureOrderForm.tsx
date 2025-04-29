@@ -246,6 +246,68 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
                 You have already submitted this form. You can download a PDF copy or return to the dashboard.
               </p>
             </div>
+
+            {/* Display submitted order items in read-only mode */}
+            <div className="mb-8 overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
+                <thead>
+                  <tr className="bg-blue-50">
+                    <th className="border border-gray-300 p-2 text-left">NO</th>
+                    <th className="border border-gray-300 p-2 text-left">IMAGE</th>
+                    <th className="border border-gray-300 p-2 text-left">DESCRIPTION OF SERVICE / ITEMS</th>
+                    <th className="border border-gray-300 p-2 text-left">DIMENSION (L x W x H)</th>
+                    <th className="border border-gray-300 p-2 text-right">UNIT COST (RM)</th>
+                    <th className="border border-gray-300 p-2 text-center">QTY</th>
+                    <th className="border border-gray-300 p-2 text-right">COST (RM)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orderItems.map((item) => (
+                    <tr key={item.id} className={item.quantity > 0 ? 'bg-gray-50' : 'text-gray-400'}>
+                      <td className="border border-gray-300 p-2">{item.id}</td>
+                      <td className="border border-gray-300 p-2 relative">
+                        <div className="relative group w-14 h-14 cursor-pointer">
+                          <img 
+                            src={item.image} 
+                            alt={item.description}
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                              e.currentTarget.src = "https://via.placeholder.com/100x100?text=No+Image"
+                              e.currentTarget.onerror = null
+                            }}
+                          />
+                        </div>
+                      </td>
+                      <td className="border border-gray-300 p-2">{item.description}</td>
+                      <td className="border border-gray-300 p-2">{item.dimension}</td>
+                      <td className="border border-gray-300 p-2 text-right">{item.unitCost.toFixed(2)}</td>
+                      <td className="border border-gray-300 p-2 text-center">{item.quantity}</td>
+                      <td className="border border-gray-300 p-2 text-right">
+                        {(item.unitCost * item.quantity).toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                  <tr>
+                    <td colSpan={5} className="border border-gray-300 p-2"></td>
+                    <td className="border border-gray-300 p-2 text-right font-medium">Subtotal:</td>
+                    <td className="border border-gray-300 p-2 text-right">{subtotal.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td colSpan={5} className="border border-gray-300 p-2 text-center italic">
+                      A SURCHARGE OF 30% will be imposed for orders received after June 30, 2025.
+                    </td>
+                    <td className="border border-gray-300 p-2 text-right font-medium">Late Charge (30%):</td>
+                    <td className="border border-gray-300 p-2 text-right">{lateCharge.toFixed(2)}</td>
+                  </tr>
+                  <tr className="font-bold">
+                    <td colSpan={5} className="border border-gray-300 p-2"></td>
+                    <td className="border border-gray-300 p-2 text-right">Total Amount:</td>
+                    <td className="border border-gray-300 p-2 text-right">{grandTotal.toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
             <div className="flex justify-center space-x-6">
               <PdfButton
                 formData={submittedData || {}}

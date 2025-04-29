@@ -249,6 +249,38 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
                 You have already submitted this form. You can download a PDF copy or return to the dashboard.
               </p>
             </div>
+
+            {/* Display submitted fascia name in read-only mode */}
+            <div className="mb-8">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-blue-700 mb-4">Submitted Fascia Name:</h4>
+                <div className="flex flex-col gap-2">
+                  {/* First row: 13 boxes */}
+                  <div className="flex gap-1 justify-center">
+                    {fasciaName.slice(0, 13).map((char, i) => (
+                      <div
+                        key={i}
+                        className="w-10 h-10 border border-gray-300 rounded flex items-center justify-center bg-white text-center uppercase font-bold"
+                      >
+                        {char}
+                      </div>
+                    ))}
+                  </div>
+                  {/* Second row: 12 boxes */}
+                  <div className="flex gap-1 justify-center">
+                    {fasciaName.slice(13).map((char, i) => (
+                      <div
+                        key={i + 13}
+                        className="w-10 h-10 border border-gray-300 rounded flex items-center justify-center bg-white text-center uppercase font-bold"
+                      >
+                        {char}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="flex justify-center space-x-6">
               <PdfButton
                 formData={submittedData || {}}

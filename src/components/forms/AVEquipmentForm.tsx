@@ -1,22 +1,20 @@
 'use client'
 
-import React, { useState, FormEvent, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import UserDataContainer from '@/components/UserDataContainer'
-import { isPastDeadline, syncFormWithSupabase, checkPreviousFormSubmission } from '@/lib/forms/submitHandler'
+import { syncFormWithSupabase } from '@/lib/forms/submitHandler'
 import { PdfButton } from '@/components/ui/PdfButton'
-import { User } from '@supabase/supabase-js'
-import { Dispatch, SetStateAction } from 'react'
-import SubmissionNotification from '@/components/ui/SubmissionNotification'
 import Link from 'next/link'
 
-interface OrderItem {
-  id: string
-  description: string
-  unitCost: number
+interface AVEquipmentItem {
+  id: number
+  name: string
+  unit: string
+  rate: number
   quantity: number
-  image: string
+  total: number
 }
 
 interface AVEquipmentFormProps {
@@ -43,20 +41,23 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
   const [submittedData, setSubmittedData] = useState<any>(null)
   const formRef = useRef<HTMLFormElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([
-    { id: '901', description: '42" LED TV', unitCost: 1000.00, quantity: 0, image: '/products/42-led-tv.jpg' },
-    { id: '902', description: '55" LED TV', unitCost: 1500.00, quantity: 0, image: '/products/55-led-tv.jpg' },
-    { id: '903', description: '65" LED TV', unitCost: 2000.00, quantity: 0, image: '/products/65-led-tv.jpg' },
-    { id: '904', description: 'PORTABLE TV STAND', unitCost: 500.00, quantity: 0, image: '/products/tv-stand.jpg' },
+
+  const [orderItems, setOrderItems] = useState<AVEquipmentItem[]>([
+    { id: 1, name: 'LCD TV 42"', unit: 'unit', rate: 800, quantity: 0, total: 0 },
+    { id: 2, name: 'LCD TV 50"', unit: 'unit', rate: 1000, quantity: 0, total: 0 },
+    { id: 3, name: 'LCD TV 65"', unit: 'unit', rate: 1500, quantity: 0, total: 0 },
+    { id: 4, name: 'LCD TV 75"', unit: 'unit', rate: 2000, quantity: 0, total: 0 },
+    { id: 5, name: 'LCD TV 85"', unit: 'unit', rate: 2500, quantity: 0, total: 0 },
+    { id: 6, name: 'TV Stand', unit: 'unit', rate: 200, quantity: 0, total: 0 },
+    { id: 7, name: 'Laptop', unit: 'unit', rate: 500, quantity: 0, total: 0 },
+    { id: 8, name: 'PA System with 2 Speakers', unit: 'set', rate: 800, quantity: 0, total: 0 },
+    { id: 9, name: 'Wireless Microphone', unit: 'unit', rate: 200, quantity: 0, total: 0 },
+    { id: 10, name: 'DVD Player', unit: 'unit', rate: 150, quantity: 0, total: 0 }
   ])
-  
-  // Fixed security deposit amount
-  const securityDeposit = 2000.00;
 
   // Check if form has been previously submitted
   useEffect(() => {
-    const checkPreviousSubmission = async () => {
+    const checkSubmission = async () => {
       setIsLoading(true)
       try {
         const { data: { user } } = await supabase.auth.getUser()
@@ -75,12 +76,18 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
             setSubmitted(true)
             setSubmittedData(data.data)
             // Update order items with submitted quantities
-            const formData = data.data as { items?: Array<{ id: string; quantity: number }> }
-            if (formData.items && Array.isArray(formData.items)) {
+            if (data.data.order_items) {
               setOrderItems(prevItems => 
                 prevItems.map(item => {
-                  const submittedItem = formData.items?.find(i => i.id === item.id)
-                  return submittedItem ? { ...item, quantity: submittedItem.quantity } : item
+                  const submittedItem = data.data.order_items.find((si: AVEquipmentItem) => si.id === item.id)
+                  if (submittedItem) {
+                    return {
+                      ...item,
+                      quantity: submittedItem.quantity,
+                      total: submittedItem.quantity * item.rate
+                    }
+                  }
+                  return item
                 })
               )
             }
@@ -93,27 +100,21 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
       }
     }
     
-    checkPreviousSubmission()
+    checkSubmission()
   }, [supabase])
 
-  const handleQuantityChange = (id: string, value: number) => {
-    setOrderItems(items =>
-      items.map(item =>
-        item.id === id ? { ...item, quantity: Math.max(0, value) } : item
+  const handleQuantityChange = (id: number, value: number) => {
+    setOrderItems(prevItems =>
+      prevItems.map(item =>
+        item.id === id
+          ? { ...item, quantity: value, total: value * item.rate }
+          : item
       )
     )
   }
 
   const calculateSubtotal = () => {
-    return orderItems.reduce((sum, item) => sum + (item.unitCost * item.quantity), 0)
-  }
-
-  const calculateLateCharge = () => {
-    return isPastDeadline() ? calculateSubtotal() * 0.3 : 0
-  }
-
-  const calculateGrandTotal = () => {
-    return calculateSubtotal() + calculateLateCharge() + securityDeposit
+    return orderItems.reduce((sum, item) => sum + item.total, 0)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -132,11 +133,17 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
         'auth_address',
         'auth_email',
         'auth_tel'
-      ];
+      ]
 
-      const missingFields = requiredFields.filter(field => !formData.get(field));
+      const missingFields = requiredFields.filter(field => !formData.get(field))
       if (missingFields.length > 0) {
-        throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`);
+        throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`)
+      }
+
+      // Check if at least one item is ordered
+      const hasOrders = orderItems.some(item => item.quantity > 0)
+      if (!hasOrders) {
+        throw new Error('Please order at least one item')
       }
 
       const formDataObj = {
@@ -150,19 +157,8 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
           fax: userData?.fax || '',
           address: userData?.address || '',
         },
-        items: orderItems
-          .filter(item => item.quantity > 0)
-          .map(item => ({
-            id: item.id,
-            description: item.description,
-            quantity: item.quantity,
-            unitCost: item.unitCost,
-            total: item.unitCost * item.quantity
-          })),
+        order_items: orderItems.filter(item => item.quantity > 0),
         subtotal: calculateSubtotal(),
-        security_deposit: securityDeposit,
-        late_charge: calculateLateCharge(),
-        grand_total: calculateGrandTotal(),
         auth_details: {
           name: formData.get('auth_name')?.toString() || userData?.contact_person || '',
           designation: formData.get('auth_designation')?.toString() || '',
@@ -228,227 +224,256 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
             <span className="ml-3 text-gray-600">Checking submission status...</span>
           </div>
         ) : submitted ? (
-          <div>
-            {/* Success message and PDF download */}
-            <div className="mt-4 space-y-4">
-              <div className="text-green-600 font-medium">Form submitted successfully!</div>
-              <div className="flex gap-4">
-                <PdfButton
-                  formData={submittedData}
-                  formType={9}
-                  containerRef={containerRef}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  Download PDF
-                </PdfButton>
-                <Link
-                  href="/dashboard"
-                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-                >
-                  Return to Dashboard
-                </Link>
+          <div className="space-y-8">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+              <div className="text-green-600 font-semibold text-lg mb-2">
+                Form Successfully Submitted
               </div>
+              <p className="text-gray-600">
+                You have already submitted this form. You can download a PDF copy or return to the dashboard.
+              </p>
+            </div>
+
+            {/* Display submitted details in read-only mode */}
+            <div className="mb-8 bg-gray-50 p-6 rounded-lg">
+              <h4 className="font-semibold text-blue-700 mb-4">Submitted Details:</h4>
+              
+              {/* Order Items Table */}
+              <div className="overflow-x-auto mb-6">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="px-4 py-2 text-left">Item</th>
+                      <th className="px-4 py-2 text-center">Unit</th>
+                      <th className="px-4 py-2 text-right">Rate (RM)</th>
+                      <th className="px-4 py-2 text-center">Quantity</th>
+                      <th className="px-4 py-2 text-right">Total (RM)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {submittedData?.order_items?.map((item: AVEquipmentItem) => (
+                      <tr key={item.id} className="border-b">
+                        <td className="px-4 py-2">{item.name}</td>
+                        <td className="px-4 py-2 text-center">{item.unit}</td>
+                        <td className="px-4 py-2 text-right">{item.rate.toFixed(2)}</td>
+                        <td className="px-4 py-2 text-center">{item.quantity}</td>
+                        <td className="px-4 py-2 text-right">{item.total.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                    <tr className="font-bold">
+                      <td colSpan={4} className="px-4 py-2 text-right">Subtotal:</td>
+                      <td className="px-4 py-2 text-right">
+                        {submittedData?.subtotal?.toFixed(2) || '0.00'}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Authorization Details */}
+              <div className="space-y-4">
+                <div>
+                  <p className="font-medium">Authorized By:</p>
+                  <p>{submittedData?.auth_details?.name}</p>
+                </div>
+                <div>
+                  <p className="font-medium">Designation:</p>
+                  <p>{submittedData?.auth_details?.designation}</p>
+                </div>
+                <div>
+                  <p className="font-medium">Company:</p>
+                  <p>{submittedData?.auth_details?.company}</p>
+                </div>
+                <div>
+                  <p className="font-medium">Date:</p>
+                  <p>{new Date(submittedData?.auth_details?.date).toLocaleDateString()}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-center space-x-6">
+              <PdfButton
+                formData={submittedData || {}}
+                formType={9}
+                containerRef={containerRef}
+                className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
+              />
+              <Link
+                href="/dashboard"
+                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
+              >
+                Return to Dashboard
+              </Link>
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} ref={formRef} className="space-y-8">
-            {/* Order Table */}
-            <div className="mb-8 overflow-x-auto">
-              <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
+          <form onSubmit={handleSubmit} className="space-y-8" ref={formRef}>
+            {/* Instructions */}
+            <div className="space-y-4 text-sm bg-gray-50 p-4 rounded-lg">
+              <p>Please complete this form for ordering AV equipment for your booth.</p>
+              <p>Note:</p>
+              <ul className="list-disc pl-5 space-y-2">
+                <li>All prices are in Malaysian Ringgit (RM)</li>
+                <li>Prices are for the entire duration of the exhibition</li>
+                <li>All equipment will be installed and tested before the exhibition</li>
+                <li>Technical support will be available during the exhibition hours</li>
+                <li>Late orders may be subject to availability and additional charges</li>
+              </ul>
+            </div>
+
+            {/* Order Items Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-gray-100">
-                    <th className="border border-gray-300 px-4 py-2 text-left">DESCRIPTION / ITEM</th>
-                    <th className="border border-gray-300 px-4 py-2 text-center w-24">QTY</th>
-                    <th className="border border-gray-300 px-4 py-2 text-right w-48">PRICE / UNIT (RM)</th>
-                    <th className="border border-gray-300 px-4 py-2 text-right w-48">COST (RM)</th>
+                    <th className="px-4 py-2 text-left">Item</th>
+                    <th className="px-4 py-2 text-center">Unit</th>
+                    <th className="px-4 py-2 text-right">Rate (RM)</th>
+                    <th className="px-4 py-2 text-center">Quantity</th>
+                    <th className="px-4 py-2 text-right">Total (RM)</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {orderItems.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50">
-                      <td className="border border-gray-300 px-4 py-3">{item.description}</td>
-                      <td className="border border-gray-300 px-4 py-3">
+                  {orderItems.map(item => (
+                    <tr key={item.id} className="border-b">
+                      <td className="px-4 py-2">{item.name}</td>
+                      <td className="px-4 py-2 text-center">{item.unit}</td>
+                      <td className="px-4 py-2 text-right">{item.rate.toFixed(2)}</td>
+                      <td className="px-4 py-2">
                         <input
                           type="number"
                           min="0"
                           value={item.quantity}
                           onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
-                          className="w-full p-1 text-center rounded border border-gray-300"
+                          className="w-20 text-center border border-gray-300 rounded p-1"
                         />
                       </td>
-                      <td className="border border-gray-300 px-4 py-3 text-right">{item.unitCost.toFixed(2)}</td>
-                      <td className="border border-gray-300 px-4 py-3 text-right">
-                        {(item.quantity * item.unitCost).toFixed(2)}
-                      </td>
+                      <td className="px-4 py-2 text-right">{item.total.toFixed(2)}</td>
                     </tr>
                   ))}
-                  {/* Security Deposit row - fixed and not editable */}
-                  <tr className="bg-gray-50">
-                    <td className="border border-gray-300 px-4 py-3 font-medium">Security Deposit</td>
-                    <td className="border border-gray-300 px-4 py-3 text-center">1</td>
-                    <td className="border border-gray-300 px-4 py-3 text-right">{securityDeposit.toFixed(2)}</td>
-                    <td className="border border-gray-300 px-4 py-3 text-right">{securityDeposit.toFixed(2)}</td>
-                  </tr>
-                  {/* Subtotal row */}
-                  <tr>
-                    <td className="border border-gray-300 px-4 py-3 text-right font-medium" colSpan={3}>
-                      Subtotal (including Security Deposit)
-                    </td>
-                    <td className="border border-gray-300 px-4 py-3 text-right font-medium">
-                      {calculateSubtotal().toFixed(2)}
-                    </td>
-                  </tr>
-                  {/* Late charge row - shown if applicable */}
-                  {calculateLateCharge() > 0 && (
-                    <tr>
-                      <td className="border border-gray-300 px-4 py-3 text-right font-medium text-amber-600" colSpan={3}>
-                        Late Order Surcharge (30%)
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-right font-medium text-amber-600">
-                        {calculateLateCharge().toFixed(2)}
-                      </td>
-                    </tr>
-                  )}
-                  {/* Grand Total row */}
-                  <tr className="bg-blue-50">
-                    <td className="border border-gray-300 px-4 py-3 text-right font-bold" colSpan={3}>
-                      Grand Total
-                    </td>
-                    <td className="border border-gray-300 px-4 py-3 text-right font-bold">
-                      {calculateGrandTotal().toFixed(2)}
-                    </td>
+                  <tr className="font-bold">
+                    <td colSpan={4} className="px-4 py-2 text-right">Subtotal:</td>
+                    <td className="px-4 py-2 text-right">{calculateSubtotal().toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-            
-            {/* Important Notes */}
-            <div className="bg-amber-50 p-4 rounded-lg border border-amber-200 pdf-exclude">
-              <h3 className="font-bold text-amber-800 mb-2">Important Notes:</h3>
-              <ol className="list-decimal list-inside space-y-1 text-amber-800">
-                <li>All items are on rental basis.</li>
-                <li>Late order: 30% penalty fee will be charged for any late orders received after the deadline, while orders received on site will be subject to a 50% surcharge.</li>
-                <li>Any cancellation before/on 2nd July 2025 will be charged 50% on the item priced, 100% cancellation fee will be charged for order cancelled after 2nd July 2025</li>
-                <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be accompanied by this Order Form. All bank charges must be borne by remitter. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-8, Block B, Ativo Plaza, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 800 908 5824. Bank Swift Code: CIBBMYKL</li>
-              </ol>
-            </div>
-            
+
             {/* Authorization Section */}
             <div className="mb-8">
-              <h4 className="font-bold mb-6 text-center">AUTHORIZATION</h4>
-              <p className="text-center mb-6 pdf-exclude">Please retain a copy for your record & return this form via email to:</p>
+              <p className="mb-6 text-center text-gray-700">Please retain a copy for your record & return this form via email to:</p>
               
-              <div className="text-center mb-8 pdf-exclude">
-                <h5 className="font-bold mb-2">BLUE CIRCLE PLUS SDN BHD</h5>
+              <div className="mb-8 text-center bg-gray-50 py-4 rounded-lg">
+                <h5 className="font-bold text-blue-600 mb-2">BLUE CIRCLE PLUS SDN BHD</h5>
                 <p className="mb-1">Attn: Mr. Francis Chan / Ms. YJ Hoh</p>
                 <p className="mb-1">Email: francis@bcpgroup.com.my</p>
                 <p className="mb-1">or yijie@bcpgroup.com.my</p>
                 <p>Tel: +6011-2327 9795 / +6016-263 1150</p>
               </div>
 
-              <div className="border-2 p-6 rounded-lg">
-                <h5 className="font-bold mb-4">Authorized Representative Applying:</h5>
-                <div className="grid grid-cols-1 gap-6">
-                  <div className="grid grid-cols-2 gap-6">
+              <div className="border border-gray-200 rounded-lg p-6 shadow-sm">
+                <h5 className="font-bold mb-4 text-blue-600">Authorized Representative Applying:</h5>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Name</label>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Name</label>
                       <input 
                         type="text" 
-                        name="auth_name" 
-                        className="w-full border-2 rounded p-2" 
+                        name="auth_name"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                         defaultValue={userData?.contact_person || ''}
-                        required 
+                        required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Designation</label>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Designation</label>
                       <input 
                         type="text" 
-                        name="auth_designation" 
-                        className="w-full border-2 rounded p-2" 
-                        required 
+                        name="auth_designation"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        required
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Company</label>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Company</label>
                     <input 
                       type="text" 
                       name="auth_company"
-                      className="w-full border-2 rounded p-2"
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       defaultValue={userData?.company_name || ''}
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Booth No</label>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Booth No</label>
                     <input 
                       type="text" 
                       name="auth_booth"
-                      className="w-full border-2 rounded p-2"
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       defaultValue={userData?.booth_number || ''}
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Address</label>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Address</label>
                     <textarea 
-                      name="auth_address" 
-                      className="w-full border-2 rounded p-2" 
+                      name="auth_address"
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       rows={3}
                       defaultValue={userData?.address || ''}
-                      required 
+                      required
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Tel</label>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Tel</label>
                       <input 
                         type="tel" 
-                        name="auth_tel" 
-                        className="w-full border-2 rounded p-2" 
+                        name="auth_tel"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                         defaultValue={userData?.tel || ''}
-                        required 
+                        required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Fax</label>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Fax</label>
                       <input 
                         type="tel" 
-                        name="auth_fax" 
-                        className="w-full border-2 rounded p-2"
-                        defaultValue={userData?.fax || ''} 
+                        name="auth_fax"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        defaultValue={userData?.fax || ''}
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Email</label>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Email</label>
                     <input 
                       type="email" 
-                      name="auth_email" 
-                      className="w-full border-2 rounded p-2" 
+                      name="auth_email"
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       defaultValue={userData?.email || ''}
-                      required 
+                      required
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Signature</label>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Signature</label>
                       <input 
                         type="text" 
-                        name="auth_signature" 
-                        className="w-full border-2 rounded p-2" 
-                        required 
+                        name="auth_signature"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Date</label>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Date</label>
                       <input 
                         type="date" 
-                        name="auth_date" 
-                        className="w-full border-2 rounded p-2"
+                        name="auth_date"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                         defaultValue={new Date().toISOString().split('T')[0]}
-                        required 
+                        required
                       />
                     </div>
                   </div>
@@ -457,18 +482,18 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
             </div>
 
             {/* Form Actions */}
-            <div className="flex justify-center space-x-6 pdf-exclude">
+            <div className="flex justify-center space-x-6">
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="px-8 py-3 border-2 border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50"
+                className="px-8 py-3 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50"
+                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
               >
                 {isSubmitting ? 'Submitting...' : 'Submit Form'}
               </button>

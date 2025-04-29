@@ -254,6 +254,87 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
                 You have already submitted this form. You can download a PDF copy or return to the dashboard.
               </p>
             </div>
+
+            {/* Display submitted order items in read-only mode */}
+            <div className="mb-8 overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
+                <thead>
+                  <tr className="bg-blue-50">
+                    <th className="border border-gray-300 p-2 text-center">NO</th>
+                    <th className="border border-gray-300 p-2 text-center">IMAGE</th>
+                    <th className="border border-gray-300 p-2 text-left">DESCRIPTION OF SERVICE / ITEMS</th>
+                    <th className="border border-gray-300 p-2 text-center">UNIT COST (RM)</th>
+                    <th className="border border-gray-300 p-2 text-center">QTY</th>
+                    <th className="border border-gray-300 p-2 text-center">COST (RM)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orderItems.map((item, index) => (
+                    <React.Fragment key={item.id}>
+                      {isFirstInSection(index) && (
+                        <tr key={`section-${index}`}>
+                          <td colSpan={6} className="border border-gray-300 p-2 font-bold bg-gray-50">
+                            {item.section}
+                            {item.section === 'SECTION A - INDIVIDUAL' && (
+                              <><br /><span className="text-sm font-normal">(Inclusive of electricity consumption)</span></>
+                            )}
+                            {item.section === 'LIGHTING CONNECTION' && (
+                              <><br /><span className="text-sm font-normal">Charges included supply electrical consumption. Wiring and maintenance are the responsibility of the contractor appointed by the Exhibitor.</span></>
+                            )}
+                            {item.section === 'POWER POINT / ISOLATOR' && (
+                              <><br /><span className="text-sm font-normal">Equipment and fittings on hire from the official contractor: Power point are used for single machinery / electrical appliances / exhibits only. STRICTLY NOT for lighting purposes.</span></>
+                            )}
+                            {item.section === 'TEMPORARY POWER SUPPLY' && (
+                              <><br /><span className="text-sm font-normal">(BUILD-UP ONLY)</span></>
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                      <tr className={item.quantity > 0 ? 'bg-gray-50' : 'text-gray-400'}>
+                        <td className="border border-gray-300 p-2 text-center">{item.id}</td>
+                        <td className="border border-gray-300 p-2 relative">
+                          <div className="relative group w-14 h-14">
+                            <img 
+                              src={item.image}
+                              alt={item.description}
+                              className="w-full h-full object-contain"
+                              onError={(e) => {
+                                e.currentTarget.src = "https://via.placeholder.com/100x100?text=No+Image"
+                                e.currentTarget.onerror = null
+                              }}
+                            />
+                          </div>
+                        </td>
+                        <td className="border border-gray-300 p-2">{item.description}</td>
+                        <td className="border border-gray-300 p-2 text-center">{item.unitCost.toFixed(2)}</td>
+                        <td className="border border-gray-300 p-2 text-center">{item.quantity}</td>
+                        <td className="border border-gray-300 p-2 text-center">
+                          {(item.unitCost * item.quantity).toFixed(2)}
+                        </td>
+                      </tr>
+                    </React.Fragment>
+                  ))}
+                  <tr>
+                    <td colSpan={4} className="border border-gray-300 p-2"></td>
+                    <td className="border border-gray-300 p-2 text-right font-medium">Subtotal:</td>
+                    <td className="border border-gray-300 p-2 text-center">{subtotal.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td colSpan={4} className="border border-gray-300 p-2 text-center italic">
+                      A SURCHARGE OF 10% will be imposed for orders received after June 30, 2025.
+                    </td>
+                    <td className="border border-gray-300 p-2 text-right font-medium">Late Charge (10%):</td>
+                    <td className="border border-gray-300 p-2 text-center">{lateCharge.toFixed(2)}</td>
+                  </tr>
+                  <tr className="font-bold">
+                    <td colSpan={4} className="border border-gray-300 p-2"></td>
+                    <td className="border border-gray-300 p-2 text-right">Total Amount:</td>
+                    <td className="border border-gray-300 p-2 text-center">{grandTotal.toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
             <div className="flex justify-center space-x-6">
               <PdfButton
                 formData={submittedData || {}}
