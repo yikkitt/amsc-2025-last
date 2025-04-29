@@ -6,13 +6,17 @@ interface SubmissionNotificationProps {
   formType: number
   containerRef: React.RefObject<HTMLElement>
   onReturnToDashboard: () => void
+  isAlreadySubmitted?: boolean
+  submissionDate?: string
 }
 
 export default function SubmissionNotification({
   submittedData,
   formType,
   containerRef,
-  onReturnToDashboard
+  onReturnToDashboard,
+  isAlreadySubmitted = false,
+  submissionDate
 }: SubmissionNotificationProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -23,9 +27,18 @@ export default function SubmissionNotification({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Form Successfully Submitted</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">
+            {isAlreadySubmitted ? 'Form Already Submitted' : 'Form Successfully Submitted'}
+          </h3>
           <p className="text-gray-600">
-            Your form has been submitted successfully. You can download a PDF copy or return to the dashboard.
+            {isAlreadySubmitted ? (
+              <>
+                This form was previously submitted on {submissionDate}. 
+                You can download a PDF copy or return to the dashboard.
+              </>
+            ) : (
+              'Your form has been submitted successfully. You can download a PDF copy or return to the dashboard.'
+            )}
           </p>
         </div>
         

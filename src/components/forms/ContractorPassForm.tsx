@@ -63,24 +63,19 @@ export default function ContractorPassForm({ userData }: ContractorPassFormProps
     setQuantity(value);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    
     try {
-      const formData = new FormData(e.target as HTMLFormElement);
+      const formData = new FormData(e.target as HTMLFormElement)
       
       // Validate required fields
       const requiredFields = [
-        'exhibitor_company',
-        'exhibitor_booth',
-        'contractor_company',
-        'contractor_person',
-        'mobile',
-        'tel',
-        'email',
         'auth_name',
         'auth_designation',
         'auth_company',
+        'auth_booth',
         'auth_address',
         'auth_email',
         'auth_tel'
@@ -91,17 +86,22 @@ export default function ContractorPassForm({ userData }: ContractorPassFormProps
         throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`);
       }
 
+      // Validate that at least one contractor pass is ordered
+      const hasOrderedPasses = quantity > 0;
+      if (!hasOrderedPasses) {
+        throw new Error('Please order at least one contractor pass');
+      }
+
       const formDataObj = {
         form_type: 2,
         company_data: {
-          exhibitor_company: formData.get('exhibitor_company')?.toString() || '',
-          exhibitor_booth: formData.get('exhibitor_booth')?.toString() || '',
-          contractor_company: formData.get('contractor_company')?.toString() || '',
-          contractor_person: formData.get('contractor_person')?.toString() || '',
-          mobile: formData.get('mobile')?.toString() || '',
-          tel: formData.get('tel')?.toString() || '',
-          fax: formData.get('fax')?.toString() || '',
-          email: formData.get('email')?.toString() || '',
+          company_name: userData?.company_name || '',
+          booth_number: userData?.booth_number || '',
+          contact_person: userData?.contact_person || '',
+          email: userData?.email || '',
+          tel: userData?.tel || '',
+          fax: userData?.fax || '',
+          address: userData?.address || '',
         },
         items: [
           {
@@ -115,48 +115,48 @@ export default function ContractorPassForm({ userData }: ContractorPassFormProps
         late_charge: lateSurcharge,
         grand_total: grandTotal,
         auth_details: {
-          name: formData.get('auth_name')?.toString() || '',
+          name: formData.get('auth_name')?.toString() || userData?.contact_person || '',
           designation: formData.get('auth_designation')?.toString() || '',
-          company: formData.get('auth_company')?.toString() || '',
-          address: formData.get('auth_address')?.toString() || '',
-          email: formData.get('auth_email')?.toString() || '',
-          tel: formData.get('auth_tel')?.toString() || '',
-          fax: formData.get('auth_fax')?.toString() || '',
-          date: formData.get('auth_date')?.toString() || new Date().toISOString(),
+          company: formData.get('auth_company')?.toString() || userData?.company_name || '',
+          booth_number: formData.get('auth_booth')?.toString() || userData?.booth_number || '',
+          address: formData.get('auth_address')?.toString() || userData?.address || '',
+          email: formData.get('auth_email')?.toString() || userData?.email || '',
+          tel: formData.get('auth_tel')?.toString() || userData?.tel || '',
+          fax: formData.get('auth_fax')?.toString() || userData?.fax || '',
+          signature: formData.get('auth_signature')?.toString() || '',
+          date: formData.get('auth_date')?.toString() || new Date().toISOString()
         }
-      };
+      }
 
-      // Use syncFormWithSupabase for submission
-      const result = await syncFormWithSupabase(formDataObj);
+      const result = await syncFormWithSupabase(formDataObj)
       
       if (!result.success) {
-        throw new Error(result.message);
+        throw new Error(result.message)
       }
-      
-      // Store submitted data for reference
-      setSubmittedData(formDataObj);
-      setFormSubmitted(true);
+
+      setSubmittedData(formDataObj)
+      setFormSubmitted(true)
       
       // Show success message
-      alert("Form submitted successfully!");
+      alert("Form submitted successfully!")
     } catch (error) {
-      console.error('Error submitting form:', error);
-      let errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error submitting form:', error)
+      let errorMessage = error instanceof Error ? error.message : 'Unknown error'
       
       // Check for specific error types from Supabase
       if (errorMessage.includes('violates not-null constraint')) {
-        errorMessage = "Required form fields are missing. Please ensure all required fields are filled.";
+        errorMessage = "Required form fields are missing. Please ensure all required fields are filled."
       } else if (errorMessage.includes('duplicate key')) {
-        errorMessage = "You have already submitted this form. Please view your submissions in the dashboard.";
+        errorMessage = "You have already submitted this form. Please view your submissions in the dashboard."
       } else if (errorMessage.includes('column')) {
-        errorMessage = "There was a database field mismatch. Our team has been notified and will fix this issue.";
+        errorMessage = "There was a database field mismatch. Our team has been notified and will fix this issue."
       }
       
-      alert(`Error submitting form: ${errorMessage}`);
+      alert(`Error submitting form: ${errorMessage}`)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   // Handle navigation back to order forms after viewing PDF
   const handleReturnToDashboard = () => {

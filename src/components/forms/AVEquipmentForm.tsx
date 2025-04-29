@@ -216,6 +216,14 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
           formType={9}
           containerRef={formRef}
           onReturnToDashboard={handleReturnToDashboard}
+          isAlreadySubmitted={true}
+          submissionDate={new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
         />
       ) : (
         <form onSubmit={handleSubmit} className="space-y-8">

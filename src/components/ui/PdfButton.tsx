@@ -23,6 +23,9 @@ export function PdfButton({ formData, formType, containerRef, className, childre
       contentDiv.style.position = 'absolute'
       contentDiv.style.left = '-9999px'
       contentDiv.style.top = '-9999px'
+      contentDiv.style.width = '210mm' // A4 width
+      contentDiv.style.padding = '20mm'
+      contentDiv.style.backgroundColor = '#ffffff'
       document.body.appendChild(contentDiv)
 
       // Clone the form content
@@ -35,13 +38,25 @@ export function PdfButton({ formData, formType, containerRef, className, childre
       // Add the cloned content to our hidden div
       contentDiv.appendChild(formContent)
 
-      // Capture the content
+      // Wait for images to load
+      const images = contentDiv.getElementsByTagName('img')
+      await Promise.all(Array.from(images).map(img => {
+        if (img.complete) return Promise.resolve()
+        return new Promise(resolve => {
+          img.onload = resolve
+          img.onerror = resolve
+        })
+      }))
+
+      // Capture the content with higher quality
       const canvas = await html2canvas(contentDiv, {
         scale: 2,
         useCORS: true,
         logging: false,
         allowTaint: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        windowWidth: 210 * 8, // A4 width in pixels at 96 DPI
+        windowHeight: 297 * 8, // A4 height in pixels at 96 DPI
       })
 
       // Create PDF
@@ -55,8 +70,17 @@ export function PdfButton({ formData, formType, containerRef, className, childre
       const imgWidth = 210 // A4 width in mm
       const imgHeight = (canvas.height * imgWidth) / canvas.width
       
-      // Add the image to the PDF
-      pdf.addImage(canvas.toDataURL('image/jpeg', 1.0), 'JPEG', 0, 0, imgWidth, imgHeight)
+      // Add the image to the PDF with better quality
+      pdf.addImage(
+        canvas.toDataURL('image/jpeg', 1.0),
+        'JPEG',
+        0,
+        0,
+        imgWidth,
+        imgHeight,
+        undefined,
+        'FAST'
+      )
 
       // Clean up
       document.body.removeChild(contentDiv)
