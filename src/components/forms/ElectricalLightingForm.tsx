@@ -3,9 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import UserDataContainer from '@/components/UserDataContainer'
-import { isPastDeadline } from '@/lib/forms/submitHandler'
-import type { FormData } from '@/types/forms'
-import { syncFormWithSupabase } from '@/lib/forms/submitHandler'
+import { syncFormWithSupabase, checkPreviousFormSubmission } from '@/lib/forms/submitHandler'
 import { PdfButton } from '@/components/ui/PdfButton'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import Link from 'next/link'
@@ -36,11 +34,12 @@ interface ElectricalLightingFormProps {
 
 export default function ElectricalLightingForm({ userData }: ElectricalLightingFormProps) {
   const router = useRouter()
-  const [submitted, setSubmitted] = useState(false)
-  const [currentlySubmitting, setCurrentlySubmitting] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [submitted, setSubmitted] = useState(false)
   const [submittedData, setSubmittedData] = useState<any>(null)
-  const formRef = useRef<HTMLDivElement>(null)
+  const formRef = useRef<HTMLFormElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const supabase = getSupabaseBrowserClient()
   
   const [orderItems, setOrderItems] = useState<OrderItem[]>([
@@ -68,16 +67,14 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
     { id: 'TPS1', description: '13 Amp/230V single phase power point (Temporary power supply for set up)', unitCost: 150.00, quantity: 0, image: '', section: 'TEMPORARY POWER SUPPLY' },
   ])
   
-  // Check if the user has already submitted this form
+  // Check if form has been previously submitted
   useEffect(() => {
-    const checkPreviousSubmission = async () => {
+    const checkSubmission = async () => {
       setIsLoading(true)
       try {
-        // Get current user
         const { data: { user } } = await supabase.auth.getUser()
         
         if (user) {
-          // Check if this form has already been submitted
           const { data, error } = await supabase
             .from('forms')
             .select('*')
@@ -87,10 +84,19 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
             
           if (error) {
             console.error('Error checking previous submission:', error)
-          } else if (data) {
-            // Form was previously submitted
-            console.log('Found previous submission:', data)
+          } else if (data && typeof data.data === 'object' && data.data !== null) {
             setSubmitted(true)
+            setSubmittedData(data.data)
+            // Update order items with submitted quantities
+            const formData = data.data as { items?: Array<{ id: string; quantity: number }> }
+            if (formData.items && Array.isArray(formData.items)) {
+              setOrderItems(prevItems => 
+                prevItems.map(item => {
+                  const submittedItem = formData.items?.find(i => i.id === item.id)
+                  return submittedItem ? { ...item, quantity: submittedItem.quantity } : item
+                })
+              )
+            }
           }
         }
       } catch (error) {
@@ -100,13 +106,13 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
       }
     }
     
-    checkPreviousSubmission()
+    checkSubmission()
   }, [supabase])
   
   // Function to check if an item is the first of its section
   const isFirstInSection = (index: number): boolean => {
-    if (index === 0) return true;
-    return orderItems[index].section !== orderItems[index - 1].section;
+    if (index === 0) return true
+    return orderItems[index].section !== orderItems[index - 1].section
   }
 
   const handleQuantityChange = (id: string, value: number) => {
@@ -122,23 +128,34 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
   }
 
   // Calculate late charge (10% of subtotal) if applicable
-  const isLateOrder = isPastDeadline(); // Use the isPastDeadline function
-  const subtotal = calculateTotal();
-  const lateCharge = isLateOrder ? subtotal * 0.1 : 0;
-  const grandTotal = subtotal + lateCharge; // Calculate here to ensure it's a valid number
+  const isLateOrder = new Date() > new Date('2025-06-30')
+  const subtotal = calculateTotal()
+  const lateCharge = isLateOrder ? subtotal * 0.1 : 0
+  const grandTotal = subtotal + lateCharge
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setCurrentlySubmitting(true)
-
-    if (isPastDeadline()) {
-      alert('You cannot submit this form after the deadline. Contact the AMSC team if you have any questions.')
-      setCurrentlySubmitting(false)
-      return
-    }
-
+    setIsSubmitting(true)
+    
     try {
-      const formData = new FormData(e.currentTarget)
+      const formData = new FormData(e.target as HTMLFormElement)
+      
+      // Validate required fields
+      const requiredFields = [
+        'auth_name',
+        'auth_designation',
+        'auth_company',
+        'auth_booth',
+        'auth_address',
+        'auth_email',
+        'auth_tel'
+      ]
+
+      const missingFields = requiredFields.filter(field => !formData.get(field))
+      if (missingFields.length > 0) {
+        throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`)
+      }
+
       const formDataObj = {
         form_type: 3,
         company_data: {
@@ -150,19 +167,30 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
           fax: userData?.fax || '',
           address: userData?.address || '',
         },
-        items: orderItems.filter(item => item.quantity > 0),
-        subtotal: subtotal,
+        items: orderItems
+          .filter(item => item.quantity > 0)
+          .map(item => ({
+            id: item.id,
+            description: item.description,
+            section: item.section,
+            quantity: item.quantity,
+            unitCost: item.unitCost,
+            total: item.unitCost * item.quantity
+          })),
+        subtotal: calculateTotal(),
         late_charge: lateCharge,
         grand_total: grandTotal,
         auth_details: {
           name: formData.get('auth_name')?.toString() || userData?.contact_person || '',
           designation: formData.get('auth_designation')?.toString() || '',
           company: formData.get('auth_company')?.toString() || userData?.company_name || '',
+          booth_number: formData.get('auth_booth')?.toString() || userData?.booth_number || '',
           address: formData.get('auth_address')?.toString() || userData?.address || '',
           email: formData.get('auth_email')?.toString() || userData?.email || '',
           tel: formData.get('auth_tel')?.toString() || userData?.tel || '',
           fax: formData.get('auth_fax')?.toString() || userData?.fax || '',
-          date: formData.get('auth_date')?.toString() || new Date().toISOString(),
+          signature: formData.get('auth_signature')?.toString() || '',
+          date: formData.get('auth_date')?.toString() || new Date().toISOString()
         }
       }
 
@@ -174,23 +202,31 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
 
       setSubmittedData(formDataObj)
       setSubmitted(true)
-      router.refresh()
+      
+      // Show success message
+      alert("Form submitted successfully!")
     } catch (error) {
       console.error('Error submitting form:', error)
-      alert('Error submitting form. Please try again.')
+      let errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      
+      // Check for specific error types from Supabase
+      if (errorMessage.includes('violates not-null constraint')) {
+        errorMessage = "Required form fields are missing. Please ensure all required fields are filled."
+      } else if (errorMessage.includes('duplicate key')) {
+        errorMessage = "You have already submitted this form. Please view your submissions in the dashboard."
+      } else if (errorMessage.includes('column')) {
+        errorMessage = "There was a database field mismatch. Our team has been notified and will fix this issue."
+      }
+      
+      alert(`Error submitting form: ${errorMessage}`)
     } finally {
-      setCurrentlySubmitting(false)
+      setIsSubmitting(false)
     }
-  }
-
-  // Handle navigation back to order forms after viewing PDF
-  const handleReturnToDashboard = () => {
-    router.push('/dashboard/order-forms');
   }
 
   return (
     <div className="w-full max-w-5xl mx-auto">
-      <div ref={formRef} className="bg-white p-6 rounded-lg shadow">
+      <div ref={containerRef} className="bg-white p-6 rounded-lg shadow">
         {/* Form Header */}
         <div className="text-center mb-8 border-b border-gray-200 pb-6">
           <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 3</h1>
@@ -209,27 +245,32 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
             <span className="ml-3 text-gray-600">Checking submission status...</span>
           </div>
         ) : submitted ? (
-          <div className="mt-4 space-y-4">
-            <div className="text-green-600 font-medium">Form submitted successfully!</div>
-            <div className="flex gap-4">
+          <div className="space-y-8">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+              <div className="text-green-600 font-semibold text-lg mb-2">
+                Form Successfully Submitted
+              </div>
+              <p className="text-gray-600">
+                You have already submitted this form. You can download a PDF copy or return to the dashboard.
+              </p>
+            </div>
+            <div className="flex justify-center space-x-6">
               <PdfButton
-                formData={submittedData}
+                formData={submittedData || {}}
                 formType={3}
-                containerRef={formRef}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Download PDF
-              </PdfButton>
+                containerRef={containerRef}
+                className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
+              />
               <Link
                 href="/dashboard"
-                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
               >
                 Return to Dashboard
               </Link>
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-8" ref={formRef}>
             {/* Instructions */}
             <div className="space-y-2 text-sm bg-gray-50 p-4 rounded-lg">
               <p>1. This form must be completed and returned by every exhibitor. If service is not required, please endorse "NOT APPLICABLE" and return this form to the address below.</p>
@@ -283,8 +324,8 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
                               className="w-full h-full object-contain"
                               onError={(e) => {
                                 // Fall back to a generic image or placeholder if the image fails to load
-                                e.currentTarget.src = "https://via.placeholder.com/100x100?text=No+Image";
-                                e.currentTarget.onerror = null; // Prevent infinite fallback loop
+                                e.currentTarget.src = "https://via.placeholder.com/100x100?text=No+Image"
+                                e.currentTarget.onerror = null // Prevent infinite fallback loop
                               }}
                             />
                             <div className="absolute top-0 left-0 w-0 h-0 bg-white opacity-0 group-hover:opacity-100 group-hover:w-48 group-hover:h-48 transition-all duration-200 z-10 overflow-hidden rounded shadow-lg">
@@ -294,8 +335,8 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
                                 className="w-full h-full object-contain"
                                 onError={(e) => {
                                   // Fall back to a generic image or placeholder if the image fails to load
-                                  e.currentTarget.src = "https://via.placeholder.com/200x200?text=No+Image";
-                                  e.currentTarget.onerror = null; // Prevent infinite fallback loop
+                                  e.currentTarget.src = "https://via.placeholder.com/200x200?text=No+Image"
+                                  e.currentTarget.onerror = null // Prevent infinite fallback loop
                                 }}
                               />
                             </div>
@@ -371,95 +412,104 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
                 <div className="grid grid-cols-1 gap-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1 text-gray-700">Authorized by</label>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Name</label>
                       <input 
                         type="text" 
-                          name="auth_name"
-                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                          defaultValue={userData?.contact_person || ''}
+                        name="auth_name"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        defaultValue={userData?.contact_person || ''}
+                        required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1 text-gray-700">Booth No</label>
-                      <input 
-                        type="text" 
-                          name="auth_booth"
-                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                        defaultValue={userData?.booth_number || ''}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700">Designation</label>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Designation</label>
                       <input 
                         type="text" 
                         name="auth_designation"
-                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        required
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1 text-gray-700">Company</label>
-                      <input 
-                        type="text" 
-                        name="auth_company"
-                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                        defaultValue={userData?.company_name || ''}
-                      />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700">Company Address</label>
-                    <textarea 
-                        name="auth_address"
-                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                      rows={2}
-                        defaultValue={userData?.address || ''}
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Company</label>
+                    <input 
+                      type="text" 
+                      name="auth_company"
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      defaultValue={userData?.company_name || ''}
+                      required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700">Email</label>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Booth No</label>
                     <input 
-                      type="email" 
-                        name="auth_email"
+                      type="text" 
+                      name="auth_booth"
                       className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                        defaultValue={userData?.email || ''}
+                      defaultValue={userData?.booth_number || ''}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Address</label>
+                    <textarea 
+                      name="auth_address"
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      rows={3}
+                      defaultValue={userData?.address || ''}
+                      required
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1 text-gray-700">Tel/Hp</label>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Tel</label>
                       <input 
                         type="tel" 
-                          name="auth_tel"
+                        name="auth_tel"
                         className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                          defaultValue={userData?.tel || ''}
-                    />
+                        defaultValue={userData?.tel || ''}
+                        required
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1 text-gray-700">Fax</label>
                       <input 
                         type="tel" 
-                          name="auth_fax"
+                        name="auth_fax"
                         className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                          defaultValue={userData?.fax || ''}
-                    />
+                        defaultValue={userData?.fax || ''}
+                      />
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Email</label>
+                    <input 
+                      type="email" 
+                      name="auth_email"
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      defaultValue={userData?.email || ''}
+                      required
+                    />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-1 text-gray-700">Signature</label>
-                        <input 
-                          type="text" 
-                          name="auth_signature"
-                          className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                        />
+                      <input 
+                        type="text" 
+                        name="auth_signature"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        required
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1 text-gray-700">Date</label>
                       <input 
                         type="date" 
-                          name="auth_date"
+                        name="auth_date"
                         className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                         defaultValue={new Date().toISOString().split('T')[0]}
+                        required
                       />
                     </div>
                   </div>
@@ -469,24 +519,24 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
 
             {/* Form Actions */}
             <div className="flex justify-center space-x-6">
-                  <button
-                    type="button"
-                    onClick={() => router.back()}
-                    className="px-8 py-3 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                  disabled={currentlySubmitting}
-                    className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                  >
-                  {currentlySubmitting ? 'Submitting...' : 'Submit Form'}
-                  </button>
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="px-8 py-3 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit Form'}
+              </button>
             </div>
           </form>
         )}
       </div>
     </div>
-  );
+  )
 } 

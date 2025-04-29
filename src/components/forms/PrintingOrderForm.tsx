@@ -70,9 +70,19 @@ export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) 
             
           if (error) {
             console.error('Error checking previous submission:', error)
-          } else if (data) {
+          } else if (data && typeof data.data === 'object' && data.data !== null) {
             setSubmitted(true)
             setSubmittedData(data.data)
+            // Update order items with submitted quantities
+            const formData = data.data as { items?: Array<{ id: string; quantity: number }> }
+            if (formData.items && Array.isArray(formData.items)) {
+              setOrderItems(prevItems => 
+                prevItems.map(item => {
+                  const submittedItem = formData.items?.find(i => i.id === item.id)
+                  return submittedItem ? { ...item, quantity: submittedItem.quantity } : item
+                })
+              )
+            }
           }
         }
       } catch (error) {

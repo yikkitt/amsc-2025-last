@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import UserDataContainer from '@/components/UserDataContainer'
-import { syncFormWithSupabase, isPastDeadline, checkPreviousFormSubmission } from '@/lib/forms/submitHandler'
+import { syncFormWithSupabase, checkPreviousFormSubmission } from '@/lib/forms/submitHandler'
 import { PdfButton } from '../ui/PdfButton'
 import Link from 'next/link'
 
@@ -68,11 +68,36 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
 
   // Check if form has been previously submitted
   useEffect(() => {
-    const checkPreviousSubmission = async () => {
+    const checkSubmission = async () => {
       setIsLoading(true)
       try {
-        const { isSubmitted } = await checkPreviousFormSubmission("4", supabase)
-        setSubmitted(isSubmitted)
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (user) {
+          const { data, error } = await supabase
+            .from('forms')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('form_type', '4')
+            .maybeSingle()
+            
+          if (error) {
+            console.error('Error checking previous submission:', error)
+          } else if (data && typeof data.data === 'object' && data.data !== null) {
+            setSubmitted(true)
+            setSubmittedData(data.data)
+            // Update order items with submitted quantities
+            const formData = data.data as { items?: Array<{ id: string; quantity: number }> }
+            if (formData.items && Array.isArray(formData.items)) {
+              setOrderItems(prevItems => 
+                prevItems.map(item => {
+                  const submittedItem = formData.items?.find(i => i.id === item.id)
+                  return submittedItem ? { ...item, quantity: submittedItem.quantity } : item
+                })
+              )
+            }
+          }
+        }
       } catch (error) {
         console.error('Error checking previous submissions:', error)
       } finally {
@@ -80,7 +105,7 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
       }
     }
     
-    checkPreviousSubmission()
+    checkSubmission()
   }, [supabase])
 
   const handleQuantityChange = (id: string, value: number) => {
@@ -96,17 +121,16 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
   }
 
   const subtotal = calculateSubtotal()
-
-  const isLateOrder = isPastDeadline()
+  const isLateOrder = new Date() > new Date('2025-06-30')
   const lateCharge = isLateOrder ? subtotal * 0.3 : 0
+  const grandTotal = subtotal + lateCharge
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     
     try {
-      const formElement = e.target as HTMLFormElement;
-      const formData = new FormData(formElement);
+      const formData = new FormData(e.target as HTMLFormElement)
       
       // Validate required fields
       const requiredFields = [
@@ -117,11 +141,11 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
         'auth_address',
         'auth_email',
         'auth_tel'
-      ];
+      ]
 
-      const missingFields = requiredFields.filter(field => !formData.get(field));
+      const missingFields = requiredFields.filter(field => !formData.get(field))
       if (missingFields.length > 0) {
-        throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`);
+        throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`)
       }
 
       const formDataObj = {
@@ -147,7 +171,7 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
           })),
         subtotal,
         late_charge: lateCharge,
-        grand_total: subtotal + lateCharge,
+        grand_total: grandTotal,
         auth_details: {
           name: formData.get('auth_name')?.toString() || userData?.contact_person || '',
           designation: formData.get('auth_designation')?.toString() || '',
@@ -160,41 +184,36 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
           signature: formData.get('auth_signature')?.toString() || '',
           date: formData.get('auth_date')?.toString() || new Date().toISOString()
         }
-      };
-
-      const result = await syncFormWithSupabase(formDataObj);
-      
-      if (!result.success) {
-        throw new Error(result.message);
       }
 
-      setSubmittedData(formDataObj);
-      setSubmitted(true);
+      const result = await syncFormWithSupabase(formDataObj)
+      
+      if (!result.success) {
+        throw new Error(result.message)
+      }
+
+      setSubmittedData(formDataObj)
+      setSubmitted(true)
       
       // Show success message
-      alert("Form submitted successfully!");
+      alert("Form submitted successfully!")
     } catch (error) {
-      console.error('Error submitting form:', error);
-      let errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error submitting form:', error)
+      let errorMessage = error instanceof Error ? error.message : 'Unknown error'
       
       // Check for specific error types from Supabase
       if (errorMessage.includes('violates not-null constraint')) {
-        errorMessage = "Required form fields are missing. Please ensure all required fields are filled.";
+        errorMessage = "Required form fields are missing. Please ensure all required fields are filled."
       } else if (errorMessage.includes('duplicate key')) {
-        errorMessage = "You have already submitted this form. Please view your submissions in the dashboard.";
+        errorMessage = "You have already submitted this form. Please view your submissions in the dashboard."
       } else if (errorMessage.includes('column')) {
-        errorMessage = "There was a database field mismatch. Our team has been notified and will fix this issue.";
+        errorMessage = "There was a database field mismatch. Our team has been notified and will fix this issue."
       }
       
-      alert(`Error submitting form: ${errorMessage}`);
+      alert(`Error submitting form: ${errorMessage}`)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  }
-
-  // Handle navigation back to order forms after viewing PDF
-  const handleReturnToDashboard = () => {
-    router.push('/dashboard/order-forms');
   }
 
   return (
@@ -218,20 +237,25 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
             <span className="ml-3 text-gray-600">Checking submission status...</span>
           </div>
         ) : submitted ? (
-          <div className="mt-4 space-y-4">
-            <div className="text-green-600 font-medium">Form submitted successfully!</div>
-            <div className="flex gap-4">
+          <div className="space-y-8">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+              <div className="text-green-600 font-semibold text-lg mb-2">
+                Form Successfully Submitted
+              </div>
+              <p className="text-gray-600">
+                You have already submitted this form. You can download a PDF copy or return to the dashboard.
+              </p>
+            </div>
+            <div className="flex justify-center space-x-6">
               <PdfButton
-                formData={submittedData}
+                formData={submittedData || {}}
                 formType={4}
                 containerRef={containerRef}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Download PDF
-              </PdfButton>
+                className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
+              />
               <Link
                 href="/dashboard"
-                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
               >
                 Return to Dashboard
               </Link>
@@ -240,30 +264,30 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
         ) : (
           <form onSubmit={handleSubmit} className="space-y-8" ref={formRef}>
             {/* Instructions */}
-            <div className="space-y-2 text-sm">
+            <div className="space-y-2 text-sm bg-gray-50 p-4 rounded-lg">
               <p>This form must be completed and returned by every exhibitor. If service is not required, please endorse "NOT APPLICABLE" and return this form to the address below.</p>
               <p className="font-bold">*ORDER ONLY YOUR ADDITIONAL REQUIREMENTS.</p>
             </div>
 
             {/* Order Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse border">
+            <div className="mb-8 overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
                 <thead>
-                  <tr className="bg-gray-50">
-                    <th className="border p-2 text-left">NO</th>
-                    <th className="border p-2 text-left">IMAGE</th>
-                    <th className="border p-2 text-left">DESCRIPTION OF SERVICE / ITEMS</th>
-                    <th className="border p-2 text-left">DIMENSION (L x W x H)</th>
-                    <th className="border p-2 text-right">UNIT COST (RM)</th>
-                    <th className="border p-2 text-center">QTY</th>
-                    <th className="border p-2 text-right">COST (RM)</th>
+                  <tr className="bg-blue-50">
+                    <th className="border border-gray-300 p-2 text-left">NO</th>
+                    <th className="border border-gray-300 p-2 text-left">IMAGE</th>
+                    <th className="border border-gray-300 p-2 text-left">DESCRIPTION OF SERVICE / ITEMS</th>
+                    <th className="border border-gray-300 p-2 text-left">DIMENSION (L x W x H)</th>
+                    <th className="border border-gray-300 p-2 text-right">UNIT COST (RM)</th>
+                    <th className="border border-gray-300 p-2 text-center">QTY</th>
+                    <th className="border border-gray-300 p-2 text-right">COST (RM)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {orderItems.map((item) => (
                     <tr key={item.id}>
-                      <td className="border p-2">{item.id}</td>
-                      <td className="border p-2 relative">
+                      <td className="border border-gray-300 p-2">{item.id}</td>
+                      <td className="border border-gray-300 p-2 relative">
                         <div className="relative group w-14 h-14 cursor-pointer">
                           <img 
                             src={item.image} 
@@ -271,8 +295,8 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
                             className="w-full h-full object-contain"
                             onError={(e) => {
                               // Fall back to a generic image or placeholder if the image fails to load
-                              e.currentTarget.src = "https://via.placeholder.com/100x100?text=No+Image";
-                              e.currentTarget.onerror = null; // Prevent infinite fallback loop
+                              e.currentTarget.src = "https://via.placeholder.com/100x100?text=No+Image"
+                              e.currentTarget.onerror = null // Prevent infinite fallback loop
                             }}
                           />
                           <div className="absolute top-0 left-0 w-0 h-0 bg-white opacity-0 group-hover:opacity-100 group-hover:w-48 group-hover:h-48 transition-all duration-200 z-10 overflow-hidden rounded shadow-lg">
@@ -282,154 +306,178 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
                               className="w-full h-full object-contain"
                               onError={(e) => {
                                 // Fall back to a generic image or placeholder if the image fails to load
-                                e.currentTarget.src = "https://via.placeholder.com/200x200?text=No+Image";
-                                e.currentTarget.onerror = null; // Prevent infinite fallback loop
+                                e.currentTarget.src = "https://via.placeholder.com/200x200?text=No+Image"
+                                e.currentTarget.onerror = null // Prevent infinite fallback loop
                               }}
                             />
                           </div>
                         </div>
                       </td>
-                      <td className="border p-2">{item.description}</td>
-                      <td className="border p-2">{item.dimension}</td>
-                      <td className="border p-2 text-right">{item.unitCost.toFixed(2)}</td>
-                      <td className="border p-2">
+                      <td className="border border-gray-300 p-2">{item.description}</td>
+                      <td className="border border-gray-300 p-2">{item.dimension}</td>
+                      <td className="border border-gray-300 p-2 text-right">{item.unitCost.toFixed(2)}</td>
+                      <td className="border border-gray-300 p-2">
                         <input
                           type="number"
                           min="0"
                           step="any"
                           value={item.quantity}
                           onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
-                          className="w-20 text-center border rounded p-1"
+                          className="w-20 text-center border border-gray-300 rounded p-1 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 mx-auto"
                         />
                       </td>
-                      <td className="border p-2 text-right">
+                      <td className="border border-gray-300 p-2 text-right">
                         {(item.unitCost * item.quantity).toFixed(2)}
                       </td>
                     </tr>
                   ))}
-                  <tr className="font-bold bg-gray-50">
-                    <td colSpan={6} className="border p-2 text-right">TOTAL COST (RM)</td>
-                    <td className="border p-2 text-right">{subtotal.toFixed(2)}</td>
+                  <tr>
+                    <td colSpan={5} className="border border-gray-300 p-2"></td>
+                    <td className="border border-gray-300 p-2 text-right font-medium">Subtotal:</td>
+                    <td className="border border-gray-300 p-2 text-right">{subtotal.toFixed(2)}</td>
                   </tr>
-                  <tr className="font-bold bg-gray-50">
-                    <td colSpan={6} className="border p-2 text-right">LATE CHARGE (RM)</td>
-                    <td className="border p-2 text-right">{lateCharge.toFixed(2)}</td>
+                  <tr>
+                    <td colSpan={5} className="border border-gray-300 p-2 text-center italic">
+                      A SURCHARGE OF 30% will be imposed for orders received after June 30, 2025.
+                    </td>
+                    <td className="border border-gray-300 p-2 text-right font-medium">Late Charge (30%):</td>
+                    <td className="border border-gray-300 p-2 text-right">{lateCharge.toFixed(2)}</td>
                   </tr>
-                  <tr className="font-bold bg-gray-50">
-                    <td colSpan={6} className="border p-2 text-right">TOTAL COST INCLUDING LATE CHARGE (RM)</td>
-                    <td className="border p-2 text-right">{(subtotal + lateCharge).toFixed(2)}</td>
+                  <tr className="font-bold">
+                    <td colSpan={5} className="border border-gray-300 p-2"></td>
+                    <td className="border border-gray-300 p-2 text-right">Total Amount:</td>
+                    <td className="border border-gray-300 p-2 text-right">{grandTotal.toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
-             {/* Authorization Section */}
-             <div className="mb-8">
-              <h4 className="font-bold mb-6 text-center">AUTHORIZATION</h4>
-              <p className="text-center mb-6">Please retain a copy for your record & return this form via email to:</p>
+            {/* Important Notes */}
+            <div className="mb-8 bg-blue-50 p-4 rounded-lg">
+              <h4 className="font-semibold text-blue-700 mb-4">PLEASE NOTE:</h4>
+              <ol className="list-decimal list-inside space-y-2 text-gray-700">
+                <li>All items are on rental basis.</li>
+                <li>A <strong>SURCHARGE OF 30%</strong> will be imposed for orders received after June 30, 2025.</li>
+                <li>A <strong>SURCHARGE OF 50%</strong> will be imposed for orders received on site or on-site alteration/relocation, and is subject to availability.</li>
+                <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be received by this Order Form. All bank charges must be borne by remitter. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-3, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 800 984924. Bank Swift Code: CIBBMYKL</li>
+              </ol>
+            </div>
+
+            {/* Authorization Section */}
+            <div className="mb-8">
+              <p className="mb-6 text-center text-gray-700">Please retain a copy for your record & return this form via email to:</p>
               
-              <div className="text-center mb-8">
-                <h5 className="font-bold mb-2">BLUE CIRCLE PLUS SDN BHD</h5>
+              <div className="mb-8 text-center bg-gray-50 py-4 rounded-lg">
+                <h5 className="font-bold text-blue-600 mb-2">BLUE CIRCLE PLUS SDN BHD</h5>
                 <p className="mb-1">Attn: Mr. Francis Chan / Ms. YJ Hoh</p>
                 <p className="mb-1">Email: francis@bcpgroup.com.my</p>
                 <p className="mb-1">or yijie@bcpgroup.com.my</p>
                 <p>Tel: +6011-2327 9795 / +6016-263 1150</p>
               </div>
 
-              <div className="border-2 p-6 rounded-lg">
-                <h5 className="font-bold mb-4">Authorized Representative Applying:</h5>
-                <div className="grid grid-cols-1 gap-6">
-                  <div className="grid grid-cols-2 gap-6">
+              <div className="border border-gray-200 rounded-lg p-6 shadow-sm">
+                <h5 className="font-bold mb-4 text-blue-600">Authorized Representative Applying:</h5>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Name</label>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Name</label>
                       <input 
                         type="text" 
                         name="auth_name"
-                        className="w-full border-2 rounded p-2"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                         defaultValue={userData?.contact_person || ''}
+                        required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Designation</label>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Designation</label>
                       <input 
                         type="text" 
                         name="auth_designation"
-                        className="w-full border-2 rounded p-2" 
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        required
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Company</label>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Company</label>
                     <input 
-                      type="text"
-                      name="auth_company" 
-                      className="w-full border-2 rounded p-2"
+                      type="text" 
+                      name="auth_company"
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       defaultValue={userData?.company_name || ''}
+                      required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Booth No</label>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Booth No</label>
                     <input 
-                      type="text"
-                      name="auth_booth" 
-                      className="w-full border-2 rounded p-2"
+                      type="text" 
+                      name="auth_booth"
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       defaultValue={userData?.booth_number || ''}
+                      required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Address</label>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Address</label>
                     <textarea 
                       name="auth_address"
-                      className="w-full border-2 rounded p-2" 
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       rows={3}
                       defaultValue={userData?.address || ''}
+                      required
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Tel</label>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Tel</label>
                       <input 
-                        type="tel"
-                        name="auth_tel" 
-                        className="w-full border-2 rounded p-2"
+                        type="tel" 
+                        name="auth_tel"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                         defaultValue={userData?.tel || ''}
+                        required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Fax</label>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Fax</label>
                       <input 
-                        type="tel"
-                        name="auth_fax" 
-                        className="w-full border-2 rounded p-2"
+                        type="tel" 
+                        name="auth_fax"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                         defaultValue={userData?.fax || ''}
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Email</label>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Email</label>
                     <input 
-                      type="email"
-                      name="auth_email" 
-                      className="w-full border-2 rounded p-2"
+                      type="email" 
+                      name="auth_email"
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       defaultValue={userData?.email || ''}
+                      required
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Signature</label>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Signature</label>
                       <input 
-                        type="text"
-                        name="auth_signature" 
-                        className="w-full border-2 rounded p-2" 
+                        type="text" 
+                        name="auth_signature"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Date</label>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Date</label>
                       <input 
-                        type="date"
-                        name="auth_date" 
-                        className="w-full border-2 rounded p-2"
+                        type="date" 
+                        name="auth_date"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                         defaultValue={new Date().toISOString().split('T')[0]}
+                        required
                       />
                     </div>
                   </div>
@@ -442,14 +490,14 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="px-8 py-3 border-2 border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50"
+                className="px-8 py-3 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50"
+                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
               >
                 {isSubmitting ? 'Submitting...' : 'Submit Form'}
               </button>

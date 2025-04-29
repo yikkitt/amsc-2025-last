@@ -16,7 +16,13 @@ interface FasciaNameFormProps {
   } | null;
 }
 
-export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
+interface FormWrapperProps {
+  children: React.ReactNode
+  formId: number
+  onSubmit: (data: FormData) => Promise<void>
+}
+
+export const FasciaNameForm: React.FC<FasciaNameFormProps> = ({ userData }) => {
   const router = useRouter()
   const supabase = createClientComponentClient()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -153,55 +159,44 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
 
   // Handle form submission
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    try {
-      const formData = {
-        form_type: 1,
-        company_data: {
-          company_name: userData?.company_name || '',
-          booth_number: userData?.booth_number || '',
-          contact_person: userData?.contact_person || '',
-          email: userData?.email || '',
-        },
-        fascia_name: fasciaText.trim(),
-        items: [],
-      };
-      
-      console.log('Submitting form data:', formData);
-      
-      // Use the syncFormWithSupabase function for submission
-      const result = await syncFormWithSupabase(formData);
-      
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-      
-      // Store submitted data for PDF generation
-      setSubmittedData(formData);
-      setFormSubmitted(true);
-      
-      // Show success message
-      alert("Form submitted successfully!");
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      let errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      
-      // Check for specific error types from Supabase
-      if (errorMessage.includes('violates not-null constraint')) {
-        errorMessage = "Required form fields are missing. Please ensure all required fields are filled.";
-      } else if (errorMessage.includes('duplicate key')) {
-        errorMessage = "You have already submitted this form. Please view your submissions in the dashboard.";
-      } else if (errorMessage.includes('column')) {
-        errorMessage = "There was a database field mismatch. Our team has been notified and will fix this issue.";
-      }
-      
-      alert(`Error submitting form: ${errorMessage}`);
-    } finally {
-      setIsSubmitting(false);
+    e.preventDefault()
+    setIsSubmitting(true)
+
+    if (isPastDeadline()) {
+      alert('The submission deadline for this form has passed.')
+      setIsSubmitting(false)
+      return
     }
-  };
+
+    const formData = new FormData()
+    formData.append('form_type', '1')
+    formData.append('company_name', userData?.company_name || '')
+    formData.append('booth_number', userData?.booth_number || '')
+    formData.append('fascia_name', fasciaText.trim())
+    formData.append('contact_person', userData?.contact_person || '')
+    formData.append('address', userData?.address || '')
+    formData.append('postcode', userData?.postcode || '')
+    formData.append('state', userData?.state || '')
+    formData.append('country', userData?.country || '')
+    formData.append('tel', userData?.tel || '')
+    formData.append('fax', userData?.fax || '')
+    formData.append('email', userData?.email || '')
+
+    try {
+      const result = await syncFormWithSupabase(Object.fromEntries(formData))
+      if (result.success) {
+        setFormSubmitted(true)
+        setSubmittedData(Object.fromEntries(formData))
+      } else {
+        alert(result.message || 'Failed to submit form')
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error)
+      alert('An error occurred while submitting the form')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <div ref={formRef} className="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-md">

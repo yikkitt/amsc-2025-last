@@ -7,6 +7,7 @@ import Image from 'next/image'
 import UserDataContainer from '@/components/UserDataContainer';
 import { isPastDeadline, syncFormWithSupabase, checkPreviousFormSubmission } from '@/lib/forms/submitHandler';
 import { PdfButton } from '@/components/ui/PdfButton';
+import Link from 'next/link';
 
 interface ContractorPassFormProps {
   userData?: {
@@ -28,20 +29,38 @@ export default function ContractorPassForm({ userData }: ContractorPassFormProps
   const supabase = createClientComponentClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [submittedData, setSubmittedData] = useState<any>(null);
-  const formRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [quantity, setQuantity] = useState<number>(0);
 
   // Check if form has been previously submitted
   useEffect(() => {
-    const checkPreviousSubmission = async () => {
+    const checkSubmission = async () => {
       setIsLoading(true);
       try {
-        const { isSubmitted, data } = await checkPreviousFormSubmission("2", supabase);
-        setFormSubmitted(isSubmitted);
-        if (isSubmitted && data) {
-          setSubmittedData(data.data || {});
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          const { data, error } = await supabase
+            .from('forms')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('form_type', '2')
+            .maybeSingle();
+            
+          if (error) {
+            console.error('Error checking previous submission:', error);
+          } else if (data && typeof data.data === 'object' && data.data !== null) {
+            setSubmitted(true);
+            setSubmittedData(data.data);
+            // Update quantity with submitted data
+            const formData = data.data as { items?: Array<{ quantity: number }> };
+            if (formData.items && formData.items.length > 0) {
+              setQuantity(formData.items[0].quantity);
+            }
+          }
         }
       } catch (error) {
         console.error('Error checking previous submissions:', error);
@@ -50,7 +69,7 @@ export default function ContractorPassForm({ userData }: ContractorPassFormProps
       }
     };
     
-    checkPreviousSubmission();
+    checkSubmission();
   }, [supabase]);
 
   const unitPrice = 25.00;
@@ -64,11 +83,11 @@ export default function ContractorPassForm({ userData }: ContractorPassFormProps
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
     
     try {
-      const formData = new FormData(e.target as HTMLFormElement)
+      const formData = new FormData(e.target as HTMLFormElement);
       
       // Validate required fields
       const requiredFields = [
@@ -128,312 +147,333 @@ export default function ContractorPassForm({ userData }: ContractorPassFormProps
         }
       }
 
-      const result = await syncFormWithSupabase(formDataObj)
+      const result = await syncFormWithSupabase(formDataObj);
       
       if (!result.success) {
-        throw new Error(result.message)
+        throw new Error(result.message);
       }
 
-      setSubmittedData(formDataObj)
-      setFormSubmitted(true)
+      setSubmittedData(formDataObj);
+      setSubmitted(true);
       
       // Show success message
-      alert("Form submitted successfully!")
+      alert("Form submitted successfully!");
     } catch (error) {
-      console.error('Error submitting form:', error)
-      let errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      console.error('Error submitting form:', error);
+      let errorMessage = error instanceof Error ? error.message : 'Unknown error';
       
       // Check for specific error types from Supabase
       if (errorMessage.includes('violates not-null constraint')) {
-        errorMessage = "Required form fields are missing. Please ensure all required fields are filled."
+        errorMessage = "Required form fields are missing. Please ensure all required fields are filled.";
       } else if (errorMessage.includes('duplicate key')) {
-        errorMessage = "You have already submitted this form. Please view your submissions in the dashboard."
+        errorMessage = "You have already submitted this form. Please view your submissions in the dashboard.";
       } else if (errorMessage.includes('column')) {
-        errorMessage = "There was a database field mismatch. Our team has been notified and will fix this issue."
+        errorMessage = "There was a database field mismatch. Our team has been notified and will fix this issue.";
       }
       
-      alert(`Error submitting form: ${errorMessage}`)
+      alert(`Error submitting form: ${errorMessage}`);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
-
-  // Handle navigation back to order forms after viewing PDF
-  const handleReturnToDashboard = () => {
-    router.push('/dashboard/order-forms');
   };
 
   return (
-    <div ref={formRef} className="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-md">
-      {/* Form Header */}
-      <div className="text-center mb-8 border-b border-gray-200 pb-6">
-        <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 2</h1>
-        <h2 className="text-xl font-semibold mb-4">CONTRACTOR PASS APPLICATION FORM</h2>
-        <p className="text-gray-600 mb-2">DEADLINE: 2nd July 2025</p>
-        <h3 className="text-lg font-semibold mb-2">Aesthetic Medicine & Surgery Conference & Exhibition 2025</h3>
-        <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
-      </div>
-
-      {/* User Data Container */}
-      <UserDataContainer userData={userData} />
-
-      {isLoading ? (
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-          <span className="ml-3 text-gray-600">Checking submission status...</span>
+    <div className="w-full max-w-5xl mx-auto">
+      <div ref={containerRef} className="bg-white p-6 rounded-lg shadow">
+        {/* Form Header */}
+        <div className="text-center mb-8 border-b border-gray-200 pb-6">
+          <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 2</h1>
+          <h2 className="text-xl font-semibold mb-4">CONTRACTOR PASS APPLICATION FORM</h2>
+          <p className="text-gray-600 mb-2">DEADLINE: 2nd July 2025</p>
+          <h3 className="text-lg font-semibold mb-2">Aesthetic Medicine & Surgery Conference & Exhibition 2025</h3>
+          <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
         </div>
-      ) : formSubmitted ? (
-        <div className="space-y-8">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-            <div className="text-green-600 font-semibold text-lg mb-2">
-              Form Successfully Submitted
+
+        {/* User Data Container */}
+        <UserDataContainer userData={userData} />
+
+        {isLoading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            <span className="ml-3 text-gray-600">Checking submission status...</span>
+          </div>
+        ) : submitted ? (
+          <div className="space-y-8">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+              <div className="text-green-600 font-semibold text-lg mb-2">
+                Form Successfully Submitted
+              </div>
+              <p className="text-gray-600">
+                You have already submitted this form. You can download a PDF copy or return to the dashboard.
+              </p>
             </div>
-            <p className="text-gray-600">
-              You have already submitted this form. You can download a PDF copy or return to the dashboard.
-            </p>
-          </div>
-          <div className="flex justify-center space-x-6">
-            <PdfButton
-              formData={submittedData || {}}
-              formType={2}
-              containerRef={formRef}
-              className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
-            />
-            <button
-              type="button"
-              onClick={handleReturnToDashboard}
-              className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
-            >
-              Return to Dashboard
-            </button>
-          </div>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Exhibitor Details */}
-          <div className="mb-8 bg-gray-50 p-4 rounded-lg">
-            <h4 className="font-semibold text-blue-700 mb-4">Exhibitor Details</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm mb-1 text-gray-700">Company Name</label>
-                <input
-                  type="text"
-                  name="exhibitor_company"
-                  defaultValue={userData?.company_name}
-                  className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm mb-1 text-gray-700">Booth No.</label>
-                <input
-                  type="text"
-                  name="exhibitor_booth"
-                  defaultValue={userData?.booth_number}
-                  className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
+            <div className="flex justify-center space-x-6">
+              <PdfButton
+                formData={submittedData || {}}
+                formType={2}
+                containerRef={containerRef}
+                className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
+              />
+              <Link
+                href="/dashboard"
+                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
+              >
+                Return to Dashboard
+              </Link>
             </div>
           </div>
-
-          {/* Contractor Details */}
-          <div className="mb-8 bg-gray-50 p-4 rounded-lg">
-            <h4 className="font-semibold text-blue-700 mb-4">Contractor Details</h4>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm mb-1 text-gray-700">Company Name</label>
-                <input type="text" name="contractor_company" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
-              </div>
-              <div>
-                <label className="block text-sm mb-1 text-gray-700">Contact Person</label>
-                <input type="text" name="contractor_person" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
-              </div>
-              <div>
-                <label className="block text-sm mb-1 text-gray-700">Mobile No.</label>
-                <input type="tel" name="mobile" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
-              </div>
-              <div>
-                <label className="block text-sm mb-1 text-gray-700">Tel No.</label>
-                <input type="tel" name="tel" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
-              </div>
-              <div>
-                <label className="block text-sm mb-1 text-gray-700">Fax No.</label>
-                <input type="tel" name="fax" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
-              </div>
-              <div>
-                <label className="block text-sm mb-1 text-gray-700">Email</label>
-                <input type="email" name="email" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
-              </div>
-            </div>
-          </div>
-
-          {/* Order Table */}
-          <div className="mb-8 overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
-              <thead>
-                <tr className="bg-blue-50">
-                  <th className="border border-gray-300 p-2 text-center">Item</th>
-                  <th className="border border-gray-300 p-2 text-center">Quantity</th>
-                  <th className="border border-gray-300 p-2 text-center">Unit Price (RM)</th>
-                  <th className="border border-gray-300 p-2 text-center">Total (RM)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="border border-gray-300 p-2">Contractor Pass</td>
-                  <td className="border border-gray-300 p-2 text-center">
-                    <input 
-                      type="number" 
-                      name="quantity" 
-                      className="w-24 text-center border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 mx-auto" 
-                      min="0"
-                      step="any"
-                      value={quantity}
-                      onChange={handleQuantityChange}
-                    />
-                  </td>
-                  <td className="border border-gray-300 p-2 text-center">25.00</td>
-                  <td className="border border-gray-300 p-2 text-center">{total.toFixed(2)}</td>
-                </tr>
-                <tr>
-                  <td colSpan={2} className="border border-gray-300 p-2"></td>
-                  <td className="border border-gray-300 p-2 text-right">Late Surcharge:<br/>(if applicable)</td>
-                  <td className="border border-gray-300 p-2 text-center">{lateSurcharge.toFixed(2)}</td>
-                </tr>
-                <tr>
-                  <td colSpan={2} className="border border-gray-300 p-2"></td>
-                  <td className="border border-gray-300 p-2 text-right font-bold">Total Amount:</td>
-                  <td className="border border-gray-300 p-2 text-center font-bold">{grandTotal.toFixed(2)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {/* Important Notes */}
-          <div className="mb-8 bg-blue-50 p-4 rounded-lg">
-            <h4 className="font-semibold text-blue-700 mb-4">Important Notes:</h4>
-            <ol className="list-decimal list-inside space-y-2 text-gray-700">
-              <li>Each contractor pass is priced at RM 25.00 after the deadline of June 30, 2025.</li>
-              <li>Official Contractor will not issue any contractor badges during tear down, therefore please ensure that you have order in advance the sufficient number of badges to be used during build up as well as the tear down.</li>
-              <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be received by this Order Form. All bank charges must be borne by remitter. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-3, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 800 984924. Bank Swift Code: CIBBMYKL</li>
-            </ol>
-          </div>
-
-          {/* Authorization Section */}
-          <div className="mb-8">
-            <p className="mb-6 text-center text-gray-700">Please retain a copy for your record & return this form via email to:</p>
-            
-            <div className="mb-8 text-center bg-gray-50 py-4 rounded-lg">
-              <h5 className="font-bold text-blue-600 mb-2">BLUE CIRCLE PLUS SDN BHD</h5>
-              <p className="mb-1">Attn: Mr. Francis Chan / Ms. YJ Hoh</p>
-              <p className="mb-1">Email: francis@bcpgroup.com.my</p>
-              <p className="mb-1">or yijie@bcpgroup.com.my</p>
-              <p>Tel: +6011-2327 9795 / +6016-263 1150</p>
-            </div>
-
-            <div className="border border-gray-200 rounded-lg p-6 shadow-sm">
-              <h5 className="font-bold mb-4 text-blue-600">Authorized Representative Applying:-</h5>
-              <p className="text-gray-600 mb-4">(Please type or attach business name card)</p>
-              <div className="grid grid-cols-1 gap-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm mb-1 text-gray-700">Authorized by</label>
-                    <input 
-                      type="text" 
-                      name="auth_name" 
-                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                      defaultValue={userData?.contact_person || ''}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm mb-1 text-gray-700">Booth No</label>
-                    <input 
-                      type="text" 
-                      name="auth_booth" 
-                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                      defaultValue={userData?.booth_number || ''}
-                    />
-                  </div>
-                </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-8" ref={formRef}>
+            {/* Exhibitor Details */}
+            <div className="mb-8 bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-semibold text-blue-700 mb-4">Exhibitor Details</h4>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm mb-1 text-gray-700">Designation</label>
-                  <input type="text" name="auth_designation" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
-                </div>
-                <div>
-                  <label className="block text-sm mb-1 text-gray-700">Company Address</label>
-                  <textarea 
-                    name="auth_address" 
-                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                    rows={2}
-                    defaultValue={userData?.address || ''}
+                  <label className="block text-sm mb-1 text-gray-700">Company Name</label>
+                  <input
+                    type="text"
+                    name="exhibitor_company"
+                    defaultValue={userData?.company_name}
+                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm mb-1 text-gray-700">Booth No.</label>
+                  <input
+                    type="text"
+                    name="exhibitor_booth"
+                    defaultValue={userData?.booth_number}
+                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Contractor Details */}
+            <div className="mb-8">
+              <h4 className="font-semibold text-blue-700 mb-4">Contractor Details</h4>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm mb-1 text-gray-700">Company Name</label>
+                  <input type="text" name="contractor_company" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-sm mb-1 text-gray-700">Contact Person</label>
+                  <input type="text" name="contractor_person" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-sm mb-1 text-gray-700">Mobile No.</label>
+                  <input type="tel" name="mobile" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-sm mb-1 text-gray-700">Tel No.</label>
+                  <input type="tel" name="tel" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-sm mb-1 text-gray-700">Fax No.</label>
+                  <input type="tel" name="fax" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
                 </div>
                 <div>
                   <label className="block text-sm mb-1 text-gray-700">Email</label>
-                  <input 
-                    type="email" 
-                    name="auth_email" 
-                    className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    defaultValue={userData?.email || ''}
-                  />
+                  <input type="email" name="email" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+              </div>
+            </div>
+
+            {/* Order Table */}
+            <div className="mb-8 overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
+                <thead>
+                  <tr className="bg-blue-50">
+                    <th className="border border-gray-300 p-2 text-center">Item</th>
+                    <th className="border border-gray-300 p-2 text-center">Quantity</th>
+                    <th className="border border-gray-300 p-2 text-center">Unit Price (RM)</th>
+                    <th className="border border-gray-300 p-2 text-center">Total (RM)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-gray-300 p-2">Contractor Pass</td>
+                    <td className="border border-gray-300 p-2 text-center">
+                      <input 
+                        type="number" 
+                        name="quantity" 
+                        className="w-24 text-center border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 mx-auto" 
+                        min="0"
+                        step="any"
+                        value={quantity}
+                        onChange={handleQuantityChange}
+                      />
+                    </td>
+                    <td className="border border-gray-300 p-2 text-center">25.00</td>
+                    <td className="border border-gray-300 p-2 text-center">{total.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td colSpan={2} className="border border-gray-300 p-2"></td>
+                    <td className="border border-gray-300 p-2 text-right">Late Surcharge:<br/>(if applicable)</td>
+                    <td className="border border-gray-300 p-2 text-center">{lateSurcharge.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td colSpan={2} className="border border-gray-300 p-2"></td>
+                    <td className="border border-gray-300 p-2 text-right font-bold">Total Amount:</td>
+                    <td className="border border-gray-300 p-2 text-center font-bold">{grandTotal.toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Important Notes */}
+            <div className="mb-8 bg-blue-50 p-4 rounded-lg">
+              <h4 className="font-semibold text-blue-700 mb-4">Important Notes:</h4>
+              <ol className="list-decimal list-inside space-y-2 text-gray-700">
+                <li>Each contractor pass is priced at RM 25.00 after the deadline of June 30, 2025.</li>
+                <li>Official Contractor will not issue any contractor badges during tear down, therefore please ensure that you have order in advance the sufficient number of badges to be used during build up as well as the tear down.</li>
+                <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be received by this Order Form. All bank charges must be borne by remitter. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-3, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 800 984924. Bank Swift Code: CIBBMYKL</li>
+              </ol>
+            </div>
+
+            {/* Authorization Section */}
+            <div className="mb-8">
+              <p className="mb-6 text-center text-gray-700">Please retain a copy for your record & return this form via email to:</p>
+              
+              <div className="mb-8 text-center bg-gray-50 py-4 rounded-lg">
+                <h5 className="font-bold text-blue-600 mb-2">BLUE CIRCLE PLUS SDN BHD</h5>
+                <p className="mb-1">Attn: Mr. Francis Chan / Ms. YJ Hoh</p>
+                <p className="mb-1">Email: francis@bcpgroup.com.my</p>
+                <p className="mb-1">or yijie@bcpgroup.com.my</p>
+                <p>Tel: +6011-2327 9795 / +6016-263 1150</p>
+              </div>
+
+              <div className="border border-gray-200 rounded-lg p-6 shadow-sm">
+                <h5 className="font-bold mb-4 text-blue-600">Authorized Representative Applying:</h5>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Name</label>
+                      <input 
+                        type="text" 
+                        name="auth_name"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        defaultValue={userData?.contact_person || ''}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Designation</label>
+                      <input 
+                        type="text" 
+                        name="auth_designation"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+                  </div>
                   <div>
-                    <label className="block text-sm mb-1 text-gray-700">Tel/Hp</label>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Company</label>
                     <input 
-                      type="tel" 
-                      name="auth_tel" 
+                      type="text" 
+                      name="auth_company"
                       className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      defaultValue={userData?.tel || ''}
+                      defaultValue={userData?.company_name || ''}
+                      required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm mb-1 text-gray-700">Fax</label>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Booth No</label>
                     <input 
-                      type="tel" 
-                      name="auth_fax" 
+                      type="text" 
+                      name="auth_booth"
                       className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      defaultValue={userData?.fax || ''}
+                      defaultValue={userData?.booth_number || ''}
+                      required
                     />
                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm mb-1 text-gray-700">Signature</label>
-                    <input type="text" name="auth_signature" className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Address</label>
+                    <textarea 
+                      name="auth_address"
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      rows={3}
+                      defaultValue={userData?.address || ''}
+                      required
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Tel</label>
+                      <input 
+                        type="tel" 
+                        name="auth_tel"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        defaultValue={userData?.tel || ''}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Fax</label>
+                      <input 
+                        type="tel" 
+                        name="auth_fax"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        defaultValue={userData?.fax || ''}
+                      />
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-sm mb-1 text-gray-700">Date</label>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Email</label>
                     <input 
-                      type="date" 
-                      name="auth_date" 
+                      type="email" 
+                      name="auth_email"
                       className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      defaultValue={new Date().toISOString().split('T')[0]}
+                      defaultValue={userData?.email || ''}
+                      required
                     />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Signature</label>
+                      <input 
+                        type="text" 
+                        name="auth_signature"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Date</label>
+                      <input 
+                        type="date" 
+                        name="auth_date"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        defaultValue={new Date().toISOString().split('T')[0]}
+                        required
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Form Actions */}
-          <div className="flex justify-center space-x-6">
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="px-8 py-3 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
-            >
-              {isSubmitting ? 'Submitting...' : 'Submit Form'}
-            </button>
-          </div>
-        </form>
-      )}
+            {/* Form Actions */}
+            <div className="flex justify-center space-x-6">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="px-8 py-3 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit Form'}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
     </div>
   );
 } 

@@ -9,6 +9,7 @@ import { PdfButton } from '@/components/ui/PdfButton'
 import { User } from '@supabase/supabase-js'
 import { Dispatch, SetStateAction } from 'react'
 import SubmissionNotification from '@/components/ui/SubmissionNotification'
+import Link from 'next/link'
 
 interface OrderItem {
   id: string
@@ -38,9 +39,10 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
   const supabase = createClientComponentClient()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [formSubmitted, setFormSubmitted] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const [submittedData, setSubmittedData] = useState<any>(null)
-  const formRef = useRef<HTMLDivElement>(null)
+  const formRef = useRef<HTMLFormElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   
   const [orderItems, setOrderItems] = useState<OrderItem[]>([
     { id: '901', description: '42" LED TV', unitCost: 1000.00, quantity: 0, image: '/products/42-led-tv.jpg' },
@@ -57,10 +59,32 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
     const checkPreviousSubmission = async () => {
       setIsLoading(true)
       try {
-        const { isSubmitted, data } = await checkPreviousFormSubmission("9", supabase)
-        setFormSubmitted(isSubmitted)
-        if (isSubmitted && data) {
-          setSubmittedData(data.data || {})
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (user) {
+          const { data, error } = await supabase
+            .from('forms')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('form_type', '9')
+            .maybeSingle()
+            
+          if (error) {
+            console.error('Error checking previous submission:', error)
+          } else if (data && typeof data.data === 'object' && data.data !== null) {
+            setSubmitted(true)
+            setSubmittedData(data.data)
+            // Update order items with submitted quantities
+            const formData = data.data as { items?: Array<{ id: string; quantity: number }> }
+            if (formData.items && Array.isArray(formData.items)) {
+              setOrderItems(prevItems => 
+                prevItems.map(item => {
+                  const submittedItem = formData.items?.find(i => i.id === item.id)
+                  return submittedItem ? { ...item, quantity: submittedItem.quantity } : item
+                })
+              )
+            }
+          }
         }
       } catch (error) {
         console.error('Error checking previous submissions:', error)
@@ -81,21 +105,18 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
   }
 
   const calculateSubtotal = () => {
-    // Include regular items plus security deposit
-    return orderItems.reduce((sum, item) => sum + (item.unitCost * item.quantity), 0) + securityDeposit;
+    return orderItems.reduce((sum, item) => sum + (item.unitCost * item.quantity), 0)
   }
 
-  // Calculate subtotal (items plus security deposit)
-  const subtotal = calculateSubtotal();
-  
-  // Calculate late charge (30% of subtotal if past deadline)
-  const isLateOrder = isPastDeadline(); 
-  const lateCharge = isLateOrder ? subtotal * 0.3 : 0;
-  
-  // Final grand total 
-  const grandTotal = subtotal + lateCharge;
+  const calculateLateCharge = () => {
+    return isPastDeadline() ? calculateSubtotal() * 0.3 : 0
+  }
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const calculateGrandTotal = () => {
+    return calculateSubtotal() + calculateLateCharge() + securityDeposit
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     
@@ -138,10 +159,10 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
             unitCost: item.unitCost,
             total: item.unitCost * item.quantity
           })),
-        subtotal: subtotal,
+        subtotal: calculateSubtotal(),
         security_deposit: securityDeposit,
-        late_charge: lateCharge,
-        grand_total: grandTotal,
+        late_charge: calculateLateCharge(),
+        grand_total: calculateGrandTotal(),
         auth_details: {
           name: formData.get('auth_name')?.toString() || userData?.contact_person || '',
           designation: formData.get('auth_designation')?.toString() || '',
@@ -163,7 +184,7 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
       }
 
       setSubmittedData(formDataObj)
-      setFormSubmitted(true)
+      setSubmitted(true)
       
       // Show success message
       alert("Form submitted successfully!")
@@ -186,270 +207,275 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
     }
   }
 
-  // Handle navigation back to order forms after viewing PDF
-  const handleReturnToDashboard = () => {
-    router.push('/dashboard/order-forms');
-  }
-
   return (
-    <div ref={formRef} className="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-md">
-      {/* Form Header */}
-      <div className="text-center mb-8 border-b border-gray-200 pb-6">
-        <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 9</h1>
-        <h2 className="text-xl font-semibold mb-4">AUDIO VISUAL EQUIPMENT</h2>
-        <p className="text-gray-600 mb-2">DEADLINE: 2nd July 2025</p>
-        <h3 className="text-lg font-semibold mb-2">Aesthetic Medicine & Surgery Conference & Exhibition 2025</h3>
-        <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
-      </div>
-
-      {/* User Data Container */}
-      <UserDataContainer userData={userData} />
-
-      {isLoading ? (
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-          <span className="ml-3 text-gray-600">Checking submission status...</span>
+    <div className="w-full max-w-5xl mx-auto">
+      <div ref={containerRef} className="bg-white p-6 rounded-lg shadow">
+        {/* Form Header */}
+        <div className="text-center mb-8 border-b border-gray-200 pb-6">
+          <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 9</h1>
+          <h2 className="text-xl font-semibold mb-4">AV EQUIPMENT ORDER FORM</h2>
+          <p className="text-gray-600 mb-2">DEADLINE: 2nd July 2025</p>
+          <h3 className="text-lg font-semibold mb-2">Aesthetic Medicine & Surgery Conference & Exhibition 2025</h3>
+          <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
         </div>
-      ) : formSubmitted ? (
-        <SubmissionNotification
-          submittedData={submittedData}
-          formType={9}
-          containerRef={formRef}
-          onReturnToDashboard={handleReturnToDashboard}
-          isAlreadySubmitted={true}
-          submissionDate={new Date().toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })}
-        />
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Order Table */}
-          <div className="mb-8 overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border border-gray-300 px-4 py-2 text-left">DESCRIPTION / ITEM</th>
-                  <th className="border border-gray-300 px-4 py-2 text-center w-24">QTY</th>
-                  <th className="border border-gray-300 px-4 py-2 text-right w-48">PRICE / UNIT (RM)</th>
-                  <th className="border border-gray-300 px-4 py-2 text-right w-48">COST (RM)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orderItems.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="border border-gray-300 px-4 py-3">{item.description}</td>
-                    <td className="border border-gray-300 px-4 py-3">
-                      <input
-                        type="number"
-                        min="0"
-                        value={item.quantity}
-                        onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
-                        className="w-full p-1 text-center rounded border border-gray-300"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-4 py-3 text-right">{item.unitCost.toFixed(2)}</td>
-                    <td className="border border-gray-300 px-4 py-3 text-right">
-                      {(item.quantity * item.unitCost).toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
-                {/* Security Deposit row - fixed and not editable */}
-                <tr className="bg-gray-50">
-                  <td className="border border-gray-300 px-4 py-3 font-medium">Security Deposit</td>
-                  <td className="border border-gray-300 px-4 py-3 text-center">1</td>
-                  <td className="border border-gray-300 px-4 py-3 text-right">{securityDeposit.toFixed(2)}</td>
-                  <td className="border border-gray-300 px-4 py-3 text-right">{securityDeposit.toFixed(2)}</td>
-                </tr>
-                {/* Subtotal row */}
-                <tr>
-                  <td className="border border-gray-300 px-4 py-3 text-right font-medium" colSpan={3}>
-                    Subtotal (including Security Deposit)
-                  </td>
-                  <td className="border border-gray-300 px-4 py-3 text-right font-medium">
-                    {subtotal.toFixed(2)}
-                  </td>
-                </tr>
-                {/* Late charge row - shown if applicable */}
-                {isLateOrder && (
-                  <tr>
-                    <td className="border border-gray-300 px-4 py-3 text-right font-medium text-amber-600" colSpan={3}>
-                      Late Order Surcharge (30%)
-                    </td>
-                    <td className="border border-gray-300 px-4 py-3 text-right font-medium text-amber-600">
-                      {lateCharge.toFixed(2)}
-                    </td>
-                  </tr>
-                )}
-                {/* Grand Total row */}
-                <tr className="bg-blue-50">
-                  <td className="border border-gray-300 px-4 py-3 text-right font-bold" colSpan={3}>
-                    Grand Total
-                  </td>
-                  <td className="border border-gray-300 px-4 py-3 text-right font-bold">
-                    {grandTotal.toFixed(2)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          
-          {/* Important Notes */}
-          <div className="bg-amber-50 p-4 rounded-lg border border-amber-200 pdf-exclude">
-            <h3 className="font-bold text-amber-800 mb-2">Important Notes:</h3>
-            <ol className="list-decimal list-inside space-y-1 text-amber-800">
-              <li>All items are on rental basis.</li>
-              <li>Late order: 30% penalty fee will be charged for any late orders received after the deadline, while orders received on site will be subject to a 50% surcharge.</li>
-              <li>Any cancellation before/on 2nd July 2025 will be charged 50% on the item priced, 100% cancellation fee will be charged for order cancelled after 2nd July 2025</li>
-              <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be accompanied by this Order Form. All bank charges must be borne by remitter. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-8, Block B, Ativo Plaza, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 800 908 5824. Bank Swift Code: CIBBMYKL</li>
-            </ol>
-          </div>
-          
-          {/* Authorization Section */}
-          <div className="mb-8">
-            <h4 className="font-bold mb-6 text-center">AUTHORIZATION</h4>
-            <p className="text-center mb-6 pdf-exclude">Please retain a copy for your record & return this form via email to:</p>
-            
-            <div className="text-center mb-8 pdf-exclude">
-              <h5 className="font-bold mb-2">BLUE CIRCLE PLUS SDN BHD</h5>
-              <p className="mb-1">Attn: Mr. Francis Chan / Ms. YJ Hoh</p>
-              <p className="mb-1">Email: francis@bcpgroup.com.my</p>
-              <p className="mb-1">or yijie@bcpgroup.com.my</p>
-              <p>Tel: +6011-2327 9795 / +6016-263 1150</p>
-            </div>
 
-            <div className="border-2 p-6 rounded-lg">
-              <h5 className="font-bold mb-4">Authorized Representative Applying:</h5>
-              <div className="grid grid-cols-1 gap-6">
-                <div className="grid grid-cols-2 gap-6">
+        {/* User Data Container */}
+        <UserDataContainer userData={userData} />
+
+        {isLoading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            <span className="ml-3 text-gray-600">Checking submission status...</span>
+          </div>
+        ) : submitted ? (
+          <div>
+            {/* Success message and PDF download */}
+            <div className="mt-4 space-y-4">
+              <div className="text-green-600 font-medium">Form submitted successfully!</div>
+              <div className="flex gap-4">
+                <PdfButton
+                  formData={submittedData}
+                  formType={9}
+                  containerRef={containerRef}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Download PDF
+                </PdfButton>
+                <Link
+                  href="/dashboard"
+                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                >
+                  Return to Dashboard
+                </Link>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} ref={formRef} className="space-y-8">
+            {/* Order Table */}
+            <div className="mb-8 overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border border-gray-300 px-4 py-2 text-left">DESCRIPTION / ITEM</th>
+                    <th className="border border-gray-300 px-4 py-2 text-center w-24">QTY</th>
+                    <th className="border border-gray-300 px-4 py-2 text-right w-48">PRICE / UNIT (RM)</th>
+                    <th className="border border-gray-300 px-4 py-2 text-right w-48">COST (RM)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orderItems.map((item) => (
+                    <tr key={item.id} className="hover:bg-gray-50">
+                      <td className="border border-gray-300 px-4 py-3">{item.description}</td>
+                      <td className="border border-gray-300 px-4 py-3">
+                        <input
+                          type="number"
+                          min="0"
+                          value={item.quantity}
+                          onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
+                          className="w-full p-1 text-center rounded border border-gray-300"
+                        />
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3 text-right">{item.unitCost.toFixed(2)}</td>
+                      <td className="border border-gray-300 px-4 py-3 text-right">
+                        {(item.quantity * item.unitCost).toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                  {/* Security Deposit row - fixed and not editable */}
+                  <tr className="bg-gray-50">
+                    <td className="border border-gray-300 px-4 py-3 font-medium">Security Deposit</td>
+                    <td className="border border-gray-300 px-4 py-3 text-center">1</td>
+                    <td className="border border-gray-300 px-4 py-3 text-right">{securityDeposit.toFixed(2)}</td>
+                    <td className="border border-gray-300 px-4 py-3 text-right">{securityDeposit.toFixed(2)}</td>
+                  </tr>
+                  {/* Subtotal row */}
+                  <tr>
+                    <td className="border border-gray-300 px-4 py-3 text-right font-medium" colSpan={3}>
+                      Subtotal (including Security Deposit)
+                    </td>
+                    <td className="border border-gray-300 px-4 py-3 text-right font-medium">
+                      {calculateSubtotal().toFixed(2)}
+                    </td>
+                  </tr>
+                  {/* Late charge row - shown if applicable */}
+                  {calculateLateCharge() > 0 && (
+                    <tr>
+                      <td className="border border-gray-300 px-4 py-3 text-right font-medium text-amber-600" colSpan={3}>
+                        Late Order Surcharge (30%)
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3 text-right font-medium text-amber-600">
+                        {calculateLateCharge().toFixed(2)}
+                      </td>
+                    </tr>
+                  )}
+                  {/* Grand Total row */}
+                  <tr className="bg-blue-50">
+                    <td className="border border-gray-300 px-4 py-3 text-right font-bold" colSpan={3}>
+                      Grand Total
+                    </td>
+                    <td className="border border-gray-300 px-4 py-3 text-right font-bold">
+                      {calculateGrandTotal().toFixed(2)}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Important Notes */}
+            <div className="bg-amber-50 p-4 rounded-lg border border-amber-200 pdf-exclude">
+              <h3 className="font-bold text-amber-800 mb-2">Important Notes:</h3>
+              <ol className="list-decimal list-inside space-y-1 text-amber-800">
+                <li>All items are on rental basis.</li>
+                <li>Late order: 30% penalty fee will be charged for any late orders received after the deadline, while orders received on site will be subject to a 50% surcharge.</li>
+                <li>Any cancellation before/on 2nd July 2025 will be charged 50% on the item priced, 100% cancellation fee will be charged for order cancelled after 2nd July 2025</li>
+                <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be accompanied by this Order Form. All bank charges must be borne by remitter. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-8, Block B, Ativo Plaza, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 800 908 5824. Bank Swift Code: CIBBMYKL</li>
+              </ol>
+            </div>
+            
+            {/* Authorization Section */}
+            <div className="mb-8">
+              <h4 className="font-bold mb-6 text-center">AUTHORIZATION</h4>
+              <p className="text-center mb-6 pdf-exclude">Please retain a copy for your record & return this form via email to:</p>
+              
+              <div className="text-center mb-8 pdf-exclude">
+                <h5 className="font-bold mb-2">BLUE CIRCLE PLUS SDN BHD</h5>
+                <p className="mb-1">Attn: Mr. Francis Chan / Ms. YJ Hoh</p>
+                <p className="mb-1">Email: francis@bcpgroup.com.my</p>
+                <p className="mb-1">or yijie@bcpgroup.com.my</p>
+                <p>Tel: +6011-2327 9795 / +6016-263 1150</p>
+              </div>
+
+              <div className="border-2 p-6 rounded-lg">
+                <h5 className="font-bold mb-4">Authorized Representative Applying:</h5>
+                <div className="grid grid-cols-1 gap-6">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Name</label>
+                      <input 
+                        type="text" 
+                        name="auth_name" 
+                        className="w-full border-2 rounded p-2" 
+                        defaultValue={userData?.contact_person || ''}
+                        required 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Designation</label>
+                      <input 
+                        type="text" 
+                        name="auth_designation" 
+                        className="w-full border-2 rounded p-2" 
+                        required 
+                      />
+                    </div>
+                  </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Name</label>
+                    <label className="block text-sm font-medium mb-2">Company</label>
                     <input 
                       type="text" 
-                      name="auth_name" 
-                      className="w-full border-2 rounded p-2" 
-                      defaultValue={userData?.contact_person || ''}
-                      required 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Designation</label>
-                    <input 
-                      type="text" 
-                      name="auth_designation" 
-                      className="w-full border-2 rounded p-2" 
-                      required 
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Company</label>
-                  <input 
-                    type="text" 
-                    name="auth_company"
-                    className="w-full border-2 rounded p-2"
-                    defaultValue={userData?.company_name || ''}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Booth No</label>
-                  <input 
-                    type="text" 
-                    name="auth_booth"
-                    className="w-full border-2 rounded p-2"
-                    defaultValue={userData?.booth_number || ''}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Address</label>
-                  <textarea 
-                    name="auth_address" 
-                    className="w-full border-2 rounded p-2" 
-                    rows={3}
-                    defaultValue={userData?.address || ''}
-                    required 
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Tel</label>
-                    <input 
-                      type="tel" 
-                      name="auth_tel" 
-                      className="w-full border-2 rounded p-2" 
-                      defaultValue={userData?.tel || ''}
-                      required 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Fax</label>
-                    <input 
-                      type="tel" 
-                      name="auth_fax" 
+                      name="auth_company"
                       className="w-full border-2 rounded p-2"
-                      defaultValue={userData?.fax || ''} 
+                      defaultValue={userData?.company_name || ''}
+                      required
                     />
                   </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Email</label>
-                  <input 
-                    type="email" 
-                    name="auth_email" 
-                    className="w-full border-2 rounded p-2" 
-                    defaultValue={userData?.email || ''}
-                    required 
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Signature</label>
+                    <label className="block text-sm font-medium mb-2">Booth No</label>
                     <input 
                       type="text" 
-                      name="auth_signature" 
-                      className="w-full border-2 rounded p-2" 
-                      required 
+                      name="auth_booth"
+                      className="w-full border-2 rounded p-2"
+                      defaultValue={userData?.booth_number || ''}
+                      required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Date</label>
-                    <input 
-                      type="date" 
-                      name="auth_date" 
-                      className="w-full border-2 rounded p-2"
-                      defaultValue={new Date().toISOString().split('T')[0]}
+                    <label className="block text-sm font-medium mb-2">Address</label>
+                    <textarea 
+                      name="auth_address" 
+                      className="w-full border-2 rounded p-2" 
+                      rows={3}
+                      defaultValue={userData?.address || ''}
                       required 
                     />
+                  </div>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Tel</label>
+                      <input 
+                        type="tel" 
+                        name="auth_tel" 
+                        className="w-full border-2 rounded p-2" 
+                        defaultValue={userData?.tel || ''}
+                        required 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Fax</label>
+                      <input 
+                        type="tel" 
+                        name="auth_fax" 
+                        className="w-full border-2 rounded p-2"
+                        defaultValue={userData?.fax || ''} 
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Email</label>
+                    <input 
+                      type="email" 
+                      name="auth_email" 
+                      className="w-full border-2 rounded p-2" 
+                      defaultValue={userData?.email || ''}
+                      required 
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Signature</label>
+                      <input 
+                        type="text" 
+                        name="auth_signature" 
+                        className="w-full border-2 rounded p-2" 
+                        required 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Date</label>
+                      <input 
+                        type="date" 
+                        name="auth_date" 
+                        className="w-full border-2 rounded p-2"
+                        defaultValue={new Date().toISOString().split('T')[0]}
+                        required 
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Form Actions */}
-          <div className="flex justify-center space-x-6 pdf-exclude">
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="px-8 py-3 border-2 border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50"
-            >
-              {isSubmitting ? 'Submitting...' : 'Submit Form'}
-            </button>
-          </div>
-        </form>
-      )}
+            {/* Form Actions */}
+            <div className="flex justify-center space-x-6 pdf-exclude">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="px-8 py-3 border-2 border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50"
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit Form'}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
     </div>
   )
 } 
