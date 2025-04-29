@@ -337,7 +337,15 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
 
             <div className="flex justify-center space-x-6">
               <PdfButton
-                formData={submittedData || {}}
+                formData={{
+                  form_type: 3,
+                  company_data: submittedData?.company_data || {},
+                  items: submittedData?.items || [],
+                  subtotal: submittedData?.subtotal || 0,
+                  late_charge: submittedData?.late_charge || 0,
+                  grand_total: submittedData?.grand_total || 0,
+                  auth_details: submittedData?.auth_details || {}
+                }}
                 formType={3}
                 containerRef={containerRef}
                 className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"

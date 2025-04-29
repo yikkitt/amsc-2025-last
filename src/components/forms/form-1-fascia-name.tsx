@@ -7,6 +7,7 @@ import UserDataContainer from '@/components/UserDataContainer'
 import { syncFormWithSupabase, checkPreviousFormSubmission } from '@/lib/forms/submitHandler'
 import { PdfButton } from '@/components/ui/PdfButton'
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface FasciaNameFormProps {
   userData?: {
@@ -355,6 +356,52 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
                 <li>Failure to submit the request after the deadline, the name on signed contract will be used</li>
                 <li>Any changes on site will be charged RM 100.00/set of fascia name</li>
               </ol>
+            </div>
+
+            {/* Standard Booth Diagram */}
+            <div className="mb-8">
+              <h4 className="font-semibold text-blue-700 mb-4">2. STANDARD BOOTH</h4>
+              <div className="border border-gray-200 rounded-lg overflow-hidden p-6">
+                {/* Shell scheme booth example image */}
+                <div className="mb-6">
+                  <Image
+                    src="/images/shell-shceme-booth-example.png"
+                    alt="Shell Scheme Booth Example"
+                    width={600}
+                    height={400}
+                    className="mx-auto rounded-lg shadow-sm"
+                  />
+                </div>
+                
+                {/* Booth Package */}
+                <div>
+                  <h5 className="font-bold mb-4 text-center">Booth Package Entitlement (9sqm)</h5>
+                  <table className="w-full border-collapse">
+                    <tbody>
+                      <tr className="border-b border-gray-200">
+                        <td className="py-2">Information Desk</td>
+                        <td className="text-right font-bold">1</td>
+                      </tr>
+                      <tr className="border-b border-gray-200">
+                        <td className="py-2">White Folding Chair</td>
+                        <td className="text-right font-bold">2</td>
+                      </tr>
+                      <tr className="border-b border-gray-200">
+                        <td className="py-2">Waste Paper Bin</td>
+                        <td className="text-right font-bold">1</td>
+                      </tr>
+                      <tr className="border-b border-gray-200">
+                        <td className="py-2">Fluorescent Tube</td>
+                        <td className="text-right font-bold">2</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2">13Amp Power Socket (240Volt)</td>
+                        <td className="text-right font-bold">1</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
 
             {/* Authorization Section */}
