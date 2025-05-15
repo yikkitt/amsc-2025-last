@@ -219,8 +219,8 @@ export default function DeadlineReminders() {
             <span className="ml-2 text-gray-600">Loading form status...</span>
           </div>
         ) : (
-          <div className="max-h-96 overflow-y-auto pr-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="overflow-x-auto pb-4">
+            <div className="flex space-x-4 snap-x snap-mandatory">
               {forms.map((form) => {
                 const daysLeft = calculateDaysLeft(form.date);
                 
@@ -228,10 +228,10 @@ export default function DeadlineReminders() {
                   <Link
                     key={form.id}
                     href={form.href}
-                    className="group block"
+                    className="snap-start shrink-0 w-80 sm:w-96 group"
                   >
                     <div 
-                      className={`p-4 rounded-lg border ${getStatusColor(daysLeft, !!form.isSubmitted, 'border')} ${getStatusColor(daysLeft, !!form.isSubmitted, 'bg')} transition-all hover:shadow-md`}
+                      className={`p-4 rounded-lg border ${getStatusColor(daysLeft, !!form.isSubmitted, 'border')} ${getStatusColor(daysLeft, !!form.isSubmitted, 'bg')} transition-all hover:shadow-md h-full`}
                     >
                       <div className="flex justify-between items-start mb-2">
                         <h4 className={`font-medium ${getStatusColor(daysLeft, !!form.isSubmitted, 'text')} text-sm sm:text-base`}>
@@ -243,7 +243,7 @@ export default function DeadlineReminders() {
                             <span className="font-semibold">Submitted</span>
                           </div>
                         ) : (
-                          <div className="flex items-center bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
+                          <div className="flex items-center bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs">
                             <XCircle size={14} className="mr-1" />
                             <span className="font-semibold">Not Submitted</span>
                           </div>
@@ -254,7 +254,7 @@ export default function DeadlineReminders() {
                         <div className="flex items-center">
                           <Clock size={14} className="text-gray-500 mr-1" />
                           <span className="text-xs text-gray-600">
-                            {daysLeft > 0 ? `${daysLeft} days remaining` : 'Deadline passed'}
+                            {daysLeft > 0 ? `${daysLeft} days remaining` : 'Deadline has passed'}
                           </span>
                         </div>
                         <span className="text-xs font-semibold text-gray-500">
