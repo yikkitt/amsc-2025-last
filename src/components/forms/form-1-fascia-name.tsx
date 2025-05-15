@@ -252,33 +252,44 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
               </p>
             </div>
 
-            {/* Display submitted fascia name in read-only mode */}
-            <div className="mb-8">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-blue-700 mb-4">Submitted Fascia Name:</h4>
-                <div className="flex flex-col gap-2">
-                  {/* First row: 13 boxes */}
-                  <div className="flex gap-1 justify-center">
-                    {fasciaName.slice(0, 13).map((char, i) => (
-                      <div
-                        key={i}
-                        className="w-10 h-10 border border-gray-300 rounded flex items-center justify-center bg-white text-center uppercase font-bold"
-                      >
-                        {char}
-                      </div>
-                    ))}
+            {/* Display submitted details in read-only mode */}
+            <div className="mb-8 bg-gray-50 p-6 rounded-lg">
+              <h4 className="font-semibold text-blue-700 mb-4">Submitted Details:</h4>
+              <div className="space-y-4">
+                <div>
+                  <p className="font-medium">Fascia Name:</p>
+                  <div className="flex flex-col gap-2 mt-2">
+                    {/* First row: 13 boxes */}
+                    <div className="flex gap-1 justify-center">
+                      {fasciaName.slice(0, 13).map((char, i) => (
+                        <div
+                          key={i}
+                          className="w-10 h-10 border border-gray-300 rounded flex items-center justify-center bg-white text-center uppercase font-bold"
+                        >
+                          {char}
+                        </div>
+                      ))}
+                    </div>
+                    {/* Second row: 12 boxes */}
+                    <div className="flex gap-1 justify-center">
+                      {fasciaName.slice(13).map((char, i) => (
+                        <div
+                          key={i + 13}
+                          className="w-10 h-10 border border-gray-300 rounded flex items-center justify-center bg-white text-center uppercase font-bold"
+                        >
+                          {char}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  {/* Second row: 12 boxes */}
-                  <div className="flex gap-1 justify-center">
-                    {fasciaName.slice(13).map((char, i) => (
-                      <div
-                        key={i + 13}
-                        className="w-10 h-10 border border-gray-300 rounded flex items-center justify-center bg-white text-center uppercase font-bold"
-                      >
-                        {char}
-                      </div>
-                    ))}
-                  </div>
+                </div>
+                <div>
+                  <p className="font-medium">Company Name:</p>
+                  <p>{submittedData?.company_data?.company_name || userData?.company_name || ''}</p>
+                </div>
+                <div>
+                  <p className="font-medium">Booth Number:</p>
+                  <p>{submittedData?.company_data?.booth_number || userData?.booth_number || ''}</p>
                 </div>
               </div>
             </div>

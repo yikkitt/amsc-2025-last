@@ -203,6 +203,7 @@ export default function AdminFeesForm({ userData }: AdminFeesFormProps) {
 
             {/* Display submitted details in read-only mode */}
             <div className="mb-8 overflow-x-auto">
+              <h4 className="font-semibold text-blue-700 mb-4">Submitted Details:</h4>
               <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
                 <thead>
                   <tr className="bg-blue-50">
