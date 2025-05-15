@@ -72,7 +72,7 @@ export async function getUserProfileData(supabase: SupabaseClient) {
         console.log('User profile not found, creating from auth metadata');
         console.log('Auth metadata available:', user.user_metadata);
         
-        // Extract profile data from auth metadata
+        // Create a basic profile with required fields
         const metaProfile: Record<string, any> = {
           id: user.id,
           email: user.email,
@@ -90,7 +90,7 @@ export async function getUserProfileData(supabase: SupabaseClient) {
         if (user.user_metadata?.postcode) metaProfile.postcode = user.user_metadata.postcode;
         if (user.user_metadata?.state) metaProfile.state = user.user_metadata.state;
         if (user.user_metadata?.country) metaProfile.country = user.user_metadata.country;
-        if (user.user_metadata?.fax) metaProfile.fax = user.user_metadata.fax;
+        if (user.user_metadata?.tax_identification_number) metaProfile.tax_identification_number = user.user_metadata.tax_identification_number;
         
         console.log('Created profile data from metadata:', metaProfile);
         

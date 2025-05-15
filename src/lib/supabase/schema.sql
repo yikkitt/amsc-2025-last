@@ -9,7 +9,7 @@ CREATE TABLE amsc_2025_user (
   address TEXT NOT NULL,
   booth_number TEXT NOT NULL,
   telephone TEXT NOT NULL,
-  fax TEXT,
+  tax_identification_number TEXT,
   email TEXT NOT NULL UNIQUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
   CONSTRAINT fk_auth_user

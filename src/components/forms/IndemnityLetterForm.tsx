@@ -19,7 +19,7 @@ interface IndemnityLetterFormProps {
     state?: string
     country?: string
     tel?: string
-    fax?: string
+    tax_identification_number?: string
     email?: string
   } | null
 }
@@ -97,7 +97,7 @@ export default function IndemnityLetterForm({ userData }: IndemnityLetterFormPro
           contact_person: userData?.contact_person || '',
           email: userData?.email || '',
           tel: userData?.tel || '',
-          fax: userData?.fax || '',
+          tax_identification_number: userData?.tax_identification_number || '',
           address: userData?.address || '',
         },
         auth_details: {
@@ -108,7 +108,6 @@ export default function IndemnityLetterForm({ userData }: IndemnityLetterFormPro
           address: formData.get('auth_address')?.toString() || userData?.address || '',
           email: formData.get('auth_email')?.toString() || userData?.email || '',
           tel: formData.get('auth_tel')?.toString() || userData?.tel || '',
-          fax: formData.get('auth_fax')?.toString() || userData?.fax || '',
           signature: formData.get('auth_signature')?.toString() || '',
           date: formData.get('auth_date')?.toString() || new Date().toISOString()
         }
@@ -312,12 +311,12 @@ export default function IndemnityLetterForm({ userData }: IndemnityLetterFormPro
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1 text-gray-700">Fax</label>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Tax Identification Number</label>
                       <input 
-                        type="tel" 
-                        name="auth_fax"
+                        type="text" 
+                        name="auth_tax_identification_number"
                         className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                        defaultValue={userData?.fax || ''}
+                        defaultValue={userData?.tax_identification_number || ''}
                       />
                     </div>
                   </div>

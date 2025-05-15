@@ -14,7 +14,7 @@ interface UserData {
   address: string;
   telephone: string;
   tel: string;
-  fax?: string;
+  tax_identification_number?: string;
   postcode?: string;
   state?: string;
   country?: string;
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     if (requestData.address) userData.address = requestData.address;
     if (requestData.telephone) userData.telephone = requestData.telephone;
     if (requestData.tel) userData.tel = requestData.tel || requestData.telephone;
-    if (requestData.fax) userData.fax = requestData.fax;
+    if (requestData.tax_identification_number) userData.tax_identification_number = requestData.tax_identification_number;
     if (requestData.postcode) userData.postcode = requestData.postcode;
     if (requestData.state) userData.state = requestData.state;
     if (requestData.country) userData.country = requestData.country;

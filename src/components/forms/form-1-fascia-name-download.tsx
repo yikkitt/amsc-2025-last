@@ -16,7 +16,7 @@ interface FasciaNameFormProps {
     state?: string
     country?: string
     tel?: string
-    fax?: string
+    tax_identification_number?: string
     email?: string
   } | null
 }
@@ -324,11 +324,11 @@ export default function FasciaNameFormDownload({ userData }: FasciaNameFormProps
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Fax</label>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Tax Identification Number</label>
                   <input 
-                    type="tel" 
+                    type="text" 
                     className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    defaultValue={userData?.fax || ''}
+                    defaultValue={userData?.tax_identification_number || ''}
                   />
                 </div>
               </div>

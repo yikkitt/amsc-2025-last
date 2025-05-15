@@ -13,7 +13,7 @@ interface UserDataProps {
     country?: string;
     tel?: string;
     telephone?: string;
-    fax?: string;
+    tax_identification_number?: string;
     email?: string;
   } | null;
 }
@@ -97,8 +97,8 @@ export default function UserDataContainer({ userData }: UserDataProps) {
           </div>
           
           <div className="mb-4">
-            <span className="font-medium block">Fax</span>
-            <span className="text-blue-700">{userData.fax || '-'}</span>
+            <span className="font-medium block">Tax Identification Number</span>
+            <span className="text-blue-700">{userData.tax_identification_number || '-'}</span>
           </div>
           
           <div className="mb-4">

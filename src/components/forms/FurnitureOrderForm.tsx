@@ -28,7 +28,7 @@ interface FurnitureOrderFormProps {
     state?: string
     country?: string
     tel?: string
-    fax?: string
+    tax_identification_number?: string
     email?: string
   } | null
 }
@@ -157,7 +157,7 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
           contact_person: userData?.contact_person || '',
           email: userData?.email || '',
           tel: userData?.tel || '',
-          fax: userData?.fax || '',
+          tax_identification_number: userData?.tax_identification_number || '',
           address: userData?.address || '',
         },
         items: orderItems
@@ -181,7 +181,7 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
           address: formData.get('auth_address')?.toString() || userData?.address || '',
           email: formData.get('auth_email')?.toString() || userData?.email || '',
           tel: formData.get('auth_tel')?.toString() || userData?.tel || '',
-          fax: formData.get('auth_fax')?.toString() || userData?.fax || '',
+          tax_identification_number: formData.get('auth_tax_identification_number')?.toString() || userData?.tax_identification_number || '',
           signature: formData.get('auth_signature')?.toString() || '',
           date: formData.get('auth_date')?.toString() || new Date().toISOString()
         }
@@ -519,12 +519,12 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1 text-gray-700">Fax</label>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Tax Identification Number</label>
                       <input 
-                        type="tel" 
-                        name="auth_fax"
+                        type="text" 
+                        name="auth_tax_identification_number"
                         className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                        defaultValue={userData?.fax || ''}
+                        defaultValue={userData?.tax_identification_number || ''}
                       />
                     </div>
                   </div>

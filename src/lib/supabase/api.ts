@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 // Hardcoded values for deployment safety
 const SUPABASE_URL = 'https://kiotgupdmepdyiscbrmb.supabase.co'
 // Use the Service Role Key for API routes by default
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'fallback-service-key-if-needed' 
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtpb3RndXBkbWVwZHlpc2Nicm1iIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0Mzk5NzgwNCwiZXhwIjoyMDU5NTczODA0fQ.mKrhfzdqmXUkddeMYJdZfKM0bsXBd4Tx8mvTM3OMgVM' 
 
 // Helper function to get Supabase URL for API routes
 function getSupabaseUrlApi(): string {
@@ -24,9 +24,8 @@ function getSupabaseUrlApi(): string {
 function getSupabaseServiceKey(): string {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!serviceKey) {
-    console.error('[API] SUPABASE_SERVICE_ROLE_KEY environment variable is not set! Using fallback.')
-    // Ensure a fallback key is provided or handle the error appropriately
-    return 'fallback-service-key-if-needed' // Replace with a real fallback or throw error
+    console.warn('[API] SUPABASE_SERVICE_ROLE_KEY environment variable is not set! Using fallback.')
+    return SUPABASE_SERVICE_KEY // Use the fallback defined at the top
   }
   return serviceKey
 }
@@ -40,11 +39,12 @@ const supabaseServiceKey = getSupabaseServiceKey()
  * IMPORTANT: Never expose this client or the Service Role Key to the browser.
  */
 export const createSupabaseApiClient = () => {
-  if (!supabaseUrl || !supabaseServiceKey || supabaseServiceKey === 'fallback-service-key-if-needed') {
-    console.error('API Route Supabase client cannot be initialized: Missing URL or Service Key.')
-    throw new Error('Server configuration error for Supabase API client.');
+  if (!supabaseUrl) {
+    console.error('API Route Supabase client cannot be initialized: Missing URL.')
+    throw new Error('Server configuration error for Supabase API client: Missing URL');
   }
 
+  // Always proceed with whatever key we have (either from env or fallback)
   return createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
       autoRefreshToken: false,

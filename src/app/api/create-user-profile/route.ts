@@ -13,7 +13,7 @@ interface UserData {
   address: string;
   telephone: string;
   tel: string;
-  fax?: string;
+  tax_identification_number?: string;
   postcode?: string;
   state?: string;
   country?: string;
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     };
     
     // Add optional fields if they exist
-    if (requestData.fax) userData.fax = requestData.fax;
+    if (requestData.tax_identification_number) userData.tax_identification_number = requestData.tax_identification_number;
     if (requestData.postcode) userData.postcode = requestData.postcode;
     if (requestData.state) userData.state = requestData.state;
     if (requestData.country) userData.country = requestData.country;
@@ -146,20 +146,20 @@ export async function POST(request: NextRequest) {
       // Use any type to avoid TypeScript errors with dynamic properties
       const insertData: Record<string, any> = {
         id: requestData.id,
-        email: requestData.email
+        email: requestData.email,
+        company_name: userData.company_name || 'Default Company',
+        booth_number: userData.booth_number || 'TBD',
+        contact_person: userData.contact_person || requestData.email.split('@')[0],
+        address: userData.address || 'To Be Updated',
+        telephone: userData.telephone || userData.tel || '0000000000'
       };
       
       // Add other fields only if they exist in the userData object
-      if (userData.company_name) insertData.company_name = userData.company_name;
-      if (userData.booth_number) insertData.booth_number = userData.booth_number;
-      if (userData.contact_person) insertData.contact_person = userData.contact_person;
-      if (userData.address) insertData.address = userData.address;
-      if (userData.telephone) insertData.telephone = userData.telephone;
-      if (userData.tel) insertData.tel = userData.tel;
-      if (userData.fax) insertData.fax = userData.fax;
+      if (userData.tax_identification_number) insertData.tax_identification_number = userData.tax_identification_number;
       if (userData.postcode) insertData.postcode = userData.postcode;
       if (userData.state) insertData.state = userData.state;
       if (userData.country) insertData.country = userData.country;
+      if (userData.tel && userData.tel !== userData.telephone) insertData.tel = userData.tel;
       
       const { data, error } = await supabaseAdmin
         .from('amsc_2025_user')

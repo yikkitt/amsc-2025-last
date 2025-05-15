@@ -28,7 +28,7 @@ export interface FormData {
     email?: string;
     tel?: string;
     telephone?: string;
-    fax?: string;
+    tax_identification_number?: string;
     address?: string;
   };
   auth_details?: {

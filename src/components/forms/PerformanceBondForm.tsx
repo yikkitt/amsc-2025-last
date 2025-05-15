@@ -19,7 +19,7 @@ interface PerformanceBondFormProps {
     state?: string
     country?: string
     tel?: string
-    fax?: string
+    tax_identification_number?: string
     email?: string
   } | null
 }
@@ -75,7 +75,7 @@ export default function PerformanceBondForm({ userData }: PerformanceBondFormPro
       },
       address: formData.get('address') as string || userData?.address || '',
       tel: formData.get('tel') as string || userData?.tel || '',
-      fax: formData.get('fax') as string || userData?.fax || '',
+      fax: formData.get('fax') as string || userData?.tax_identification_number || '',
       email: formData.get('email') as string || userData?.email || ''
     };
   };
@@ -302,12 +302,12 @@ export default function PerformanceBondForm({ userData }: PerformanceBondFormPro
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Fax</label>
+                  <label className="block text-sm font-medium mb-2">Tax Identification Number</label>
                   <input 
                     type="tel" 
                     name="fax" 
                     className="w-full border-2 rounded p-2"
-                    defaultValue={userData?.fax || ''} 
+                    defaultValue={userData?.tax_identification_number || ''} 
                   />
                 </div>
               </div>

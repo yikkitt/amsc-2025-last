@@ -12,6 +12,12 @@ interface FasciaNameFormProps {
     company_name: string;
     booth_number: string;
     contact_person?: string;
+    address?: string;
+    postcode?: string;
+    state?: string;
+    country?: string;
+    tel?: string;
+    tax_identification_number?: string;
     email?: string;
   } | null;
 }
@@ -178,8 +184,8 @@ export const FasciaNameForm: React.FC<FasciaNameFormProps> = ({ userData }) => {
     formData.append('postcode', userData?.postcode || '')
     formData.append('state', userData?.state || '')
     formData.append('country', userData?.country || '')
-    formData.append('tel', userData?.tel || '')
-    formData.append('fax', userData?.fax || '')
+    formData.append('telephone', userData?.tel || '')
+    formData.append('tax_identification_number', userData?.tax_identification_number || '')
     formData.append('email', userData?.email || '')
 
     try {

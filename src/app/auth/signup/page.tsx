@@ -17,7 +17,7 @@ const signupSchema = z.object({
   postcode: z.string().optional(),
   state: z.string().optional(),
   country: z.string().optional(),
-  fax: z.string().optional(),
+  tax_identification_number: z.string().optional(),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string(),
 }).refine(data => data.password === data.confirmPassword, {
@@ -55,7 +55,7 @@ export default function SignupPage() {
         postcode: data.postcode,
         state: data.state,
         country: data.country,
-        fax: data.fax
+        tax_identification_number: data.tax_identification_number
       };
       
       await signUp(data.email, data.password, profile);
@@ -217,15 +217,15 @@ export default function SignupPage() {
             </div>
             
             <div>
-              <label htmlFor="fax" className="block text-sm font-medium text-gray-700">
-                Fax
+              <label htmlFor="tax_identification_number" className="block text-sm font-medium text-gray-700">
+                Tax Identification Number (TIN)
               </label>
               <input
-                id="fax"
-                {...register('fax')}
+                id="tax_identification_number"
+                {...register('tax_identification_number')}
                 type="text"
                 className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Fax (optional)"
+                placeholder="TIN (Enter N/A for foreign clients)"
               />
             </div>
             

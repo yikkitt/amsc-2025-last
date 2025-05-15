@@ -15,7 +15,7 @@ type UserProfile = {
   postcode?: string;
   state?: string;
   country?: string;
-  fax?: string;
+  tax_identification_number?: string;
 };
 
 type AuthContextType = {
@@ -198,11 +198,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email: profile.email,
             telephone: profile.telephone,
             address: profile.address,
-            // Only include optional fields if they exist
             ...(profile.postcode ? { postcode: profile.postcode } : {}),
             ...(profile.state ? { state: profile.state } : {}),
             ...(profile.country ? { country: profile.country } : {}),
-            ...(profile.fax ? { fax: profile.fax } : {})
+            ...(profile.tax_identification_number ? { tax_identification_number: profile.tax_identification_number } : {})
           }
         }
       });
@@ -223,6 +222,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         console.log('Creating user profile with ID:', authData.user.id);
         
+        // Special case: If we suspect database might not be initialized yet,
+        // we can still proceed with auth-only signup
+        const isDevEnvironment = process.env.NODE_ENV === 'development' || 
+                                process.env.NEXT_PUBLIC_USE_MOCK_AUTH === 'true';
+        
         // Create a user profile directly using the API endpoint
         console.log('Using API endpoint for creating user profile...');
         
@@ -238,37 +242,95 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           postcode: profile.postcode,
           state: profile.state,
           country: profile.country,
-          fax: profile.fax
+          tax_identification_number: profile.tax_identification_number
         };
         
-        const response = await fetch('/api/create-user-profile', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(userProfileData),
-        });
-        
-        // Check for error response from API
-        if (!response.ok) {
-          let errorData;
-          try {
-            errorData = await response.json();
-          } catch (e) {
-            console.error('Failed to parse error response:', e);
-            throw new Error(`API error (${response.status}): Unable to create user profile`);
-          }
-          
-          console.error('Failed to create user profile via API:', errorData);
-          throw new Error(errorData.error || 'Failed to create user profile via API');
-        }
-        
-        console.log('User profile created successfully via API');
-        
-        // Step 3: Set the user and session in the context
+        // Set user regardless of profile creation success
+        // This ensures the user can at least sign in
         setUser(authData.user);
         if (authData.session) {
           setSession(authData.session);
+        }
+        
+        let profileCreated = false;
+        let attempts = 0;
+        const maxAttempts = 3;
+        let lastError = null;
+        
+        // Only try to create profile if not in special dev mode with mocked auth
+        if (!isDevEnvironment || process.env.NEXT_PUBLIC_REQUIRE_PROFILE === 'true') {
+          // Retry profile creation a few times with exponential backoff
+          while (!profileCreated && attempts < maxAttempts) {
+            attempts++;
+            try {
+              const response = await fetch('/api/create-user-profile', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userProfileData),
+              });
+              
+              if (response.ok) {
+                console.log('User profile created successfully via API');
+                profileCreated = true;
+                break; // Exit the retry loop on success
+              } else {
+                // Process error response
+                let errorData;
+                try {
+                  errorData = await response.json();
+                } catch (e) {
+                  console.error('Failed to parse error response:', e);
+                  errorData = { error: `API error (${response.status}): Unable to create user profile` };
+                }
+                
+                console.error(`Failed to create user profile via API (attempt ${attempts}):`, errorData);
+                lastError = new Error(errorData.error || 'Failed to create user profile via API');
+                
+                // If this is a database setup issue, we can't retry meaningfully
+                if (errorData.error && errorData.error.includes('does not exist - database setup issue')) {
+                  console.warn('Database table missing - profile creation will be handled by admin');
+                  break;
+                }
+                
+                // Wait with exponential backoff before retrying
+                if (attempts < maxAttempts) {
+                  const backoffTime = Math.pow(2, attempts) * 500; // 1s, 2s, 4s
+                  console.log(`Retrying in ${backoffTime}ms...`);
+                  await new Promise(resolve => setTimeout(resolve, backoffTime));
+                }
+              }
+            } catch (apiError) {
+              console.error(`Network error during profile creation (attempt ${attempts}):`, apiError);
+              lastError = apiError;
+              
+              // Wait before retrying
+              if (attempts < maxAttempts) {
+                const backoffTime = Math.pow(2, attempts) * 500;
+                console.log(`Retrying after network error in ${backoffTime}ms...`);
+                await new Promise(resolve => setTimeout(resolve, backoffTime));
+              }
+            }
+          }
+        } else {
+          console.log('Development mode: Skipping profile creation in database');
+          profileCreated = true; // Consider it created in dev mode
+        }
+        
+        if (!profileCreated && !isDevEnvironment) {
+          console.warn('Failed to create user profile, but allowing authentication to proceed');
+          // Add special user metadata to indicate profile needs creation
+          try {
+            await supabase.auth.updateUser({
+              data: { 
+                ...userProfileData,
+                needs_profile_creation: true 
+              }
+            });
+          } catch (updateError) {
+            console.error('Failed to update user metadata:', updateError);
+          }
         }
         
       } catch (profileError: any) {

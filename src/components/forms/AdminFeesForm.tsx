@@ -19,7 +19,7 @@ interface AdminFeesFormProps {
     state?: string
     country?: string
     tel?: string
-    fax?: string
+    tax_identification_number?: string
     email?: string
   } | null
 }
@@ -112,7 +112,7 @@ export default function AdminFeesForm({ userData }: AdminFeesFormProps) {
           contact_person: userData?.contact_person || '',
           email: userData?.email || '',
           tel: userData?.tel || '',
-          fax: userData?.fax || '',
+          tax_identification_number: userData?.tax_identification_number || '',
           address: userData?.address || '',
         },
         square_metre: sqm,
@@ -135,7 +135,6 @@ export default function AdminFeesForm({ userData }: AdminFeesFormProps) {
           address: formData.get('auth_address')?.toString() || userData?.address || '',
           email: formData.get('auth_email')?.toString() || userData?.email || '',
           tel: formData.get('auth_tel')?.toString() || userData?.tel || '',
-          fax: formData.get('auth_fax')?.toString() || userData?.fax || '',
           signature: formData.get('auth_signature')?.toString() || '',
           date: formData.get('auth_date')?.toString() || new Date().toISOString()
         }

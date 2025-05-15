@@ -2,6 +2,7 @@
 const { configureWebpack } = require('./module-resolve');
 
 const nextConfig = {
+  output: 'standalone',
   reactStrictMode: true,
   swcMinify: true,
   // Workaround for issues with node_modules
@@ -24,13 +25,16 @@ const nextConfig = {
     adjustFontFallbacks: true, // Improve font display
     adjustFontFallbacksWithSizeAdjust: true, // Better font size adjustments
     // Enables more efficient code splitting
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+    optimizePackageImports: ['lucide-react'],
+    serverComponentsExternalPackages: [],
   },
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**',
+        hostname: 'kiotgupdmepdyiscbrmb.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
       },
     ],
     unoptimized: false, // Ensure image optimization is enabled
@@ -41,10 +45,11 @@ const nextConfig = {
     dangerouslyAllowSVG: true, // Allow SVG optimization
     contentDispositionType: 'attachment', // Better caching for images
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    domains: ['kiotgupdmepdyiscbrmb.supabase.co'],
   },
   
   // Add webpack configuration to handle Node.js built-in modules (Webpack 5 compatible)
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, dev }) => {
     // First apply our custom webpack configuration
     config = configureWebpack(config, { isServer });
     
@@ -55,6 +60,9 @@ const nextConfig = {
         fs: false,
         path: false,
         os: false,
+        net: false,
+        tls: false,
+        crypto: false,
       };
     }
     
@@ -97,34 +105,40 @@ const nextConfig = {
     }
     
     // Optimize images at build time
-    config.module.rules.push({
-      test: /\.(jpe?g|png|svg|webp|avif)$/i,
-      use: [
-        {
-          loader: 'image-webpack-loader',
-          options: {
-            mozjpeg: {
-              progressive: true,
-              quality: 75,
-            },
-            optipng: {
-              enabled: true,
-              optimizationLevel: 5,
-            },
-            pngquant: {
-              quality: [0.65, 0.80],
-              speed: 4,
-            },
-            webp: {
-              quality: 75,
-              method: 6,
-            },
-            gifsicle: {
-              interlaced: false,
+    if (!dev) {
+      config.module.rules.push({
+        test: /\.(png|jpe?g|gif|svg)$/i,
+        use: [
+          {
+            loader: 'image-webpack-loader',
+            options: {
+              mozjpeg: {
+                progressive: true,
+                quality: 65,
+              },
+              optipng: {
+                enabled: false,
+              },
+              pngquant: {
+                quality: [0.65, 0.90],
+                speed: 4,
+              },
+              gifsicle: {
+                interlaced: false,
+              },
+              webp: {
+                quality: 75,
+              },
             },
           },
-        },
-      ],
+        ],
+      });
+    }
+    
+    // Add loader for PDF generation
+    config.module.rules.push({
+      test: /\.node$/,
+      use: 'null-loader',
     });
     
     return config;
@@ -190,7 +204,40 @@ const nextConfig = {
           }
         ],
       },
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
+          },
+        ],
+      },
     ];
+  },
+  // Handle browser polyfills
+  transpilePackages: [
+    '@react-pdf/renderer', 
+    'react-pdf',
+    'jspdf',
+    'jspdf-autotable',
+  ],
+  // Ensure public files are available
+  publicRuntimeConfig: {
+    staticFolder: '/public',
+  },
+  // Add redirects if needed
+  async redirects() {
+    return [
+      {
+        source: '/forms',
+        destination: '/dashboard',
+        permanent: false,
+      },
+    ];
+  },
+  generateBuildId: async () => {
+    return `build-${new Date().toISOString()}`;
   },
 }
 

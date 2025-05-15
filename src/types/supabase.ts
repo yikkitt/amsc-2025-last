@@ -21,6 +21,7 @@ export interface Database {
           job_title: string | null
           address: string | null
           telephone: string | null
+          tax_identification_number: string | null
           avatar_url: string | null
           updated_at: string | null
         }
@@ -35,6 +36,7 @@ export interface Database {
           job_title?: string | null
           address?: string | null
           telephone?: string | null
+          tax_identification_number?: string | null
           avatar_url?: string | null
           updated_at?: string | null
         }
@@ -49,6 +51,7 @@ export interface Database {
           job_title?: string | null
           address?: string | null
           telephone?: string | null
+          tax_identification_number?: string | null
           avatar_url?: string | null
           updated_at?: string | null
         }
