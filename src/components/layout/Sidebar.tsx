@@ -203,7 +203,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   
   return (
-    <div className="w-64 bg-white border-r border-gray-200 min-h-screen p-4">
+    <div className="w-72 bg-white border-r border-gray-200 min-h-screen p-4">
       <div className="flex justify-center mb-6">
         <Link href="/dashboard">
           <Image 
