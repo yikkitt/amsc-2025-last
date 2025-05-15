@@ -360,8 +360,8 @@ export default function ContractorPassForm({ userData }: ContractorPassFormProps
               <h4 className="font-semibold text-blue-700 mb-4">Important Notes:</h4>
               <ol className="list-decimal list-inside space-y-2 text-gray-700">
                 <li>Each contractor pass is priced at RM 25.00 after the deadline of June 30, 2025.</li>
-                <li>Official Contractor will not issue any contractor badges during tear down, therefore please ensure that you have order in advance the sufficient number of badges to be used during build up as well as the tear down.</li>
-                <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be received by this Order Form. All bank charges must be borne by remitter. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-3, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 800 984924. Bank Swift Code: CIBBMYKL</li>
+                <li>Official Contractor will not issue any contractor badges during tear-down, therefore please ensure that you have ordered in advance the sufficient number of badges to be used during build-up as well as the tear-down.</li>
+                <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be received with this Order Form. All bank charges must be borne by remitter. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-3, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 800 984924. Bank Swift Code: CIBBMYKL</li>
               </ol>
             </div>
 

@@ -135,7 +135,7 @@ export default function PerformanceBondForm({ userData }: PerformanceBondFormPro
       <div className="text-center mb-8 border-b border-gray-200 pb-6">
         <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 6</h1>
         <h2 className="text-xl font-semibold mb-4">PERFORMANCE BOND FORM</h2>
-        <p className="text-gray-600 mb-2">DEADLINE: 2nd July 2025</p>
+        <p className="text-gray-600 mb-2">DEADLINE: 30th June 2025</p>
         <h3 className="text-lg font-semibold mb-2">Aesthetic Medicine & Surgery Conference & Exhibition 2025</h3>
         <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
       </div>
@@ -218,11 +218,11 @@ export default function PerformanceBondForm({ userData }: PerformanceBondFormPro
 
           {/* Performance Bond Information */}
           <div className="mb-6 space-y-4">
-            <p className="text-justify">Before permission is granted for a non-official contractor to work at the exhibition, the non-official contractor is required to place a performance bond (refundable) by rm. RM 5,000.00 (37 sqm and below), RM 10,000.00 (37 sqm and 100 sqm) and RM 15,000.00 (101 sqm and above) per contractor per stand with Blue Circle Plus Sdn. Bhd. and sign an undertaking letter to guarantee conduct, proper schedule of production and observance of the exhibition rules and regulations.</p>
+            <p className="text-justify">Before permission is granted for a non-official contractor to work at the exhibition, the non-official contractor is required to place a Performance Bond (Refundable) of RM 5,000.00 (37 sqm and below), RM 10,000.00 (between 38 sqm and 100 sqm) and RM 15,000.00 (101 sqm and above) per contractor per stand with Blue Circle Plus Sdn. Bhd. and sign an undertaking letter to guarantee conduct, proper schedule of production and observance of the exhibition rules and regulations.</p>
             
-            <p className="text-justify">Performance bond (refundable) is to cover of any damages done during the set-up, exhibition period and dismantling.</p>
+            <p className="text-justify">Performance Bond (Refundable) is to cover any damages done during the set-up, exhibition period and dismantling.</p>
             
-            <p className="text-justify">Performance bond (refundable) is to be paid before any work can commence on-site. The Performance bond (refundable) shall be held by the Official Contractor until the completion of tear and shall be refunded without interest to the non-official contractor within 30 days from the completion of exhibition after deduction of:-</p>
+            <p className="text-justify">Performance Bond (Refundable) is to be paid before any work can commence on-site. The Performance Bond (Refundable) shall be held by the Official Contractor until the completion of tear-down and shall be refunded without interest to the non-official contractor within 30 days from the completion of exhibition after deduction of:-</p>
           </div>
 
           {/* Damages List */}

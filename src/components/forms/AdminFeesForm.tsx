@@ -177,7 +177,7 @@ export default function AdminFeesForm({ userData }: AdminFeesFormProps) {
         <div className="text-center mb-8 border-b border-gray-200 pb-6">
           <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 7</h1>
           <h2 className="text-xl font-semibold mb-4">ADMINISTRATION FEE FORM</h2>
-          <p className="text-gray-600 mb-2">DEADLINE: 2nd July 2025</p>
+          <p className="text-gray-600 mb-2">DEADLINE: 30th June 2025</p>
           <h3 className="text-lg font-semibold mb-2">Aesthetic Medicine & Surgery Conference & Exhibition 2025</h3>
           <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
         </div>
@@ -300,7 +300,7 @@ export default function AdminFeesForm({ userData }: AdminFeesFormProps) {
             <div className="mb-8 bg-blue-50 p-4 rounded-lg">
               <h4 className="font-semibold text-blue-700 mb-4">Important Notes:</h4>
               <ol className="list-decimal list-inside space-y-2 text-gray-700">
-                <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be received by this Order Form.</li>
+                <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be accompanied by this Order Form.</li>
                 <li>All bank charges must be borne by remitter.</li>
                 <li>Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-3, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia.</li>
                 <li>Bank Account No: 800 984924</li>
