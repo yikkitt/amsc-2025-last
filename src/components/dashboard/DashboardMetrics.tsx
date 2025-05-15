@@ -33,7 +33,7 @@ export default function DashboardMetrics({
   completedForms = 0, 
   totalForms = 7, 
   daysRemaining = 30, 
-  nextDeadline = 'June 30, 2025' 
+  nextDeadline = '30th June 2025' 
 }: DashboardMetricsProps) {
   const completionPercentage = totalForms > 0 
     ? Math.round((completedForms / totalForms) * 100) 

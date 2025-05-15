@@ -14,29 +14,29 @@ const deadlines: Deadline[] = [
   {
     id: 'd1',
     title: 'Performance Bond Form Submission',
-    date: 'June 30, 2025',
+    date: '30th June 2025',
     daysLeft: 30,
     priority: 'high'
   },
   {
     id: 'd2',
     title: 'Contractor Pass Application',
-    date: 'July 15, 2025',
-    daysLeft: 45,
+    date: '30th June 2025',
+    daysLeft: 30,
     priority: 'medium'
   },
   {
     id: 'd3',
     title: 'Electrical & Lighting Order',
-    date: 'July 20, 2025',
-    daysLeft: 50,
+    date: '30th June 2025',
+    daysLeft: 30,
     priority: 'medium'
   },
   {
     id: 'd4',
     title: 'Special Design Submission',
-    date: 'July 25, 2025',
-    daysLeft: 55,
+    date: '30th June 2025',
+    daysLeft: 30,
     priority: 'low'
   }
 ];

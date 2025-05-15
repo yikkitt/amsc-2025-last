@@ -299,7 +299,7 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
                   {lateCharge > 0 && (
                     <tr>
                       <td colSpan={5} className="border border-gray-300 p-2 text-center italic text-sm text-gray-600">
-                        A SURCHARGE OF 30% will be imposed for orders received after June 30, 2025.
+                        A SURCHARGE OF 30% will be imposed for orders received after 30th June 2025.
                       </td>
                       <td className="border border-gray-300 p-2 text-right font-medium">Late Charge (30%):</td>
                       <td className="border border-gray-300 p-2 text-right">{lateCharge.toFixed(2)}</td>
@@ -416,7 +416,7 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
                   </tr>
                   <tr>
                     <td colSpan={5} className="border border-gray-300 p-2 text-center italic">
-                      A SURCHARGE OF 30% will be imposed for orders received after June 30, 2025.
+                      A SURCHARGE OF 30% will be imposed for orders received after 30th June 2025.
                     </td>
                     <td className="border border-gray-300 p-2 text-right font-medium">Late Charge (30%):</td>
                     <td className="border border-gray-300 p-2 text-right">{lateCharge.toFixed(2)}</td>
@@ -435,7 +435,7 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
               <h4 className="font-semibold text-blue-700 mb-4">PLEASE NOTE:</h4>
               <ol className="list-decimal list-inside space-y-2 text-gray-700">
                 <li>All items are on rental basis.</li>
-                <li>A <strong>SURCHARGE OF 30%</strong> will be imposed for orders received after June 30, 2025.</li>
+                <li>A <strong>SURCHARGE OF 30%</strong> will be imposed for orders received after 30th June 2025.</li>
                 <li>A <strong>SURCHARGE OF 50%</strong> will be imposed for orders received on site or on-site alteration/relocation, and is subject to availability.</li>
                 <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be accompanied by this Order Form. All bank charges must be borne by remitter. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-3, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 800 984924. Bank Swift Code: CIBBMYKL</li>
               </ol>

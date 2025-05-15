@@ -39,7 +39,7 @@ export default function DashboardTopCards({ userId }: DashboardTopCardsProps) {
     completedForms: 2,
     totalForms: 7,
     daysRemaining: 57,
-    nextDeadline: 'June 30, 2025'
+    nextDeadline: '30th June 2025'
   };
   
   const completionPercentage = metrics.totalForms > 0 
