@@ -118,7 +118,7 @@ export default function AdminFeesForm({ userData }: AdminFeesFormProps) {
         square_metre: sqm,
         items: [
           {
-            description: "Admin Fee to Construct / Decorate Special Design Stand (Non-Refundable)",
+            description: "Administration Fee to Construct / Decorate Special Design Stand (Non-Refundable)",
             quantity: 1,
             unitCost: 50.00,
             price_per_sqm: 50.00,
@@ -215,7 +215,7 @@ export default function AdminFeesForm({ userData }: AdminFeesFormProps) {
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-300 p-2">Admin Fee to Construct / Decorate Special Design Stand (Non-Refundable)</td>
+                    <td className="border border-gray-300 p-2">Administration Fee to Construct / Decorate Special Design Stand (Non-Refundable)</td>
                     <td className="border border-gray-300 p-2 text-center">{squareMetre}</td>
                     <td className="border border-gray-300 p-2 text-right">50.00</td>
                     <td className="border border-gray-300 p-2 text-right">{calculateAmount(parseFloat(squareMetre)).toFixed(2)}</td>
@@ -283,7 +283,7 @@ export default function AdminFeesForm({ userData }: AdminFeesFormProps) {
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-gray-300 p-2">Admin Fee to Construct / Decorate Special Design Stand (Non-Refundable)</td>
+                    <td className="border border-gray-300 p-2">Administration Fee to Construct / Decorate Special Design Stand (Non-Refundable)</td>
                     <td className="border border-gray-300 p-2 text-center">{squareMetre}</td>
                     <td className="border border-gray-300 p-2 text-right">50.00</td>
                     <td className="border border-gray-300 p-2 text-right">{calculateAmount(parseFloat(squareMetre)).toFixed(2)}</td>

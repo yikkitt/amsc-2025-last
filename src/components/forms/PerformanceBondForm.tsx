@@ -284,7 +284,7 @@ export default function PerformanceBondForm({ userData }: PerformanceBondFormPro
             <h4 className="font-bold">Important Note:</h4>
             <ol className="list-decimal list-inside space-y-2 ml-4">
               <li>Please issue separate cheque for the performance bond. For bank in payment, kindly attach a copy of bank in slip as confirmation.</li>
-              <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be accompanied by this Order Form. All bank charges must be borne by remitter. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-6, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 800 9085824, Bank Swift Code: CIBBMYKL</li>
+              <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be accompanied by this Order Form. All bank charges must be borne by remitter. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-3, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 800 984924, Bank Swift Code: CIBBMYKL</li>
             </ol>
           </div>
 

@@ -109,8 +109,8 @@ export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) 
   }
 
   const calculateSurcharge = () => {
-    // 30% surcharge for late orders
-    return calculateSubTotal() * 0.3
+    // 50% surcharge for late orders
+    return calculateSubTotal() * 0.5
   }
 
   const calculateGrandTotal = () => {
@@ -215,7 +215,7 @@ export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) 
         <div className="text-center mb-8 border-b border-gray-200 pb-6">
           <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 5</h1>
           <h2 className="text-xl font-semibold mb-4">PRINTING ORDER FORM</h2>
-          <p className="text-gray-600 mb-2">DEADLINE: 2nd July 2025</p>
+          <p className="text-gray-600 mb-2">DEADLINE: 30th June 2025</p>
           <h3 className="text-lg font-semibold mb-2">Aesthetic Medicine & Surgery Conference & Exhibition 2025</h3>
           <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
         </div>
@@ -415,11 +415,11 @@ export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) 
             <div className="space-y-2 bg-blue-50 p-4 rounded-lg">
               <h4 className="font-semibold text-blue-700 mb-4">PLEASE NOTE:</h4>
               <ol className="list-decimal list-inside space-y-2 text-gray-700 ml-4">
-                <li>Kindly send in the final artwork in AI format / high resolution PDF as well as the same copy in JPEG for reference.</li>
+                <li>Kindly send in the final artwork in AI format / high resolution PDF, as well as the same copy in JPEG for reference.</li>
                 <li>All artwork must be provided 2 weeks before the event date.</li>
                 <li>Any cancellation after the deadline will be charged 50% on the item priced. 100% cancellation fee will be charged for order cancelled after deadline.</li>
-                <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be accompanied by this Order Form. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-6, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 8010655824, Bank Swift Code: CIBBMYKL</li>
-                <li>Late orders: 30% surcharge will be charged for any late orders received after the deadline 30 June 2025, while orders received on site will be subject to a 50% surcharge.</li>
+                <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be accompanied by this Order Form. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-3, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 800 984924, Bank Swift Code: CIBBMYKL</li>
+                <li>Late orders: 50% surcharge will be charged for any late orders received after the deadline 30 June 2025, while orders received on site will be subject to a 50% surcharge.</li>
               </ol>
             </div>
 
