@@ -10,9 +10,11 @@ import {
   ChevronDown,
   ChevronRight,
   Bookmark,
-  Phone
+  Phone,
+  Menu,
+  X
 } from 'lucide-react'
-import { useState, memo } from 'react'
+import { useState, memo, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
 
@@ -199,59 +201,110 @@ const AppendixSection = memo(({ pathname }: { pathname: string | null }) => {
   );
 });
 
+// Mobile menu toggle button
+const MobileMenuToggle = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) => (
+  <button
+    onClick={toggle}
+    className="fixed top-4 left-4 z-50 lg:hidden bg-white p-2 rounded-full shadow-md"
+    aria-label={isOpen ? "Close menu" : "Open menu"}
+  >
+    {isOpen ? <X size={24} /> : <Menu size={24} />}
+  </button>
+);
+
 export default function Sidebar() {
   const pathname = usePathname();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // Handle window resize
+  useEffect(() => {
+    setIsMounted(true);
+    
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) { // lg breakpoint
+        setIsMobileMenuOpen(false);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+  
+  if (!isMounted) {
+    // Return a placeholder with the same width to avoid layout shift
+    return <div className="hidden lg:block w-72 shrink-0" />;
+  }
   
   return (
-    <div className="w-72 bg-white border-r border-gray-200 min-h-screen p-4">
-      <div className="flex justify-center mb-6">
-        <Link href="/dashboard">
-          <Image 
-            src="/images/amsc-logo.png" 
-            alt="AMSC Logo" 
-            width={120} 
-            height={60} 
-            className="h-16 w-auto" 
-            priority
-            quality={85}
-            loading="eager"
-            fetchPriority="high"
-          />
-        </Link>
-      </div>
-      <div className="space-y-4">
-        <Link 
-          href="/dashboard" 
-          className={cn(
-            "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors",
-            pathname === '/dashboard' 
-              ? "bg-blue-50 text-blue-700" 
-              : "text-gray-700 hover:bg-gray-100"
-          )}
-          prefetch={true}
-        >
-          <LayoutDashboard className="w-5 h-5" />
-          <span className="font-medium">Dashboard</span>
-        </Link>
+    <>
+      <MobileMenuToggle isOpen={isMobileMenuOpen} toggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
+      
+      <div className={cn(
+        "fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden transition-opacity duration-300",
+        isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+      )} 
+      onClick={() => setIsMobileMenuOpen(false)}
+      />
+      
+      <div className={cn(
+        "fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-gray-200 p-4 overflow-y-auto transition-transform duration-300 lg:transition-none lg:translate-x-0 lg:relative",
+        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+      )}>
+        <div className="flex justify-center mb-6">
+          <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+            <Image 
+              src="/images/amsc-logo.png" 
+              alt="AMSC Logo" 
+              width={120} 
+              height={60} 
+              className="h-16 w-auto" 
+              priority
+              quality={85}
+              loading="eager"
+              fetchPriority="high"
+            />
+          </Link>
+        </div>
+        <div className="space-y-4">
+          <Link 
+            href="/dashboard" 
+            className={cn(
+              "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors",
+              pathname === '/dashboard' 
+                ? "bg-blue-50 text-blue-700" 
+                : "text-gray-700 hover:bg-gray-100"
+            )}
+            prefetch={true}
+          >
+            <LayoutDashboard className="w-5 h-5" />
+            <span className="font-medium">Dashboard</span>
+          </Link>
 
-        <OrderFormsSection pathname={pathname} />
-        <InformationSection pathname={pathname} />
-        <AppendixSection pathname={pathname} />
+          <OrderFormsSection pathname={pathname} />
+          <InformationSection pathname={pathname} />
+          <AppendixSection pathname={pathname} />
 
-        <Link 
-          href="/dashboard/contact-us" 
-          className={cn(
-            "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors",
-            pathname === '/dashboard/contact-us' 
-              ? "bg-blue-50 text-blue-700" 
-              : "text-gray-700 hover:bg-gray-100"
-          )}
-          prefetch={true}
-        >
-          <Phone className="w-5 h-5" />
-          <span className="font-medium">Contact Us</span>
-        </Link>
+          <Link 
+            href="/dashboard/contact-us" 
+            className={cn(
+              "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors",
+              pathname === '/dashboard/contact-us' 
+                ? "bg-blue-50 text-blue-700" 
+                : "text-gray-700 hover:bg-gray-100"
+            )}
+            prefetch={true}
+          >
+            <Phone className="w-5 h-5" />
+            <span className="font-medium">Contact Us</span>
+          </Link>
+        </div>
       </div>
-    </div>
+    </>
   )
 } 

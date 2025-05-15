@@ -263,28 +263,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           while (!profileCreated && attempts < maxAttempts) {
             attempts++;
             try {
-              const response = await fetch('/api/create-user-profile', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(userProfileData),
-              });
-              
+        const response = await fetch('/api/create-user-profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(userProfileData),
+        });
+        
               if (response.ok) {
                 console.log('User profile created successfully via API');
                 profileCreated = true;
                 break; // Exit the retry loop on success
               } else {
                 // Process error response
-                let errorData;
-                try {
-                  errorData = await response.json();
-                } catch (e) {
-                  console.error('Failed to parse error response:', e);
+          let errorData;
+          try {
+            errorData = await response.json();
+          } catch (e) {
+            console.error('Failed to parse error response:', e);
                   errorData = { error: `API error (${response.status}): Unable to create user profile` };
-                }
-                
+          }
+          
                 console.error(`Failed to create user profile via API (attempt ${attempts}):`, errorData);
                 lastError = new Error(errorData.error || 'Failed to create user profile via API');
                 

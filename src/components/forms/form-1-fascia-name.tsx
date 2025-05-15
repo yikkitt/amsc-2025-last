@@ -9,6 +9,9 @@ import { PdfButton } from '@/components/ui/PdfButton'
 import Link from 'next/link'
 import Image from 'next/image'
 import FormDisclaimer from '@/components/ui/FormDisclaimer'
+import FormLoadingWrapper from '@/components/wrappers/FormLoadingWrapper'
+import FormProgressIndicator from '@/components/ui/FormProgressIndicator'
+import useFormProgress from '@/hooks/useFormProgress'
 
 interface FasciaNameFormProps {
   userData?: {
@@ -36,6 +39,17 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
   const supabase = getSupabaseBrowserClient()
   const [fasciaName, setFasciaName] = useState<string[]>(Array(25).fill(''))
   const inputRefs = useRef<Array<HTMLInputElement | null>>([])
+  
+  // Initialize form progress tracking
+  const formProgress = useFormProgress({
+    steps: [
+      { id: 'form-info', label: 'Form Information' },
+      { id: 'fascia-name', label: 'Fascia Name' },
+      { id: 'authorization', label: 'Authorization' },
+      { id: 'review', label: 'Review & Submit' }
+    ],
+    initialStep: 'form-info'
+  });
 
   // Check if form has been previously submitted
   useEffect(() => {
@@ -222,345 +236,324 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto">
-      <div ref={containerRef} className="bg-white p-6 rounded-lg shadow">
-        {/* Form Header */}
-        <div className="text-center mb-8 border-b border-gray-200 pb-6">
-          <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 1</h1>
-          <h2 className="text-xl font-semibold mb-4">FASCIA NAME</h2>
-          <p className="text-gray-600 mb-2">DEADLINE: 30th June 2025</p>
-          <p className="text-red-500 font-semibold mb-2">MANDATORY FORM</p>
-          <h3 className="text-lg font-semibold mb-2">Aesthetic Medicine & Surgery Conference & Exhibition 2025</h3>
-          <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
-        </div>
-
-        {/* User Data Container */}
-        <UserDataContainer userData={userData} />
-
-        {isLoading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            <span className="ml-3 text-gray-600">Checking submission status...</span>
+    <FormLoadingWrapper isLoading={isLoading} fallbackMessage="Loading Fascia Name Form...">
+      <div className="w-full max-w-5xl mx-auto">
+        <div ref={containerRef} className="bg-white p-6 rounded-lg shadow">
+          {/* Form Header */}
+          <div className="text-center mb-8 border-b border-gray-200 pb-6">
+            <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 1</h1>
+            <h2 className="text-xl font-semibold mb-4">FASCIA NAME</h2>
+            <p className="text-gray-600 mb-2">DEADLINE: 30th June 2025</p>
+            <p className="text-red-500 font-semibold mb-2">MANDATORY FORM</p>
+            <h3 className="text-lg font-semibold mb-2">Aesthetic Medicine & Surgery Conference & Exhibition 2025</h3>
+            <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
           </div>
-        ) : submitted ? (
-          <div className="space-y-8">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-              <div className="text-green-600 font-semibold text-lg mb-2">
-                Form Successfully Submitted
+
+          {/* Progress Indicator */}
+          <FormProgressIndicator 
+            steps={formProgress.steps}
+            currentStep={formProgress.currentStepId}
+            className="mb-6"
+          />
+
+          {/* User Data Container */}
+          <UserDataContainer userData={userData} />
+
+          {submitted ? (
+            <div className="space-y-8">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+                <div className="text-green-600 font-semibold text-lg mb-2">
+                  Form Successfully Submitted
+                </div>
+                <p className="text-green-700">
+                  Thank you for submitting your fascia name. Your submission has been received.
+                </p>
               </div>
-              <p className="text-gray-600">
-                You have already submitted this form. You can download a PDF copy or return to the dashboard.
-              </p>
-            </div>
-
-            {/* Display submitted details in read-only mode */}
-            <div className="mb-8 bg-gray-50 p-6 rounded-lg">
-              <h4 className="font-semibold text-blue-700 mb-4">Submitted Details:</h4>
-              <div className="space-y-4">
-                <div>
-                  <p className="font-medium">Fascia Name:</p>
-                  <div className="flex flex-col gap-2 mt-2">
-                    {/* First row: 13 boxes */}
-                    <div className="flex gap-1 justify-center">
-                      {fasciaName.slice(0, 13).map((char, i) => (
-                        <div
-                          key={i}
-                          className="w-10 h-10 border border-gray-300 rounded flex items-center justify-center bg-white text-center uppercase font-bold"
-                        >
-                          {char}
-                        </div>
-                      ))}
-                    </div>
-                    {/* Second row: 12 boxes */}
-                    <div className="flex gap-1 justify-center">
-                      {fasciaName.slice(13).map((char, i) => (
-                        <div
-                          key={i + 13}
-                          className="w-10 h-10 border border-gray-300 rounded flex items-center justify-center bg-white text-center uppercase font-bold"
-                        >
-                          {char}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <p className="font-medium">Company Name:</p>
-                  <p>{submittedData?.company_data?.company_name || userData?.company_name || ''}</p>
-                </div>
-                <div>
-                  <p className="font-medium">Booth Number:</p>
-                  <p>{submittedData?.company_data?.booth_number || userData?.booth_number || ''}</p>
-                </div>
-              </div>
-            </div>
-
-            <FormDisclaimer />
-
-            <div className="flex justify-center space-x-6">
-              <PdfButton
-                formData={submittedData || {}}
-                formType={1}
-                containerRef={containerRef}
-                className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
-              />
-              <Link
-                href="/dashboard"
-                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
-              >
-                Return to Dashboard
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-8" ref={formRef}>
-            {/* Instructions */}
-            <div className="mb-8 p-4 bg-gray-50 rounded-lg">
-              <p className="text-gray-700 mb-4">This form must be completed and returned by all Standard Shell Scheme exhibitors.</p>
-              <p className="font-bold mb-4">PLEASE USE BLOCK LETTERS</p>
-              <label className="block font-bold">
-                1. FASCIA NAME (A maximum of 25 letterings only can be accommodated)
-              </label>
-            </div>
-
-            {/* Fascia Name Input */}
-            <div className="mb-8">
-              <div className="flex flex-col gap-2">
-                {/* First row: 13 boxes */}
-                <div className="flex gap-1 justify-center">
-                  {fasciaName.slice(0, 13).map((_, i) => (
-                    <input
-                      key={i}
-                      ref={el => { inputRefs.current[i] = el }}
-                      type="text"
-                      maxLength={1}
-                      className="w-10 h-10 border border-gray-300 rounded text-center uppercase font-bold focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      value={fasciaName[i] || ''}
-                      onChange={(e) => handleInputChange(i, e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(i, e)}
-                      onPaste={(e) => handlePaste(i, e)}
-                      autoComplete="off"
-                    />
-                  ))}
-                </div>
-                {/* Second row: 12 boxes */}
-                <div className="flex gap-1 justify-center">
-                  {fasciaName.slice(13).map((_, i) => (
-                    <input
-                      key={i + 13}
-                      ref={el => { inputRefs.current[i + 13] = el }}
-                      type="text"
-                      maxLength={1}
-                      className="w-10 h-10 border border-gray-300 rounded text-center uppercase font-bold focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      value={fasciaName[i + 13] || ''}
-                      onChange={(e) => handleInputChange(i + 13, e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(i + 13, e)}
-                      onPaste={(e) => handlePaste(i + 13, e)}
-                      autoComplete="off"
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Important Notes */}
-            <div className="mb-8 bg-blue-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-blue-700 mb-4">Important Note:</h4>
-              <ol className="list-decimal list-inside space-y-2 text-gray-700">
-                <li>Fascia Name will be in upper case, standard 70mm high sticker English letterings (maximum 25 letterings)</li>
-                <li>Failure to submit the request after the deadline, the name on signed contract will be used</li>
-                <li>Any changes on site will be charged RM 100.00/set of fascia name</li>
-              </ol>
-            </div>
-
-            {/* Standard Booth Diagram */}
-            <div className="mb-8">
-              <h4 className="font-semibold text-blue-700 mb-4">2. STANDARD BOOTH</h4>
-              <div className="border border-gray-200 rounded-lg overflow-hidden p-6">
-                {/* Shell scheme booth example image */}
+              
+              {/* Display form data */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                <h3 className="text-lg font-semibold mb-4">Your Submission</h3>
+                
                 <div className="mb-6">
-                  <Image
-                    src="/images/shell-shceme-booth-example.png"
-                    alt="Shell Scheme Booth Example"
-                    width={600}
-                    height={400}
-                    className="mx-auto rounded-lg shadow-sm"
-                  />
+                  <h4 className="font-medium text-gray-700 mb-2">Fascia Name</h4>
+                  <div className="bg-white border border-gray-300 rounded-lg p-4 font-mono text-lg text-center">
+                    {submittedData?.fascia_name || ''}
+                  </div>
                 </div>
                 
-                {/* Booth Package */}
-                <div>
-                  <h5 className="font-bold mb-4 text-center">Booth Package Entitlement (9sqm)</h5>
-                  <table className="w-full border-collapse">
-                    <tbody>
-                      <tr className="border-b border-gray-200">
-                        <td className="py-2">Information Desk</td>
-                        <td className="text-right font-bold">1</td>
-                      </tr>
-                      <tr className="border-b border-gray-200">
-                        <td className="py-2">White Folding Chair</td>
-                        <td className="text-right font-bold">2</td>
-                      </tr>
-                      <tr className="border-b border-gray-200">
-                        <td className="py-2">Waste Paper Bin</td>
-                        <td className="text-right font-bold">1</td>
-                      </tr>
-                      <tr className="border-b border-gray-200">
-                        <td className="py-2">Fluorescent Tube</td>
-                        <td className="text-right font-bold">2</td>
-                      </tr>
-                      <tr>
-                        <td className="py-2">13Amp Power Socket (240Volt)</td>
-                        <td className="text-right font-bold">1</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-medium text-gray-700 mb-2">Authorized By</h4>
+                    <p><span className="font-semibold">Name:</span> {submittedData?.auth_details?.name}</p>
+                    <p><span className="font-semibold">Designation:</span> {submittedData?.auth_details?.designation}</p>
+                    <p><span className="font-semibold">Company:</span> {submittedData?.auth_details?.company}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-700 mb-2">Submission Details</h4>
+                    <p><span className="font-semibold">Date:</span> {new Date(submittedData?.auth_details?.date).toLocaleDateString()}</p>
+                    <p><span className="font-semibold">Email:</span> {submittedData?.auth_details?.email}</p>
+                    <p><span className="font-semibold">Tel:</span> {submittedData?.auth_details?.tel}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* Authorization Section */}
-            <div className="mb-8">
-              <p className="mb-6 text-center text-gray-700">Please retain a copy for your record & return this form via email to:</p>
               
-              <div className="mb-8 text-center bg-gray-50 py-4 rounded-lg">
-                <h5 className="font-bold text-blue-600 mb-2">BLUE CIRCLE PLUS SDN BHD</h5>
-                <p className="mb-1">Attn: Mr. Francis Chan / Ms. YJ Hoh</p>
-                <p className="mb-1">Email: francis@bcpgroup.com.my</p>
-                <p className="mb-1">or yijie@bcpgroup.com.my</p>
-                <p>Tel: +6011-2327 9795 / +6016-263 1150</p>
+              <div className="flex justify-between items-center">
+                <Link href="/dashboard" className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md transition-colors">
+                  Return to Dashboard
+                </Link>
+                {/* PDF Download Button */}
+                <PdfButton 
+                  formData={submittedData || {}}
+                  formType={1}
+                  containerRef={containerRef}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
+                />
               </div>
-
-              <div className="border border-gray-200 rounded-lg p-6 shadow-sm">
-                <h5 className="font-bold mb-4 text-blue-600">Authorized Representative Applying:</h5>
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="grid grid-cols-2 gap-4">
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} ref={formRef} className="space-y-8">
+              {/* Fascia Name Section - Current step UI based on form progress */}
+              <div className={`${formProgress.currentStepId === 'fascia-name' ? 'block' : 'hidden'}`}>
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-2">Fascia Name</h3>
+                  <p className="text-gray-600 mb-4">
+                    Please fill in your company name as it should appear on the fascia board. One letter per box, max 25 characters.
+                  </p>
+                  
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                    <div className="flex flex-wrap gap-1 justify-center">
+                      {fasciaName.map((char, index) => (
+                        <div key={`char-${index}`} className="flex flex-col items-center">
+                          <input
+                            type="text"
+                            maxLength={1}
+                            value={char}
+                            onChange={(e) => handleInputChange(index, e.target.value)}
+                            onKeyDown={(e) => handleKeyDown(index, e)}
+                            onPaste={(e) => handlePaste(index, e)}
+                            ref={(el) => { inputRefs.current[index] = el }}
+                            className="w-10 h-10 border-2 border-gray-300 rounded-md text-center text-xl uppercase focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
+                            style={{ aspectRatio: '1/1' }}
+                          />
+                          <span className="text-xs text-gray-500 mt-1">{index + 1}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-sm text-gray-500 mt-4 text-center">
+                      Only letters, numbers, and spaces are allowed.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Form Information Section */}
+              <div className={`${formProgress.currentStepId === 'form-info' ? 'block' : 'hidden'}`}>
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-2">Form Information</h3>
+                  <p className="text-gray-600 mb-4">
+                    This form is for the submission of your company name as it will appear on your booth fascia board.
+                    Please complete all required fields marked with an asterisk (*).
+                  </p>
+                  
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <p className="text-blue-800">
+                      <span className="font-semibold">Important:</span> The fascia name will be displayed on your booth. 
+                      Please ensure it is correct as changes after submission may incur additional charges.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Authorization Section */}
+              <div className={`${formProgress.currentStepId === 'authorization' ? 'block' : 'hidden'}`}>
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-2">Authorization</h3>
+                  <p className="text-gray-600 mb-4">
+                    Please provide the details of the authorized person for this submission.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium mb-1 text-gray-700">Name</label>
-                      <input 
-                        type="text" 
+                      <label htmlFor="auth_name" className="block text-sm font-medium text-gray-700 mb-1">
+                        Name *
+                      </label>
+                      <input
+                        type="text"
+                        id="auth_name"
                         name="auth_name"
-                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                         defaultValue={userData?.contact_person || ''}
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1 text-gray-700">Designation</label>
-                      <input 
-                        type="text" 
+                      <label htmlFor="auth_designation" className="block text-sm font-medium text-gray-700 mb-1">
+                        Designation *
+                      </label>
+                      <input
+                        type="text"
+                        id="auth_designation"
                         name="auth_designation"
-                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                         required
                       />
                     </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700">Company</label>
-                    <input 
-                      type="text" 
-                      name="auth_company"
-                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      defaultValue={userData?.company_name || ''}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700">Booth No</label>
-                    <input 
-                      type="text" 
-                      name="auth_booth"
-                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      defaultValue={userData?.booth_number || ''}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700">Address</label>
-                    <textarea 
-                      name="auth_address"
-                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      rows={3}
-                      defaultValue={userData?.address || ''}
-                      required
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1 text-gray-700">Tel</label>
-                      <input 
-                        type="tel" 
+                      <label htmlFor="auth_company" className="block text-sm font-medium text-gray-700 mb-1">
+                        Company *
+                      </label>
+                      <input
+                        type="text"
+                        id="auth_company"
+                        name="auth_company"
+                        defaultValue={userData?.company_name || ''}
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="auth_booth" className="block text-sm font-medium text-gray-700 mb-1">
+                        Booth Number *
+                      </label>
+                      <input
+                        type="text"
+                        id="auth_booth"
+                        name="auth_booth"
+                        defaultValue={userData?.booth_number || ''}
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="auth_address" className="block text-sm font-medium text-gray-700 mb-1">
+                        Address *
+                      </label>
+                      <input
+                        type="text"
+                        id="auth_address"
+                        name="auth_address"
+                        defaultValue={userData?.address || ''}
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="auth_email" className="block text-sm font-medium text-gray-700 mb-1">
+                        Email *
+                      </label>
+                      <input
+                        type="email"
+                        id="auth_email"
+                        name="auth_email"
+                        defaultValue={userData?.email || ''}
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="auth_tel" className="block text-sm font-medium text-gray-700 mb-1">
+                        Tel *
+                      </label>
+                      <input
+                        type="tel"
+                        id="auth_tel"
                         name="auth_tel"
-                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                         defaultValue={userData?.tel || ''}
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1 text-gray-700">Tax Identification Number</label>
-                      <input 
-                        type="text" 
+                      <label htmlFor="auth_tax_identification_number" className="block text-sm font-medium text-gray-700 mb-1">
+                        Tax Identification Number
+                      </label>
+                      <input
+                        type="text"
+                        id="auth_tax_identification_number"
                         name="auth_tax_identification_number"
-                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                         defaultValue={userData?.tax_identification_number || ''}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700">Email</label>
-                    <input 
-                      type="email" 
-                      name="auth_email"
-                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      defaultValue={userData?.email || ''}
-                      required
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1 text-gray-700">Signature</label>
-                      <input 
-                        type="text" 
-                        name="auth_signature"
-                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                        required
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1 text-gray-700">Date</label>
-                      <input 
-                        type="date" 
+                      <label htmlFor="auth_date" className="block text-sm font-medium text-gray-700 mb-1">
+                        Date *
+                      </label>
+                      <input
+                        type="date"
+                        id="auth_date"
                         name="auth_date"
-                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                         defaultValue={new Date().toISOString().split('T')[0]}
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                         required
                       />
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Form Actions */}
-            <div className="flex justify-center space-x-6">
-              <button
-                type="button"
-                onClick={() => router.back()}
-                className="px-8 py-3 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
-              >
-                {isSubmitting ? 'Submitting...' : 'Submit Form'}
-              </button>
-            </div>
-          </form>
-        )}
+              
+              {/* Review Section */}
+              <div className={`${formProgress.currentStepId === 'review' ? 'block' : 'hidden'}`}>
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-2">Review & Submit</h3>
+                  <p className="text-gray-600 mb-4">
+                    Please review your information before submitting.
+                  </p>
+                  
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 space-y-4">
+                    <div>
+                      <h4 className="font-medium text-gray-700 mb-2">Fascia Name</h4>
+                      <div className="bg-white border border-gray-300 rounded-lg p-4 font-mono text-lg text-center">
+                        {fasciaName.join('')}
+                      </div>
+                    </div>
+                    
+                    <FormDisclaimer />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Navigation buttons */}
+              <div className="flex justify-between mt-8">
+                <button
+                  type="button"
+                  onClick={() => formProgress.goToPreviousStep()}
+                  disabled={formProgress.isFirstStep}
+                  className={`px-4 py-2 rounded-md transition-colors ${
+                    formProgress.isFirstStep
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
+                  }`}
+                >
+                  Previous
+                </button>
+                
+                {formProgress.isLastStep ? (
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className={`px-4 py-2 rounded-md transition-colors ${
+                      isSubmitting
+                        ? 'bg-blue-400 cursor-not-allowed'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
+                  >
+                    {isSubmitting ? 'Submitting...' : 'Submit Form'}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => formProgress.goToNextStep()}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
+                  >
+                    Next
+                  </button>
+                )}
+              </div>
+            </form>
+          )}
+        </div>
       </div>
-    </div>
+    </FormLoadingWrapper>
   )
 } 
