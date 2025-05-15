@@ -5,6 +5,31 @@ import { Calendar, Clock, CheckCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
+// Add CSS to hide scrollbar but maintain functionality
+const ScrollbarHider = () => {
+  useEffect(() => {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    `;
+    document.head.appendChild(styleElement);
+    
+    return () => {
+      if (styleElement.parentNode) {
+        styleElement.parentNode.removeChild(styleElement);
+      }
+    };
+  }, []);
+  
+  return null;
+};
+
 interface FormDeadline {
   id: string;
   title: string;
@@ -199,6 +224,7 @@ export default function DeadlineReminders() {
   
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
+      <ScrollbarHider />
       <div className="p-4 bg-gradient-to-r from-blue-600 to-blue-700 flex items-center justify-between">
         <div className="flex items-center">
           <Calendar className="text-white mr-2" size={20} />
@@ -219,8 +245,8 @@ export default function DeadlineReminders() {
             <span className="ml-2 text-gray-600">Loading form status...</span>
           </div>
         ) : (
-          <div className="overflow-x-auto pb-4">
-            <div className="flex space-x-4 snap-x snap-mandatory">
+          <div className="overflow-x-auto pb-4 hide-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="flex space-x-4 snap-x snap-mandatory w-fit">
               {forms.map((form) => {
                 const daysLeft = calculateDaysLeft(form.date);
                 
@@ -228,23 +254,23 @@ export default function DeadlineReminders() {
                   <Link
                     key={form.id}
                     href={form.href}
-                    className="snap-start shrink-0 w-80 sm:w-96 group"
+                    className="snap-start shrink-0 w-72 sm:w-80 group"
                   >
                     <div 
                       className={`p-4 rounded-lg border ${getStatusColor(daysLeft, !!form.isSubmitted, 'border')} ${getStatusColor(daysLeft, !!form.isSubmitted, 'bg')} transition-all hover:shadow-md h-full`}
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <h4 className={`font-medium ${getStatusColor(daysLeft, !!form.isSubmitted, 'text')} text-sm sm:text-base`}>
+                        <h4 className={`font-medium ${getStatusColor(daysLeft, !!form.isSubmitted, 'text')} text-sm sm:text-base w-3/5`}>
                           {form.title}
                         </h4>
                         {form.isSubmitted ? (
-                          <div className="flex items-center bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs">
-                            <CheckCircle size={14} className="mr-1" />
+                          <div className="flex items-center bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs whitespace-nowrap">
+                            <CheckCircle size={14} className="mr-1 flex-shrink-0" />
                             <span className="font-semibold">Submitted</span>
                           </div>
                         ) : (
-                          <div className="flex items-center bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs">
-                            <XCircle size={14} className="mr-1" />
+                          <div className="flex items-center bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs whitespace-nowrap">
+                            <XCircle size={14} className="mr-1 flex-shrink-0" />
                             <span className="font-semibold">Not Submitted</span>
                           </div>
                         )}
@@ -252,12 +278,12 @@ export default function DeadlineReminders() {
                       
                       <div className="mt-2 flex justify-between items-center">
                         <div className="flex items-center">
-                          <Clock size={14} className="text-gray-500 mr-1" />
+                          <Clock size={14} className="text-gray-500 mr-1 flex-shrink-0" />
                           <span className="text-xs text-gray-600">
                             {daysLeft > 0 ? `${daysLeft} days remaining` : 'Deadline has passed'}
                           </span>
                         </div>
-                        <span className="text-xs font-semibold text-gray-500">
+                        <span className="text-xs font-semibold text-gray-500 ml-1">
                           {form.date}
                         </span>
                       </div>
