@@ -328,7 +328,7 @@ export default function Sidebar() {
         className={cn(
           "fixed inset-y-0 left-0 z-45 w-72 bg-white border-r border-gray-200 pt-16 pb-4 px-4 transition-transform duration-300 lg:transition-none lg:translate-x-0 lg:relative lg:pt-4 lg:z-0",
           "mobile-sidebar-scroll overflow-y-auto max-h-screen",
-          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          isMobileMenuOpen ? "translate-x-0 shadow-xl" : "-translate-x-full lg:translate-x-0 lg:shadow-none"
         )}
       >
         <div className="flex justify-center mb-6">
@@ -356,6 +356,7 @@ export default function Sidebar() {
                 : "text-gray-700 hover:bg-gray-100"
             )}
             prefetch={true}
+            onClick={() => setIsMobileMenuOpen(false)}
           >
             <LayoutDashboard className="w-5 h-5" />
             <span className="font-medium">Dashboard</span>
@@ -374,6 +375,7 @@ export default function Sidebar() {
                 : "text-gray-700 hover:bg-gray-100"
             )}
             prefetch={true}
+            onClick={() => setIsMobileMenuOpen(false)}
           >
             <Phone className="w-5 h-5" />
             <span className="font-medium">Contact Us</span>
