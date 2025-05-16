@@ -10,8 +10,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import FormDisclaimer from '@/components/ui/FormDisclaimer'
 import FormLoadingWrapper from '@/components/wrappers/FormLoadingWrapper'
-import FormProgressIndicator from '@/components/ui/FormProgressIndicator'
-import useFormProgress from '@/hooks/useFormProgress'
 
 interface FasciaNameFormProps {
   userData?: {
@@ -40,17 +38,6 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
   const [fasciaName, setFasciaName] = useState<string[]>(Array(25).fill(''))
   const inputRefs = useRef<Array<HTMLInputElement | null>>([])
   
-  // Initialize form progress tracking
-  const formProgress = useFormProgress({
-    steps: [
-      { id: 'form-info', label: 'Form Information' },
-      { id: 'fascia-name', label: 'Fascia Name' },
-      { id: 'authorization', label: 'Authorization' },
-      { id: 'review', label: 'Review & Submit' }
-    ],
-    initialStep: 'form-info'
-  });
-
   // Check if form has been previously submitted
   useEffect(() => {
     const checkSubmission = async () => {
@@ -249,24 +236,18 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
             <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
           </div>
 
-          {/* Progress Indicator */}
-          <FormProgressIndicator 
-            steps={formProgress.steps}
-            currentStep={formProgress.currentStepId}
-            className="mb-6"
-          />
-
           {/* User Data Container */}
           <UserDataContainer userData={userData} />
 
+          {/* Display submitted data if already submitted */}
           {submitted ? (
-            <div className="space-y-8">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-                <div className="text-green-600 font-semibold text-lg mb-2">
-                  Form Successfully Submitted
-                </div>
-                <p className="text-green-700">
-                  Thank you for submitting your fascia name. Your submission has been received.
+            <div className="space-y-6">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                <p className="text-green-800 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Form successfully submitted
                 </p>
               </div>
               
@@ -312,243 +293,200 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
             </div>
           ) : (
             <form onSubmit={handleSubmit} ref={formRef} className="space-y-8">
-              {/* Fascia Name Section - Current step UI based on form progress */}
-              <div className={`${formProgress.currentStepId === 'fascia-name' ? 'block' : 'hidden'}`}>
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-2">Fascia Name</h3>
-                  <p className="text-gray-600 mb-4">
-                    Please fill in your company name as it should appear on the fascia board. One letter per box, max 25 characters.
+              {/* Form Information Section */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-2">Form Information</h3>
+                <p className="text-gray-600 mb-4">
+                  This form is for the submission of your company name as it will appear on your booth fascia board.
+                  Please complete all required fields marked with an asterisk (*).
+                </p>
+                
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <p className="text-blue-800">
+                    <span className="font-semibold">Important:</span> The fascia name will be displayed on your booth. 
+                    Please ensure it is correct as changes after submission may incur additional charges.
                   </p>
-                  
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-                    <div className="flex flex-wrap gap-1 justify-center">
-                      {fasciaName.map((char, index) => (
-                        <div key={`char-${index}`} className="flex flex-col items-center">
-                          <input
-                            type="text"
-                            maxLength={1}
-                            value={char}
-                            onChange={(e) => handleInputChange(index, e.target.value)}
-                            onKeyDown={(e) => handleKeyDown(index, e)}
-                            onPaste={(e) => handlePaste(index, e)}
-                            ref={(el) => { inputRefs.current[index] = el }}
-                            className="w-10 h-10 border-2 border-gray-300 rounded-md text-center text-xl uppercase focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
-                            style={{ aspectRatio: '1/1' }}
-                          />
-                          <span className="text-xs text-gray-500 mt-1">{index + 1}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <p className="text-sm text-gray-500 mt-4 text-center">
-                      Only letters, numbers, and spaces are allowed.
-                    </p>
-                  </div>
                 </div>
               </div>
-              
-              {/* Form Information Section */}
-              <div className={`${formProgress.currentStepId === 'form-info' ? 'block' : 'hidden'}`}>
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-2">Form Information</h3>
-                  <p className="text-gray-600 mb-4">
-                    This form is for the submission of your company name as it will appear on your booth fascia board.
-                    Please complete all required fields marked with an asterisk (*).
-                  </p>
-                  
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                    <p className="text-blue-800">
-                      <span className="font-semibold">Important:</span> The fascia name will be displayed on your booth. 
-                      Please ensure it is correct as changes after submission may incur additional charges.
-                    </p>
+
+              {/* Fascia Name Section */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-2">Fascia Name</h3>
+                <p className="text-gray-600 mb-4">
+                  Please fill in your company name as it should appear on the fascia board. One letter per box, max 25 characters.
+                </p>
+                
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                  <div className="flex flex-wrap gap-1 justify-center">
+                    {fasciaName.map((char, index) => (
+                      <div key={`char-${index}`} className="flex flex-col items-center">
+                        <input
+                          type="text"
+                          maxLength={1}
+                          value={char}
+                          onChange={(e) => handleInputChange(index, e.target.value)}
+                          onKeyDown={(e) => handleKeyDown(index, e)}
+                          onPaste={(e) => handlePaste(index, e)}
+                          ref={(el) => { inputRefs.current[index] = el }}
+                          className="w-10 h-10 border-2 border-gray-300 rounded-md text-center text-xl uppercase focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
+                          style={{ aspectRatio: '1/1' }}
+                        />
+                        <span className="text-xs text-gray-500 mt-1">{index + 1}</span>
+                      </div>
+                    ))}
                   </div>
+                  <p className="text-sm text-gray-500 mt-4 text-center">
+                    Only letters, numbers, and spaces are allowed.
+                  </p>
                 </div>
               </div>
               
               {/* Authorization Section */}
-              <div className={`${formProgress.currentStepId === 'authorization' ? 'block' : 'hidden'}`}>
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-2">Authorization</h3>
-                  <p className="text-gray-600 mb-4">
-                    Please provide the details of the authorized person for this submission.
-                  </p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label htmlFor="auth_name" className="block text-sm font-medium text-gray-700 mb-1">
-                        Name *
-                      </label>
-                      <input
-                        type="text"
-                        id="auth_name"
-                        name="auth_name"
-                        defaultValue={userData?.contact_person || ''}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="auth_designation" className="block text-sm font-medium text-gray-700 mb-1">
-                        Designation *
-                      </label>
-                      <input
-                        type="text"
-                        id="auth_designation"
-                        name="auth_designation"
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="auth_company" className="block text-sm font-medium text-gray-700 mb-1">
-                        Company *
-                      </label>
-                      <input
-                        type="text"
-                        id="auth_company"
-                        name="auth_company"
-                        defaultValue={userData?.company_name || ''}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="auth_booth" className="block text-sm font-medium text-gray-700 mb-1">
-                        Booth Number *
-                      </label>
-                      <input
-                        type="text"
-                        id="auth_booth"
-                        name="auth_booth"
-                        defaultValue={userData?.booth_number || ''}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="auth_address" className="block text-sm font-medium text-gray-700 mb-1">
-                        Address *
-                      </label>
-                      <input
-                        type="text"
-                        id="auth_address"
-                        name="auth_address"
-                        defaultValue={userData?.address || ''}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="auth_email" className="block text-sm font-medium text-gray-700 mb-1">
-                        Email *
-                      </label>
-                      <input
-                        type="email"
-                        id="auth_email"
-                        name="auth_email"
-                        defaultValue={userData?.email || ''}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="auth_tel" className="block text-sm font-medium text-gray-700 mb-1">
-                        Tel *
-                      </label>
-                      <input
-                        type="tel"
-                        id="auth_tel"
-                        name="auth_tel"
-                        defaultValue={userData?.tel || ''}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="auth_tax_identification_number" className="block text-sm font-medium text-gray-700 mb-1">
-                        Tax Identification Number
-                      </label>
-                      <input
-                        type="text"
-                        id="auth_tax_identification_number"
-                        name="auth_tax_identification_number"
-                        defaultValue={userData?.tax_identification_number || ''}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="auth_date" className="block text-sm font-medium text-gray-700 mb-1">
-                        Date *
-                      </label>
-                      <input
-                        type="date"
-                        id="auth_date"
-                        name="auth_date"
-                        defaultValue={new Date().toISOString().split('T')[0]}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-2">Authorization</h3>
+                <p className="text-gray-600 mb-4">
+                  Please provide the details of the authorized person for this submission.
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label htmlFor="auth_name" className="block text-sm font-medium text-gray-700 mb-1">
+                      Name *
+                    </label>
+                    <input
+                      type="text"
+                      id="auth_name"
+                      name="auth_name"
+                      defaultValue={userData?.contact_person || ''}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="auth_designation" className="block text-sm font-medium text-gray-700 mb-1">
+                      Designation *
+                    </label>
+                    <input
+                      type="text"
+                      id="auth_designation"
+                      name="auth_designation"
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="auth_company" className="block text-sm font-medium text-gray-700 mb-1">
+                      Company *
+                    </label>
+                    <input
+                      type="text"
+                      id="auth_company"
+                      name="auth_company"
+                      defaultValue={userData?.company_name || ''}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="auth_booth" className="block text-sm font-medium text-gray-700 mb-1">
+                      Booth Number *
+                    </label>
+                    <input
+                      type="text"
+                      id="auth_booth"
+                      name="auth_booth"
+                      defaultValue={userData?.booth_number || ''}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="auth_address" className="block text-sm font-medium text-gray-700 mb-1">
+                      Address *
+                    </label>
+                    <input
+                      type="text"
+                      id="auth_address"
+                      name="auth_address"
+                      defaultValue={userData?.address || ''}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="auth_email" className="block text-sm font-medium text-gray-700 mb-1">
+                      Email *
+                    </label>
+                    <input
+                      type="email"
+                      id="auth_email"
+                      name="auth_email"
+                      defaultValue={userData?.email || ''}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="auth_tel" className="block text-sm font-medium text-gray-700 mb-1">
+                      Tel *
+                    </label>
+                    <input
+                      type="tel"
+                      id="auth_tel"
+                      name="auth_tel"
+                      defaultValue={userData?.tel || ''}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="auth_tax_identification_number" className="block text-sm font-medium text-gray-700 mb-1">
+                      Tax Identification Number
+                    </label>
+                    <input
+                      type="text"
+                      id="auth_tax_identification_number"
+                      name="auth_tax_identification_number"
+                      defaultValue={userData?.tax_identification_number || ''}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="auth_date" className="block text-sm font-medium text-gray-700 mb-1">
+                      Date *
+                    </label>
+                    <input
+                      type="date"
+                      id="auth_date"
+                      name="auth_date"
+                      defaultValue={new Date().toISOString().split('T')[0]}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
                   </div>
                 </div>
               </div>
               
               {/* Review Section */}
-              <div className={`${formProgress.currentStepId === 'review' ? 'block' : 'hidden'}`}>
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-2">Review & Submit</h3>
-                  <p className="text-gray-600 mb-4">
-                    Please review your information before submitting.
-                  </p>
-                  
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 space-y-4">
-                    <div>
-                      <h4 className="font-medium text-gray-700 mb-2">Fascia Name</h4>
-                      <div className="bg-white border border-gray-300 rounded-lg p-4 font-mono text-lg text-center">
-                        {fasciaName.join('')}
-                      </div>
-                    </div>
-                    
-                    <FormDisclaimer />
-                  </div>
+              <div className="mb-6">
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 space-y-4">
+                  <FormDisclaimer />
                 </div>
               </div>
               
-              {/* Navigation buttons */}
-              <div className="flex justify-between mt-8">
+              {/* Submit button */}
+              <div className="flex justify-end mt-8">
                 <button
-                  type="button"
-                  onClick={() => formProgress.goToPreviousStep()}
-                  disabled={formProgress.isFirstStep}
+                  type="submit"
+                  disabled={isSubmitting}
                   className={`px-4 py-2 rounded-md transition-colors ${
-                    formProgress.isFirstStep
-                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                      : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
+                    isSubmitting
+                      ? 'bg-blue-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
                   }`}
                 >
-                  Previous
+                  {isSubmitting ? 'Submitting...' : 'Submit Form'}
                 </button>
-                
-                {formProgress.isLastStep ? (
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className={`px-4 py-2 rounded-md transition-colors ${
-                      isSubmitting
-                        ? 'bg-blue-400 cursor-not-allowed'
-                        : 'bg-blue-600 hover:bg-blue-700 text-white'
-                    }`}
-                  >
-                    {isSubmitting ? 'Submitting...' : 'Submit Form'}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => formProgress.goToNextStep()}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
-                  >
-                    Next
-                  </button>
-                )}
               </div>
             </form>
           )}
