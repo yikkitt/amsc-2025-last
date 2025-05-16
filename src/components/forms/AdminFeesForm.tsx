@@ -259,7 +259,7 @@ export default function AdminFeesForm({ userData }: AdminFeesFormProps) {
                   <label className="block text-sm font-medium mb-1 text-gray-700">Square Metre (SQM)</label>
                   <input
                     type="number"
-                    step="0.01"
+                    step="1"
                     min="0"
                     value={squareMetre}
                     onChange={(e) => setSquareMetre(e.target.value)}
