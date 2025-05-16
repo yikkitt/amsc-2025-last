@@ -429,7 +429,15 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
                         </td>
                         <td className="border border-gray-300 p-2">{item.description}</td>
                         <td className="border border-gray-300 p-2 text-center">{item.unitCost.toFixed(2)}</td>
-                        <td className="border border-gray-300 p-2 text-center">{item.quantity}</td>
+                        <td className="border border-gray-300 p-2 text-center">
+                          <input
+                            type="number"
+                            min="0"
+                            value={item.quantity}
+                            onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
+                            className="w-16 text-center border border-gray-300 rounded p-1"
+                          />
+                        </td>
                         <td className="border border-gray-300 p-2 text-center">
                           {(item.unitCost * item.quantity).toFixed(2)}
                         </td>
