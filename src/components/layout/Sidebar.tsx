@@ -205,7 +205,7 @@ const AppendixSection = memo(({ pathname }: { pathname: string | null }) => {
 const MobileMenuToggle = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) => (
   <button
     onClick={toggle}
-    className="fixed top-4 left-4 z-50 lg:hidden bg-white p-2 rounded-full shadow-md"
+    className="fixed top-4 left-4 z-50 lg:hidden bg-white p-2 rounded-full shadow-md border border-gray-200"
     aria-label={isOpen ? "Close menu" : "Open menu"}
   >
     {isOpen ? <X size={24} /> : <Menu size={24} />}
