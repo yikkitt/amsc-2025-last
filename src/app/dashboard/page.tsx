@@ -5,6 +5,7 @@ import WelcomeBanner from '@/components/dashboard/WelcomeBanner';
 import NewsUpdates from '@/components/dashboard/NewsUpdates';
 import DeadlineReminders from '@/components/dashboard/DeadlineReminders';
 import CompanyData from '@/components/dashboard/CompanyData';
+import VenueFloorPlan from '@/components/dashboard/VenueFloorPlan';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,6 +59,7 @@ export default async function DashboardPage() {
             boothNumber={boothNumber}
             email={email}
           />
+          <VenueFloorPlan />
         </div>
         <div className="space-y-6">
           <DeadlineReminders />
