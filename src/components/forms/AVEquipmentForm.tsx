@@ -49,11 +49,7 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
     { id: 3, name: 'LCD TV 65"', unit: 'unit', rate: 1500, quantity: 0, total: 0 },
     { id: 4, name: 'LCD TV 75"', unit: 'unit', rate: 2000, quantity: 0, total: 0 },
     { id: 5, name: 'LCD TV 85"', unit: 'unit', rate: 2500, quantity: 0, total: 0 },
-    { id: 6, name: 'TV Stand', unit: 'unit', rate: 200, quantity: 0, total: 0 },
-    { id: 7, name: 'Laptop', unit: 'unit', rate: 500, quantity: 0, total: 0 },
-    { id: 8, name: 'PA System with 2 Speakers', unit: 'set', rate: 800, quantity: 0, total: 0 },
-    { id: 9, name: 'Wireless Microphone', unit: 'unit', rate: 200, quantity: 0, total: 0 },
-    { id: 10, name: 'DVD Player', unit: 'unit', rate: 150, quantity: 0, total: 0 }
+    { id: 6, name: 'TV Stand', unit: 'unit', rate: 200, quantity: 0, total: 0 }
   ])
 
   // Check if form has been previously submitted
@@ -296,9 +292,15 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
 
             <div className="flex justify-center space-x-6">
               <PdfButton
-                formData={submittedData || {}}
+                formData={{
+                  form_type: 9,
+                  company_data: submittedData?.company_data || {},
+                  order_items: submittedData?.order_items || [],
+                  subtotal: submittedData?.subtotal || 0,
+                  auth_details: submittedData?.auth_details || {}
+                }}
                 formType={9}
-                containerRef={containerRef}
+                containerRef={containerRef as React.RefObject<HTMLElement>}
                 className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
               />
               <Link

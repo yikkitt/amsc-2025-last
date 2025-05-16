@@ -85,19 +85,38 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
             
           if (error) {
             console.error('Error checking previous submission:', error)
-          } else if (data && typeof data.data === 'object' && data.data !== null) {
-            setSubmitted(true)
-            setSubmittedData(data.data)
-            // Update order items with submitted quantities
-            const formData = data.data as { items?: Array<{ id: string; quantity: number }> }
-            if (formData.items && Array.isArray(formData.items)) {
-              setOrderItems(prevItems => 
-                prevItems.map(item => {
-                  const submittedItem = formData.items?.find(i => i.id === item.id)
-                  return submittedItem ? { ...item, quantity: submittedItem.quantity } : item
-                })
-              )
+          } else if (data && 
+                    typeof data.data === 'object' && 
+                    data.data !== null && 
+                    data.status === 'submitted') {  // Only consider fully submitted forms
+            
+            // Safely check if data.data has items property that's a non-empty array
+            const hasValidItems = 
+              data.data && 
+              typeof data.data === 'object' && 
+              'items' in data.data && 
+              Array.isArray((data.data as any).items) && 
+              (data.data as any).items.length > 0;
+              
+            if (hasValidItems) {
+              console.log('Found valid previous form submission:', data)
+              setSubmitted(true)
+              setSubmittedData(data.data)
+              // Update order items with submitted quantities
+              const formData = data.data as { items?: Array<{ id: string; quantity: number }> }
+              if (formData.items && Array.isArray(formData.items)) {
+                setOrderItems(prevItems => 
+                  prevItems.map(item => {
+                    const submittedItem = formData.items?.find(i => i.id === item.id)
+                    return submittedItem ? { ...item, quantity: submittedItem.quantity } : item
+                  })
+                )
+              }
+            } else {
+              console.log('Previous submission found but has no valid items')
             }
+          } else {
+            console.log('No valid previous submission found or submission incomplete')
           }
         }
       } catch (error) {
@@ -330,7 +349,7 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
                   auth_details: submittedData?.auth_details || {}
                 }}
                 formType={3}
-                containerRef={containerRef}
+                containerRef={containerRef as React.RefObject<HTMLElement>}
                 className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
               />
               <Link

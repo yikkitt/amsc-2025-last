@@ -286,7 +286,7 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
                 <PdfButton 
                   formData={submittedData || {}}
                   formType={1}
-                  containerRef={containerRef}
+                  containerRef={containerRef as React.RefObject<HTMLElement>}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
                 />
               </div>
@@ -315,6 +315,27 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
                 <p className="text-gray-600 mb-4">
                   Please fill in your company name as it should appear on the fascia board. One letter per box, max 25 characters.
                 </p>
+                
+                {/* Example Fascia Image */}
+                <div className="mb-6 text-center">
+                  <h4 className="text-md font-medium text-gray-700 mb-2">Example Fascia</h4>
+                  <div className="relative w-full max-w-2xl mx-auto h-40 mb-2 border border-gray-200 rounded">
+                    <Image
+                      src="/images/shell-shceme-booth-example.png"
+                      alt="Booth Fascia Example"
+                      width={500}
+                      height={200}
+                      className="object-contain w-full h-full"
+                      onError={(e) => {
+                        // Fallback image if the main one fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.src = "https://via.placeholder.com/500x100?text=Fascia+Example";
+                        target.onerror = null;
+                      }}
+                    />
+                  </div>
+                  <p className="text-sm text-gray-500">Example of how your company name will appear on the fascia board</p>
+                </div>
                 
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
                   <div className="flex flex-wrap gap-1 justify-center">
