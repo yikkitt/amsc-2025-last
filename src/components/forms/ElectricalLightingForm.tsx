@@ -90,16 +90,22 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
                     data.data !== null && 
                     data.status === 'submitted') {  // Only consider fully submitted forms
             
-            // Perform stricter validation to check if this is a valid submission
+            // Even more strict validation to check if this is a valid submission
             const hasValidItems = 
               data.data && 
               typeof data.data === 'object' && 
               'items' in data.data && 
               Array.isArray((data.data as any).items) && 
               (data.data as any).items.length > 0 &&
-              (data.data as any).items.some((item: any) => item && item.quantity > 0);
+              (data.data as any).items.some((item: any) => item && typeof item === 'object' && item.quantity > 0);
               
-            if (hasValidItems) {
+            // Also check for minimum order amount to be considered submitted
+            const hasMinimumOrderValue = 
+              'subtotal' in data.data && 
+              typeof data.data.subtotal === 'number' && 
+              data.data.subtotal > 0;
+              
+            if (hasValidItems && hasMinimumOrderValue) {
               console.log('Found valid previous form submission:', data)
               setSubmitted(true)
               setSubmittedData(data.data)
@@ -114,7 +120,7 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
                 )
               }
             } else {
-              console.log('Previous submission found but has no valid items')
+              console.log('Previous submission found but items or totals are invalid')
             }
           } else {
             console.log('No valid previous submission found or submission incomplete')
