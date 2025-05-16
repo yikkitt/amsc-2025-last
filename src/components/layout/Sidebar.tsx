@@ -53,9 +53,10 @@ const appendixItems = [
 ]
 
 // Memoize the navigation sections
-const NavLink = memo(({ href, isActive, children }: {
+const NavLink = memo(({ href, isActive, onClick, children }: {
   href: string,
   isActive: boolean,
+  onClick?: () => void,
   children: React.ReactNode
 }) => (
   <Link
@@ -66,13 +67,14 @@ const NavLink = memo(({ href, isActive, children }: {
         ? "bg-blue-50 text-blue-700"
         : "text-gray-600 hover:bg-gray-100"
     )}
+    onClick={onClick}
   >
     {children}
   </Link>
 ));
 
 // Memoize section components to prevent re-renders
-const OrderFormsSection = memo(({ pathname }: { pathname: string | null }) => {
+const OrderFormsSection = memo(({ pathname, onLinkClick }: { pathname: string | null, onLinkClick?: () => void }) => {
   const [isOpen, setIsOpen] = useState(true);
   const isActive = pathname?.includes('/order-forms') || false;
   
@@ -105,6 +107,7 @@ const OrderFormsSection = memo(({ pathname }: { pathname: string | null }) => {
               key={form.id}
               href={form.href}
               isActive={pathname === form.href}
+              onClick={onLinkClick}
             >
               {form.name}
             </NavLink>
@@ -115,7 +118,7 @@ const OrderFormsSection = memo(({ pathname }: { pathname: string | null }) => {
   );
 });
 
-const InformationSection = memo(({ pathname }: { pathname: string | null }) => {
+const InformationSection = memo(({ pathname, onLinkClick }: { pathname: string | null, onLinkClick?: () => void }) => {
   const [isOpen, setIsOpen] = useState(true);
   const isActive = pathname?.includes('/information') || false;
   
@@ -148,6 +151,7 @@ const InformationSection = memo(({ pathname }: { pathname: string | null }) => {
               key={section.id}
               href={section.href}
               isActive={pathname === section.href}
+              onClick={onLinkClick}
             >
               {section.name}
             </NavLink>
@@ -158,7 +162,7 @@ const InformationSection = memo(({ pathname }: { pathname: string | null }) => {
   );
 });
 
-const AppendixSection = memo(({ pathname }: { pathname: string | null }) => {
+const AppendixSection = memo(({ pathname, onLinkClick }: { pathname: string | null, onLinkClick?: () => void }) => {
   const [isOpen, setIsOpen] = useState(false);
   const isActive = pathname?.includes('/appendix') || false;
   
@@ -191,6 +195,7 @@ const AppendixSection = memo(({ pathname }: { pathname: string | null }) => {
               key={item.id}
               href={item.href}
               isActive={pathname === item.href}
+              onClick={onLinkClick}
             >
               {item.name}
             </NavLink>
@@ -205,7 +210,7 @@ const AppendixSection = memo(({ pathname }: { pathname: string | null }) => {
 const MobileMenuToggle = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) => (
   <button
     onClick={toggle}
-    className="fixed top-4 left-4 z-50 lg:hidden bg-white p-2 rounded-full shadow-md border border-gray-200"
+    className="fixed top-4 left-4 z-[100] lg:hidden bg-white p-2 rounded-full shadow-md border border-gray-200"
     aria-label={isOpen ? "Close menu" : "Open menu"}
   >
     {isOpen ? <X size={24} /> : <Menu size={24} />}
@@ -217,6 +222,10 @@ export default function Sidebar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
+  
+  const handleCloseMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
   
   // Add CSS once for the scrollbar
   useEffect(() => {
@@ -282,7 +291,7 @@ export default function Sidebar() {
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [pathname]);
-  
+
   // Add CSS for better mobile scrolling
   useEffect(() => {
     const style = document.createElement('style');
@@ -317,7 +326,7 @@ export default function Sidebar() {
       <MobileMenuToggle isOpen={isMobileMenuOpen} toggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
       
       <div className={cn(
-        "fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden transition-opacity duration-300",
+        "fixed inset-0 bg-black bg-opacity-50 z-[60] lg:hidden transition-opacity duration-300",
         isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
       )} 
       onClick={() => setIsMobileMenuOpen(false)}
@@ -326,13 +335,13 @@ export default function Sidebar() {
       <div
         ref={sidebarRef}
         className={cn(
-          "fixed inset-y-0 left-0 z-45 w-72 bg-white border-r border-gray-200 pt-16 pb-4 px-4 transition-transform duration-300 lg:transition-none lg:translate-x-0 lg:relative lg:pt-4 lg:z-0",
+          "fixed inset-y-0 left-0 z-[70] w-72 bg-white border-r border-gray-200 pt-16 pb-4 px-4 transition-transform duration-300 lg:transition-none lg:translate-x-0 lg:relative lg:pt-4 lg:z-0",
           "mobile-sidebar-scroll overflow-y-auto max-h-screen",
           isMobileMenuOpen ? "translate-x-0 shadow-xl" : "-translate-x-full lg:translate-x-0 lg:shadow-none"
         )}
       >
         <div className="flex justify-center mb-6">
-          <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+          <Link href="/dashboard" onClick={handleCloseMobileMenu}>
             <Image 
               src="/images/amsc-logo.png" 
               alt="AMSC Logo" 
@@ -356,15 +365,15 @@ export default function Sidebar() {
                 : "text-gray-700 hover:bg-gray-100"
             )}
             prefetch={true}
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={handleCloseMobileMenu}
           >
             <LayoutDashboard className="w-5 h-5" />
             <span className="font-medium">Dashboard</span>
           </Link>
 
-          <OrderFormsSection pathname={pathname} />
-          <InformationSection pathname={pathname} />
-          <AppendixSection pathname={pathname} />
+          <OrderFormsSection pathname={pathname} onLinkClick={handleCloseMobileMenu} />
+          <InformationSection pathname={pathname} onLinkClick={handleCloseMobileMenu} />
+          <AppendixSection pathname={pathname} onLinkClick={handleCloseMobileMenu} />
 
           <Link 
             href="/dashboard/contact-us" 
@@ -375,7 +384,7 @@ export default function Sidebar() {
                 : "text-gray-700 hover:bg-gray-100"
             )}
             prefetch={true}
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={handleCloseMobileMenu}
           >
             <Phone className="w-5 h-5" />
             <span className="font-medium">Contact Us</span>

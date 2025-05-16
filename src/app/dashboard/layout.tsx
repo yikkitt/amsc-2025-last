@@ -74,10 +74,17 @@ export default async function DashboardLayout({
 
     return (
       <div className="min-h-screen flex flex-col lg:flex-row">
-        <Sidebar />
+        {/* Sidebar - hidden on mobile until toggled */}
+        <div className="lg:block shrink-0 lg:w-72">
+          <Sidebar />
+        </div>
+        
+        {/* Main content */}
         <div className="flex-1 flex flex-col w-full">
           <PageHeader />
-          <main className="relative flex-1 pb-40">
+          
+          {/* Main scrollable area with better mobile support */}
+          <main className="relative flex-1 pb-40 main-content">
             <div className="absolute inset-0 overflow-y-auto">
               <div className="p-4 sm:p-6 md:px-8 lg:px-12 max-w-6xl mx-auto w-full">
                 {children}
