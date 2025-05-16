@@ -319,17 +319,17 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
                 {/* Example Fascia Image */}
                 <div className="mb-6 text-center">
                   <h4 className="text-md font-medium text-gray-700 mb-2">Example Fascia</h4>
-                  <div className="relative w-full max-w-2xl mx-auto h-40 mb-2 border border-gray-200 rounded">
+                  <div className="relative w-full max-w-3xl mx-auto h-64 mb-2 border border-gray-200 rounded">
                     <Image
                       src="/images/shell-shceme-booth-example.png"
                       alt="Booth Fascia Example"
-                      width={500}
-                      height={200}
+                      width={800}
+                      height={400}
                       className="object-contain w-full h-full"
                       onError={(e) => {
                         // Fallback image if the main one fails to load
                         const target = e.target as HTMLImageElement;
-                        target.src = "https://via.placeholder.com/500x100?text=Fascia+Example";
+                        target.src = "https://via.placeholder.com/800x400?text=Fascia+Example";
                         target.onerror = null;
                       }}
                     />
@@ -372,7 +372,7 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="auth_name" className="block text-sm font-medium text-gray-700 mb-1">
-                      Name *
+                      Name
                     </label>
                     <input
                       type="text"
@@ -385,7 +385,7 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
                   </div>
                   <div>
                     <label htmlFor="auth_designation" className="block text-sm font-medium text-gray-700 mb-1">
-                      Designation *
+                      Designation
                     </label>
                     <input
                       type="text"
@@ -397,7 +397,7 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
                   </div>
                   <div>
                     <label htmlFor="auth_company" className="block text-sm font-medium text-gray-700 mb-1">
-                      Company *
+                      Company
                     </label>
                     <input
                       type="text"
@@ -410,7 +410,7 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
                   </div>
                   <div>
                     <label htmlFor="auth_booth" className="block text-sm font-medium text-gray-700 mb-1">
-                      Booth Number *
+                      Booth Number
                     </label>
                     <input
                       type="text"
@@ -423,7 +423,7 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
                   </div>
                   <div>
                     <label htmlFor="auth_address" className="block text-sm font-medium text-gray-700 mb-1">
-                      Address *
+                      Address
                     </label>
                     <input
                       type="text"
@@ -436,7 +436,7 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
                   </div>
                   <div>
                     <label htmlFor="auth_email" className="block text-sm font-medium text-gray-700 mb-1">
-                      Email *
+                      Email
                     </label>
                     <input
                       type="email"
@@ -449,7 +449,7 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
                   </div>
                   <div>
                     <label htmlFor="auth_tel" className="block text-sm font-medium text-gray-700 mb-1">
-                      Tel *
+                      Tel
                     </label>
                     <input
                       type="tel"

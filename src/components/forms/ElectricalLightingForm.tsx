@@ -90,13 +90,14 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
                     data.data !== null && 
                     data.status === 'submitted') {  // Only consider fully submitted forms
             
-            // Safely check if data.data has items property that's a non-empty array
+            // Perform stricter validation to check if this is a valid submission
             const hasValidItems = 
               data.data && 
               typeof data.data === 'object' && 
               'items' in data.data && 
               Array.isArray((data.data as any).items) && 
-              (data.data as any).items.length > 0;
+              (data.data as any).items.length > 0 &&
+              (data.data as any).items.some((item: any) => item && item.quantity > 0);
               
             if (hasValidItems) {
               console.log('Found valid previous form submission:', data)
