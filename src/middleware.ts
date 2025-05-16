@@ -72,6 +72,13 @@ export async function middleware(request: NextRequest) {
       hasAuthToken: !!authTokenCookie,
     });
     
+    // Add a circuit breaker to detect and prevent redirect loops
+    const redirectCount = parseInt(request.headers.get('x-redirect-count') || '0', 10);
+    if (redirectCount > 3) {
+      console.log('[Middleware] Redirect loop detected! Allowing request to proceed without redirect.');
+      return response;
+    }
+    
     // Get the session - this is the most critical part
     const { data } = await supabase.auth.getSession();
     const session = data.session;
@@ -84,13 +91,21 @@ export async function middleware(request: NextRequest) {
       // redirect them to the dashboard
       if (requestPath.startsWith('/auth')) {
         console.log('[Middleware] User is authenticated, redirecting from auth page to dashboard');
-        return NextResponse.redirect(new URL('/dashboard', request.url));
+        const redirectUrl = new URL('/dashboard', request.url);
+        const redirectResponse = NextResponse.redirect(redirectUrl);
+        // Add redirect counter header to detect loops
+        redirectResponse.headers.set('x-redirect-count', (redirectCount + 1).toString());
+        return redirectResponse;
       }
       
       // If user is at the root path, redirect to dashboard
       if (requestPath === '/') {
         console.log('[Middleware] User is authenticated, redirecting from root to dashboard');
-        return NextResponse.redirect(new URL('/dashboard', request.url));
+        const redirectUrl = new URL('/dashboard', request.url);
+        const redirectResponse = NextResponse.redirect(redirectUrl);
+        // Add redirect counter header to detect loops
+        redirectResponse.headers.set('x-redirect-count', (redirectCount + 1).toString());
+        return redirectResponse;
       }
       
       // For all other paths, proceed as normal for authenticated users
@@ -101,13 +116,21 @@ export async function middleware(request: NextRequest) {
       // If user is trying to access protected pages, redirect to signin
       if (requestPath.startsWith('/dashboard')) {
         console.log('[Middleware] User is not authenticated, redirecting from dashboard to signin');
-        return NextResponse.redirect(new URL('/auth/signin', request.url));
+        const redirectUrl = new URL('/auth/signin', request.url);
+        const redirectResponse = NextResponse.redirect(redirectUrl);
+        // Add redirect counter header to detect loops
+        redirectResponse.headers.set('x-redirect-count', (redirectCount + 1).toString());
+        return redirectResponse;
       }
       
       // If user is at the root path, redirect to signin
       if (requestPath === '/') {
         console.log('[Middleware] User is not authenticated, redirecting from root to signin');
-        return NextResponse.redirect(new URL('/auth/signin', request.url));
+        const redirectUrl = new URL('/auth/signin', request.url);
+        const redirectResponse = NextResponse.redirect(redirectUrl);
+        // Add redirect counter header to detect loops
+        redirectResponse.headers.set('x-redirect-count', (redirectCount + 1).toString());
+        return redirectResponse;
       }
       
       // For all other paths, proceed as normal for unauthenticated users
