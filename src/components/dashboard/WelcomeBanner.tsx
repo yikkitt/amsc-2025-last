@@ -11,7 +11,7 @@ export default function WelcomeBanner({
   firstName = 'User',
   companyName = 'Your Company', 
   profileCompleted = false,
-  hideViewFormsButton = false
+  hideViewFormsButton = true
 }: WelcomeBannerProps) {
   // Get current time to customize greeting
   const currentHour = new Date().getHours();
