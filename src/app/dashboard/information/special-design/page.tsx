@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Special Design Rules & Regulations - AMSC 2025',
@@ -14,7 +15,7 @@ export default function SpecialDesignRulesPage() {
         <h2 className="text-xl font-bold mb-6 text-white bg-blue-800 -mx-6 px-6 py-3">Special Design's Rules & Regulations</h2>
         
         <p className="mb-6">
-          Please ensure to read and complete Form 6 - Form 8 and Appendix A if you intend to have special design on your stand and return to 
+          Please ensure to read and complete <Link href="/dashboard/order-forms/form6" className="text-blue-600 hover:text-blue-800 underline">Form 6</Link>, <Link href="/dashboard/order-forms/form7" className="text-blue-600 hover:text-blue-800 underline">Form 7</Link>, <Link href="/dashboard/order-forms/indemnity-letter" className="text-blue-600 hover:text-blue-800 underline">Form 8</Link> and <Link href="/dashboard/appendix/special-design-sample" className="text-blue-600 hover:text-blue-800 underline">Sample of Special Design Stand Submission</Link> if you intend to have special design on your stand and return to 
           Official Contractor. These forms need to be submitted with your stand design otherwise your stand design will be rejected.
         </p>
         
