@@ -2,13 +2,17 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
-// Define public paths that don't require authentication
+// Define paths that don't require authentication
 const PUBLIC_PATHS = [
   '/auth/signin',
   '/auth/signup',
   '/auth/forgot-password',
   '/auth/reset-password',
 ];
+
+const isPublicPath = (path: string) => {
+  return PUBLIC_PATHS.some(publicPath => path.startsWith(publicPath));
+};
 
 export async function middleware(request: NextRequest) {
   const requestPath = request.nextUrl.pathname;
@@ -21,6 +25,11 @@ export async function middleware(request: NextRequest) {
     requestPath.includes('.') ||
     requestPath === '/heartbeat'
   ) {
+    return NextResponse.next();
+  }
+  
+  // Always allow access to public paths (auth pages)
+  if (isPublicPath(requestPath)) {
     return NextResponse.next();
   }
   
@@ -41,7 +50,6 @@ export async function middleware(request: NextRequest) {
             return cookie?.value;
           },
           set(name, value, options) {
-            // If the response has already been modified, we need to clone it
             request.cookies.set(name, value);
             response.cookies.set({
               name,
@@ -61,85 +69,54 @@ export async function middleware(request: NextRequest) {
       }
     );
 
-    // Debug: Log some important cookie names to help with debugging
+    // Debug: Log some important cookie names
     const accessTokenCookie = request.cookies.get('sb-access-token');
-    const refreshTokenCookie = request.cookies.get('sb-refresh-token');
+    const projectAccessTokenCookie = request.cookies.get('sb-kiotgupdmepdyiscbrmb-access-token');
     const authTokenCookie = request.cookies.get('sb-kiotgupdmepdyiscbrmb-auth-token');
     
     console.log('[Middleware] Cookie status:', {
       hasAccessToken: !!accessTokenCookie,
-      hasRefreshToken: !!refreshTokenCookie,
+      hasProjectAccessToken: !!projectAccessTokenCookie,
       hasAuthToken: !!authTokenCookie,
     });
     
-    // Add a circuit breaker to detect and prevent redirect loops
-    const redirectCount = parseInt(request.headers.get('x-redirect-count') || '0', 10);
-    if (redirectCount > 3) {
-      console.log('[Middleware] Redirect loop detected! Allowing request to proceed without redirect.');
-      return response;
-    }
-    
-    // Get the session - this is the most critical part
-    const { data } = await supabase.auth.getSession();
+    // Get the session
+    const { data, error } = await supabase.auth.getSession();
     const session = data.session;
     
     console.log(`[Middleware] Path: ${requestPath}, Session exists: ${!!session}`);
     
-    // If we have a session (user is logged in)
-    if (session) {
-      // If user is trying to access auth pages but is already logged in,
-      // redirect them to the dashboard
-      if (requestPath.startsWith('/auth')) {
-        console.log('[Middleware] User is authenticated, redirecting from auth page to dashboard');
-        const redirectUrl = new URL('/dashboard', request.url);
-        const redirectResponse = NextResponse.redirect(redirectUrl);
-        // Add redirect counter header to detect loops
-        redirectResponse.headers.set('x-redirect-count', (redirectCount + 1).toString());
-        return redirectResponse;
-      }
+    // Handle requests based on authentication status
+    if (!session) {
+      // User is not authenticated
       
-      // If user is at the root path, redirect to dashboard
-      if (requestPath === '/') {
-        console.log('[Middleware] User is authenticated, redirecting from root to dashboard');
-        const redirectUrl = new URL('/dashboard', request.url);
-        const redirectResponse = NextResponse.redirect(redirectUrl);
-        // Add redirect counter header to detect loops
-        redirectResponse.headers.set('x-redirect-count', (redirectCount + 1).toString());
-        return redirectResponse;
-      }
-      
-      // For all other paths, proceed as normal for authenticated users
-      return response;
-    }
-    // If we don't have a session (user is not logged in)
-    else {
-      // If user is trying to access protected pages, redirect to signin
-      if (requestPath.startsWith('/dashboard')) {
-        console.log('[Middleware] User is not authenticated, redirecting from dashboard to signin');
+      // If trying to access protected pages (dashboard), redirect to signin
+      if (requestPath.startsWith('/dashboard') || requestPath === '/') {
+        console.log('[Middleware] User is not authenticated, redirecting to signin');
         const redirectUrl = new URL('/auth/signin', request.url);
-        const redirectResponse = NextResponse.redirect(redirectUrl);
-        // Add redirect counter header to detect loops
-        redirectResponse.headers.set('x-redirect-count', (redirectCount + 1).toString());
-        return redirectResponse;
+        return NextResponse.redirect(redirectUrl);
       }
+    } else {
+      // User is authenticated
       
-      // If user is at the root path, redirect to signin
+      // If at root path, redirect to dashboard
       if (requestPath === '/') {
-        console.log('[Middleware] User is not authenticated, redirecting from root to signin');
-        const redirectUrl = new URL('/auth/signin', request.url);
-        const redirectResponse = NextResponse.redirect(redirectUrl);
-        // Add redirect counter header to detect loops
-        redirectResponse.headers.set('x-redirect-count', (redirectCount + 1).toString());
-        return redirectResponse;
+        console.log('[Middleware] User is authenticated, redirecting to dashboard');
+        const redirectUrl = new URL('/dashboard', request.url);
+        return NextResponse.redirect(redirectUrl);
       }
-      
-      // For all other paths, proceed as normal for unauthenticated users
-      return response;
     }
+    
+    // For all other paths, proceed normally
+    return response;
+    
   } catch (error) {
     console.error('[Middleware] Error in middleware:', error);
-    // In case of error, proceed to the requested page
-    // This avoids locking users out completely if there's an issue
+    // On error, allow access to signin page
+    if (requestPath.startsWith('/dashboard')) {
+      return NextResponse.redirect(new URL('/auth/signin', request.url));
+    }
+    // For all other errors, just proceed
     return response;
   }
 }
