@@ -66,7 +66,7 @@ export default function CustomizedBoothDesignPage() {
             </div>
             <div>
               <h3 className="font-bold">Final Approval</h3>
-              <p>Receive approval certificate for build-up access</p>
+              <p>Receive approval email for build-up access</p>
             </div>
           </div>
         </div>
