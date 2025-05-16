@@ -122,7 +122,7 @@ export default function DesignSubmissionPage() {
             </div>
             <div>
               <h3 className="font-bold">Final Approval</h3>
-              <p className="text-sm">Once approved, you will receive an approval certificate that must be presented to security during the construction period.</p>
+              <p className="text-sm">Once approved, you will receive an email that must be presented to security during the construction period.</p>
             </div>
           </div>
         </div>
