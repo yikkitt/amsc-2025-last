@@ -264,7 +264,6 @@ export default function AdminFeesForm({ userData }: AdminFeesFormProps) {
                     value={squareMetre}
                     onChange={(e) => setSquareMetre(e.target.value)}
                     className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    readOnly
                   />
                 </div>
               </div>
