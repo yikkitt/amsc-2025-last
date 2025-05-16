@@ -73,15 +73,17 @@ export default async function DashboardLayout({
     console.log('[DASHBOARD LAYOUT] Valid session found, user ID:', session.user.id);
 
     return (
-      <div className="flex min-h-screen flex-col lg:flex-row">
+      <div className="min-h-screen flex flex-col lg:flex-row">
         <Sidebar />
-        <div className="flex-1 flex flex-col w-full h-screen">
+        <div className="flex-1 flex flex-col w-full">
           <PageHeader />
-          <div className="flex-1 overflow-y-auto overscroll-none">
-            <div className="p-4 sm:p-6 md:px-8 lg:px-12 max-w-6xl mx-auto w-full pt-4 pb-40">
-              {children}
+          <main className="relative flex-1 pb-40">
+            <div className="absolute inset-0 overflow-y-auto">
+              <div className="p-4 sm:p-6 md:px-8 lg:px-12 max-w-6xl mx-auto w-full">
+                {children}
+              </div>
             </div>
-          </div>
+          </main>
         </div>
       </div>
     );

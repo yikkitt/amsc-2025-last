@@ -290,14 +290,14 @@ export default function Sidebar() {
       @media (max-width: 1023px) {
         body {
           position: relative;
-          height: 100%;
-          width: 100%;
         }
         body.sidebar-open {
           overflow: hidden;
-          position: fixed;
-          width: 100%;
-          height: 100%;
+          touch-action: none;
+        }
+        main {
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior: contain;
         }
       }
     `;
