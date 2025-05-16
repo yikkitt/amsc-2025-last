@@ -14,7 +14,7 @@ import {
   Menu,
   X
 } from 'lucide-react'
-import { useState, memo, useEffect } from 'react'
+import { useState, memo, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
 
@@ -216,6 +216,34 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  
+  // Add CSS once for the scrollbar
+  useEffect(() => {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+      .mobile-sidebar-scroll {
+        -webkit-overflow-scrolling: touch;
+      }
+      .mobile-sidebar-scroll::-webkit-scrollbar {
+        width: 4px;
+      }
+      .mobile-sidebar-scroll::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .mobile-sidebar-scroll::-webkit-scrollbar-thumb {
+        background-color: rgba(156, 163, 175, 0.5);
+        border-radius: 20px;
+      }
+    `;
+    document.head.appendChild(styleElement);
+    
+    return () => {
+      if (styleElement.parentNode) {
+        styleElement.parentNode.removeChild(styleElement);
+      }
+    };
+  }, []);
   
   // Handle window resize
   useEffect(() => {
@@ -230,6 +258,19 @@ export default function Sidebar() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+  
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
   
   // Close mobile menu when route changes
   useEffect(() => {
@@ -252,10 +293,14 @@ export default function Sidebar() {
       onClick={() => setIsMobileMenuOpen(false)}
       />
       
-      <div className={cn(
-        "fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-gray-200 p-4 overflow-y-auto transition-transform duration-300 lg:transition-none lg:translate-x-0 lg:relative",
-        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-      )}>
+      <div
+        ref={sidebarRef}
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-gray-200 pt-16 pb-4 px-4 transition-transform duration-300 lg:transition-none lg:translate-x-0 lg:relative lg:pt-4",
+          "mobile-sidebar-scroll overflow-y-auto max-h-screen",
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        )}
+      >
         <div className="flex justify-center mb-6">
           <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
             <Image 
@@ -271,7 +316,7 @@ export default function Sidebar() {
             />
           </Link>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-4 pb-20 lg:pb-0">
           <Link 
             href="/dashboard" 
             className={cn(
