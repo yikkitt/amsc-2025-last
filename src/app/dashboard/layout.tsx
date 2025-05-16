@@ -77,7 +77,7 @@ export default async function DashboardLayout({
         <Sidebar />
         <div className="flex-1 flex flex-col w-full overflow-hidden">
           <PageHeader />
-          <div className="flex-grow p-4 sm:p-6 md:px-8 lg:px-12 max-w-6xl mx-auto w-full pt-4 mt-2 overflow-y-auto pb-24">
+          <div className="flex-grow p-4 sm:p-6 md:px-8 lg:px-12 max-w-6xl mx-auto w-full pt-4 mt-2 overflow-y-auto pb-32 -mb-6 overscroll-contain">
             {children}
           </div>
         </div>

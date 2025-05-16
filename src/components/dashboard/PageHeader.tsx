@@ -17,16 +17,16 @@ export const PageHeader = () => {
 
   return (
     <header className="bg-white border-b border-gray-200">
-      <div className="mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+      <div className="mx-auto px-2 sm:px-4 lg:px-8">
+        <div className="flex h-14 items-center justify-between">
           {/* Mobile menu button or spacer */}
-          <div className="w-12 lg:hidden">
+          <div className="w-14 lg:hidden">
             {/* Empty div to balance layout */}
           </div>
           
           {/* Mobile centered title with proper width constraints */}
-          <div className="lg:hidden text-center max-w-[65%] truncate">
-            <h1 className="text-xl font-semibold text-gray-900">
+          <div className="lg:hidden text-center max-w-[60%] truncate">
+            <h1 className="text-lg font-semibold text-gray-900">
               AMSC 2025 Exhibitor Manual
             </h1>
           </div>
@@ -41,7 +41,7 @@ export const PageHeader = () => {
           <div className="flex items-center">
             <button
               onClick={handleSignOut}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               Sign Out
             </button>

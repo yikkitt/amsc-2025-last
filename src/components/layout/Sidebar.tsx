@@ -235,6 +235,12 @@ export default function Sidebar() {
         background-color: rgba(156, 163, 175, 0.5);
         border-radius: 20px;
       }
+      body.sidebar-open {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
     `;
     document.head.appendChild(styleElement);
     
@@ -262,13 +268,13 @@ export default function Sidebar() {
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.classList.add('sidebar-open');
     } else {
-      document.body.style.overflow = '';
+      document.body.classList.remove('sidebar-open');
     }
     
     return () => {
-      document.body.style.overflow = '';
+      document.body.classList.remove('sidebar-open');
     };
   }, [isMobileMenuOpen]);
   
@@ -296,7 +302,7 @@ export default function Sidebar() {
       <div
         ref={sidebarRef}
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-gray-200 pt-16 pb-4 px-4 transition-transform duration-300 lg:transition-none lg:translate-x-0 lg:relative lg:pt-4",
+          "fixed inset-y-0 left-0 z-45 w-72 bg-white border-r border-gray-200 pt-16 pb-4 px-4 transition-transform duration-300 lg:transition-none lg:translate-x-0 lg:relative lg:pt-4 lg:z-0",
           "mobile-sidebar-scroll overflow-y-auto max-h-screen",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
