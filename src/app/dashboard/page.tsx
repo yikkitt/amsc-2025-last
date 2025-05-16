@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import WelcomeBanner from '@/components/dashboard/WelcomeBanner';
-import NewsUpdates from '@/components/dashboard/NewsUpdates';
 import DeadlineReminders from '@/components/dashboard/DeadlineReminders';
 import CompanyData from '@/components/dashboard/CompanyData';
 import VenueFloorPlan from '@/components/dashboard/VenueFloorPlan';
@@ -51,20 +50,15 @@ export default async function DashboardPage() {
         companyName={companyName}
       />
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="space-y-6">
-          <CompanyData 
-            companyName={companyName}
-            contactPerson={contactPerson}
-            boothNumber={boothNumber}
-            email={email}
-          />
-          <VenueFloorPlan />
-        </div>
-        <div className="space-y-6">
-          <DeadlineReminders />
-          <NewsUpdates />
-        </div>
+      <div className="space-y-6">
+        <CompanyData 
+          companyName={companyName}
+          contactPerson={contactPerson}
+          boothNumber={boothNumber}
+          email={email}
+        />
+        <DeadlineReminders />
+        <VenueFloorPlan />
       </div>
     </div>
   )
