@@ -168,13 +168,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // First, refresh the current route to properly set cookies
       router.refresh();
       
+      // Log cookie status after setting them for diagnostic purposes
+      console.log('Cookie status after setting:', {
+        accessTokenExists: document.cookie.includes('access-token'),
+        refreshTokenExists: document.cookie.includes('refresh-token'),
+        authTokenExists: document.cookie.includes('auth-token'),
+        allCookies: document.cookie.split(';').map(c => c.trim().split('=')[0])
+      });
+      
       // Then wait and use a full page navigation
       console.log('Login successful, waiting briefly before navigation');
       setTimeout(() => {
         // Use window.location for a full page refresh that ensures
         // the server sees all the cookies on the next request
         window.location.href = '/';
-      }, 500);
+      }, 1500);
     } catch (error: any) {
       console.error('Error in signIn function:', error);
       throw error;
