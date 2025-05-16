@@ -237,29 +237,29 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
               
               {/* Order Items Table */}
               <div className="overflow-x-auto mb-6">
-                <table className="w-full text-sm">
+                <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
                   <thead>
-                    <tr className="bg-gray-100">
-                      <th className="px-4 py-2 text-left">Item</th>
-                      <th className="px-4 py-2 text-center">Unit</th>
-                      <th className="px-4 py-2 text-right">Rate (RM)</th>
-                      <th className="px-4 py-2 text-center">Quantity</th>
-                      <th className="px-4 py-2 text-right">Total (RM)</th>
+                    <tr className="bg-blue-50">
+                      <th className="border border-gray-300 p-2 text-left">Item</th>
+                      <th className="border border-gray-300 p-2 text-center">Unit</th>
+                      <th className="border border-gray-300 p-2 text-center">Rate (RM)</th>
+                      <th className="border border-gray-300 p-2 text-center">Quantity</th>
+                      <th className="border border-gray-300 p-2 text-center">Total (RM)</th>
                     </tr>
                   </thead>
                   <tbody>
                     {submittedData?.order_items?.map((item: AVEquipmentItem) => (
                       <tr key={item.id} className="border-b">
-                        <td className="px-4 py-2">{item.name}</td>
-                        <td className="px-4 py-2 text-center">{item.unit}</td>
-                        <td className="px-4 py-2 text-right">{item.rate.toFixed(2)}</td>
-                        <td className="px-4 py-2 text-center">{item.quantity}</td>
-                        <td className="px-4 py-2 text-right">{item.total.toFixed(2)}</td>
+                        <td className="border border-gray-300 p-2">{item.name}</td>
+                        <td className="border border-gray-300 p-2 text-center">{item.unit}</td>
+                        <td className="border border-gray-300 p-2 text-center">{item.rate.toFixed(2)}</td>
+                        <td className="border border-gray-300 p-2 text-center">{item.quantity}</td>
+                        <td className="border border-gray-300 p-2 text-center">{item.total.toFixed(2)}</td>
                       </tr>
                     ))}
                     <tr className="font-bold">
-                      <td colSpan={4} className="px-4 py-2 text-right">Subtotal:</td>
-                      <td className="px-4 py-2 text-right">
+                      <td colSpan={4} className="border border-gray-300 p-2 text-right">Subtotal:</td>
+                      <td className="border border-gray-300 p-2 text-center">
                         {submittedData?.subtotal?.toFixed(2) || '0.00'}
                       </td>
                     </tr>
@@ -328,37 +328,37 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
 
             {/* Order Items Table */}
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
                 <thead>
-                  <tr className="bg-gray-100">
-                    <th className="px-4 py-2 text-left">Item</th>
-                    <th className="px-4 py-2 text-center">Unit</th>
-                    <th className="px-4 py-2 text-right">Rate (RM)</th>
-                    <th className="px-4 py-2 text-center">Quantity</th>
-                    <th className="px-4 py-2 text-right">Total (RM)</th>
+                  <tr className="bg-blue-50">
+                    <th className="border border-gray-300 p-2 text-left">Item</th>
+                    <th className="border border-gray-300 p-2 text-center">Unit</th>
+                    <th className="border border-gray-300 p-2 text-center">Rate (RM)</th>
+                    <th className="border border-gray-300 p-2 text-center">Quantity</th>
+                    <th className="border border-gray-300 p-2 text-center">Total (RM)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {orderItems.map(item => (
-                    <tr key={item.id} className="border-b">
-                      <td className="px-4 py-2">{item.name}</td>
-                      <td className="px-4 py-2 text-center">{item.unit}</td>
-                      <td className="px-4 py-2 text-right">{item.rate.toFixed(2)}</td>
-                      <td className="px-4 py-2">
+                    <tr key={item.id} className={item.quantity > 0 ? 'bg-gray-50' : 'text-gray-400'}>
+                      <td className="border border-gray-300 p-2">{item.name}</td>
+                      <td className="border border-gray-300 p-2 text-center">{item.unit}</td>
+                      <td className="border border-gray-300 p-2 text-center">{item.rate.toFixed(2)}</td>
+                      <td className="border border-gray-300 p-2 text-center">
                         <input
                           type="number"
                           min="0"
                           value={item.quantity}
                           onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
-                          className="w-20 text-center border border-gray-300 rounded p-1"
+                          className="w-16 text-center border border-gray-300 rounded p-1"
                         />
                       </td>
-                      <td className="px-4 py-2 text-right">{item.total.toFixed(2)}</td>
+                      <td className="border border-gray-300 p-2 text-center">{item.total.toFixed(2)}</td>
                     </tr>
                   ))}
                   <tr className="font-bold">
-                    <td colSpan={4} className="px-4 py-2 text-right">Subtotal:</td>
-                    <td className="px-4 py-2 text-right">{calculateSubtotal().toFixed(2)}</td>
+                    <td colSpan={4} className="border border-gray-300 p-2 text-right">Subtotal:</td>
+                    <td className="border border-gray-300 p-2 text-center">{calculateSubtotal().toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>
