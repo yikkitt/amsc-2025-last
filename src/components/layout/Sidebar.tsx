@@ -283,6 +283,30 @@ export default function Sidebar() {
     setIsMobileMenuOpen(false);
   }, [pathname]);
   
+  // Add CSS for better mobile scrolling
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @media (max-width: 1023px) {
+        body {
+          position: relative;
+          height: 100%;
+          width: 100%;
+        }
+        body.sidebar-open {
+          overflow: hidden;
+          position: fixed;
+          width: 100%;
+          height: 100%;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+  
   if (!isMounted) {
     // Return a placeholder with the same width to avoid layout shift
     return <div className="hidden lg:block w-72 shrink-0" />;
