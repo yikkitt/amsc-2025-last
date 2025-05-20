@@ -30,6 +30,7 @@ export interface FormData {
     telephone?: string;
     tax_identification_number?: string;
     address?: string;
+    designation?: string;
   };
   auth_details?: {
     name?: string;

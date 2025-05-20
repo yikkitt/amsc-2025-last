@@ -191,6 +191,11 @@ function standardizeCompanyData(data: Record<string, any>): void {
   } else if (data.phone && !data.company_data.tel) {
     data.company_data.tel = data.phone;
   }
+
+  // Designation
+  if (data.designation && !data.company_data.designation) {
+    data.company_data.designation = data.designation;
+  }
 }
 
 /**

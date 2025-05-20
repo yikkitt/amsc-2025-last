@@ -15,6 +15,7 @@ interface UserDataProps {
     telephone?: string;
     tax_identification_number?: string;
     email?: string;
+    designation?: string;
   } | null;
 }
 
@@ -82,6 +83,11 @@ export default function UserDataContainer({ userData }: UserDataProps) {
           <div className="mb-4">
             <span className="font-medium block">Country</span>
             <span className="text-blue-700">{userData.country || '-'}</span>
+          </div>
+          
+          <div className="mb-4">
+            <span className="font-medium block">Designation</span>
+            <span className="text-blue-700">{userData.designation || '-'}</span>
           </div>
         </div>
         

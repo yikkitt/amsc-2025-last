@@ -7,6 +7,7 @@ interface CompanyDataProps {
   boothNumber?: string;
   email?: string;
   isLoading?: boolean;
+  designation?: string;
 }
 
 export default function CompanyData({
@@ -14,7 +15,8 @@ export default function CompanyData({
   contactPerson = 'Not Available',
   boothNumber = 'Not Available',
   email = 'Not Available',
-  isLoading = false
+  isLoading = false,
+  designation = 'Not Available'
 }: CompanyDataProps) {
   // Data cards for display - coming from Supabase
   const dataItems = [
@@ -41,6 +43,12 @@ export default function CompanyData({
       label: 'Email',
       value: email,
       icon: <Mail size={20} />
+    },
+    {
+      id: 'designation',
+      label: 'Designation',
+      value: designation,
+      icon: <User size={20} />
     }
   ];
   

@@ -42,6 +42,7 @@ export default async function DashboardPage() {
   const contactPerson = userData?.contact_person || data.session.user.user_metadata?.contact_person || 'Not Available';
   const boothNumber = userData?.booth_number || data.session.user.user_metadata?.booth_number || 'Not Available';
   const email = userData?.email || data.session.user.email || 'Not Available';
+  const designation = userData?.designation || data.session.user.user_metadata?.designation || 'Not Available';
 
   return (
     <div className="space-y-6 dashboard-content">
@@ -56,6 +57,7 @@ export default async function DashboardPage() {
           contactPerson={contactPerson}
           boothNumber={boothNumber}
           email={email}
+          designation={designation}
         />
         <DeadlineReminders />
         <VenueFloorPlan />
