@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from './AuthProvider';
 import { ErrorMessage } from './ErrorMessage';
+import React from 'react';
 
 // Country and state data
 const COUNTRIES = [
@@ -248,12 +249,13 @@ export function SignupForm() {
   const { signUp } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
-  const [selectedCountry, setSelectedCountry] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState('MY');
   
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -267,7 +269,7 @@ export function SignupForm() {
       address: '',
       postcode: '',
       state: '',
-      country: '',
+      country: 'MY',
       tax_identification_number: '',
       fax: '',
       password: '',
@@ -277,6 +279,13 @@ export function SignupForm() {
 
   // Watch the country field to update state options
   const watchCountry = watch('country');
+
+  // Update state field when country changes
+  React.useEffect(() => {
+    if (watchCountry !== 'MY') {
+      setValue('state', ''); // Clear state when not Malaysia
+    }
+  }, [watchCountry, setValue]);
 
   const onSubmit = async (data: SignupFormValues) => {
     try {
@@ -478,9 +487,13 @@ export function SignupForm() {
               id="country"
               {...register('country')}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              onChange={(e) => setSelectedCountry(e.target.value)}
+              onChange={(e) => {
+                setSelectedCountry(e.target.value);
+                if (e.target.value !== 'MY') {
+                  setValue('state', ''); // Clear state when not Malaysia
+                }
+              }}
             >
-              <option value="">Select a country</option>
               {COUNTRIES.map((country) => (
                 <option key={country.code} value={country.code}>
                   {country.name}
@@ -517,6 +530,7 @@ export function SignupForm() {
                 type="text"
                 {...register('state')}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                placeholder="Enter state/province"
               />
             )}
             {errors.state && (
@@ -533,6 +547,7 @@ export function SignupForm() {
               type="text"
               {...register('tax_identification_number')}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              placeholder={watchCountry === 'MY' ? 'Enter Malaysian TIN' : 'Enter TIN (if applicable)'}
             />
             {errors.tax_identification_number && (
               <p className="mt-1 text-sm text-red-600">{errors.tax_identification_number.message}</p>
