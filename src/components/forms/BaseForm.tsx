@@ -6,6 +6,7 @@ import { z } from 'zod'
 export const baseFormSchema = z.object({
   company_name: z.string().min(1, 'Company name is required'),
   contact_person: z.string().min(1, 'Contact person is required'),
+  designation: z.string().min(1, 'Designation is required'),
   booth_number: z.string().min(1, 'Booth number is required'),
   telephone: z.string().min(1, 'Telephone is required'),
   email: z.string().email('Invalid email format'),
@@ -14,10 +15,23 @@ export const baseFormSchema = z.object({
 export type BaseFormData = z.infer<typeof baseFormSchema>
 
 interface BaseFormProps {
-  onSubmit: (data: BaseFormData) => Promise<void>
+  onSubmit: (data: BaseFormData) => void
   defaultValues?: Partial<BaseFormData>
   formType: number
   isSubmitting?: boolean
+  userData?: {
+    company_name: string
+    booth_number: string
+    contact_person?: string
+    designation?: string
+    address?: string
+    postcode?: string
+    state?: string
+    country?: string
+    tel?: string
+    tax_identification_number?: string
+    email?: string
+  }
 }
 
 export const BaseForm: React.FC<BaseFormProps> = ({
@@ -25,6 +39,7 @@ export const BaseForm: React.FC<BaseFormProps> = ({
   defaultValues,
   formType,
   isSubmitting = false,
+  userData,
 }) => {
   const {
     register,
@@ -32,7 +47,10 @@ export const BaseForm: React.FC<BaseFormProps> = ({
     formState: { errors },
   } = useForm<BaseFormData>({
     resolver: zodResolver(baseFormSchema),
-    defaultValues,
+    defaultValues: {
+      ...defaultValues,
+      designation: userData?.designation || defaultValues?.designation || '',
+    },
   })
 
   return (
@@ -64,6 +82,21 @@ export const BaseForm: React.FC<BaseFormProps> = ({
         />
         {errors.contact_person && (
           <p className="mt-1 text-sm text-red-600">{errors.contact_person.message}</p>
+        )}
+      </div>
+
+      <div>
+        <label htmlFor="designation" className="block text-sm font-medium text-gray-700">
+          Designation
+        </label>
+        <input
+          type="text"
+          id="designation"
+          {...register('designation')}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        />
+        {errors.designation && (
+          <p className="mt-1 text-sm text-red-600">{errors.designation.message}</p>
         )}
       </div>
 

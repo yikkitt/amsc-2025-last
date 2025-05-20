@@ -81,7 +81,7 @@ export const PdfButton: React.FC<PdfButtonProps> = ({
   return (
     <button
       onClick={generatePDF}
-      className={`${className} flex items-center justify-center transition-colors duration-200`}
+      className={`${className} flex items-center justify-center transition-colors duration-200 print:hidden`}
     >
       <svg 
         xmlns="http://www.w3.org/2000/svg" 

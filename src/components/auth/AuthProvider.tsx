@@ -9,6 +9,7 @@ type UserProfile = {
   company_name: string;
   booth_number: string;
   contact_person: string;
+  designation: string;
   email: string;
   telephone: string;
   address: string;
@@ -203,6 +204,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             company_name: profile.company_name,
             booth_number: profile.booth_number,
             contact_person: profile.contact_person,
+            designation: profile.designation,
             email: profile.email,
             telephone: profile.telephone,
             address: profile.address,
@@ -243,6 +245,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           company_name: profile.company_name || '',
           booth_number: profile.booth_number || '',
           contact_person: profile.contact_person || '',
+          designation: profile.designation || '',
           email: profile.email || '',
           telephone: profile.telephone || '',
           tel: profile.telephone || '',

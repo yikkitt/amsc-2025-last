@@ -2,6 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Print styles for PDF generation */
+@media print {
+  /* Hide buttons and navigation elements */
+  button,
+  a[href]:not([href^="#"]),
+  .print:hidden,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Remove background colors and shadows */
+  * {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Ensure text is black for better readability */
+  body {
+    color: #000 !important;
+  }
+
+  /* Remove unnecessary spacing */
+  .space-y-8,
+  .space-y-6,
+  .space-y-4 {
+    margin-top: 1rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  /* Ensure page breaks don't occur in the middle of important content */
+  table,
+  tr,
+  td {
+    page-break-inside: avoid;
+  }
+
+  /* Add page breaks before new sections */
+  h1, h2 {
+    page-break-before: always;
+  }
+
+  /* Prevent orphaned headings */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-rgb: 255, 255, 255;

@@ -137,7 +137,13 @@ export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) 
 
       const missingFields = requiredFields.filter(field => !formData.get(field));
       if (missingFields.length > 0) {
-        throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`);
+        throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`)
+      }
+
+      // Check if at least one item is ordered
+      const hasOrders = orderItems.some(item => item.quantity > 0)
+      if (!hasOrders) {
+        throw new Error('Please order at least one item')
       }
 
       const formDataObj = {
@@ -322,7 +328,7 @@ export default function PrintingOrderForm({ userData }: PrintingOrderFormProps) 
               />
               <Link
                 href="/"
-                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
+                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors print:hidden"
               >
                 Return to Dashboard
               </Link>

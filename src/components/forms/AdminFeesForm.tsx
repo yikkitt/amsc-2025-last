@@ -239,7 +239,7 @@ export default function AdminFeesForm({ userData }: AdminFeesFormProps) {
               />
               <Link
                 href="/"
-                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
+                className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors print:hidden"
               >
                 Return to Dashboard
               </Link>

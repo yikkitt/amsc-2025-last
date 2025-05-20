@@ -23,7 +23,7 @@ export const FormActions: React.FC<FormActionsProps> = ({
   includeEmptyItems = false,
 }) => {
   return (
-    <div className="flex justify-center space-x-6 mt-8">
+    <div className="flex justify-center space-x-6 mt-8 print:hidden">
       <button
         type="button"
         onClick={onCancel}
@@ -36,7 +36,6 @@ export const FormActions: React.FC<FormActionsProps> = ({
         <PdfButton
           formData={submittedData}
           formType={formType}
-          includeEmptyItems={includeEmptyItems}
           containerRef={containerRef}
           className="px-8 py-3"
         />
