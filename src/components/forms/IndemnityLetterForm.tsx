@@ -145,9 +145,9 @@ export default function IndemnityLetterForm({ userData }: IndemnityLetterFormPro
 
   return (
     <div className="w-full max-w-5xl mx-auto">
-      <div ref={containerRef} className="bg-white p-6 rounded-lg shadow">
+      <div ref={containerRef} className="bg-white p-6 rounded-lg shadow print:shadow-none print:p-0">
         {/* Form Header */}
-        <div className="text-center mb-8 border-b border-gray-200 pb-6">
+        <div className="text-center mb-8 border-b border-gray-200 pb-6 print:break-after-avoid">
           <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 8</h1>
           <h2 className="text-xl font-semibold mb-4">LETTER OF INDEMNITY FOR NON-OFFICIAL CONTRACTOR</h2>
           <p className="text-gray-600 mb-2">DEADLINE: 30th June 2025</p>
@@ -164,7 +164,7 @@ export default function IndemnityLetterForm({ userData }: IndemnityLetterFormPro
             <span className="ml-3 text-gray-600">Checking submission status...</span>
           </div>
         ) : submitted ? (
-          <div className="space-y-8">
+          <div className="space-y-8 print:space-y-4">
             <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
               <div className="text-green-600 font-semibold text-lg mb-2">
                 Form Successfully Submitted
@@ -219,9 +219,9 @@ export default function IndemnityLetterForm({ userData }: IndemnityLetterFormPro
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-8" ref={formRef}>
+          <form onSubmit={handleSubmit} className="space-y-8 print:space-y-4" ref={formRef}>
             {/* Instructions and Rules */}
-            <div className="space-y-4 text-sm bg-gray-50 p-4 rounded-lg">
+            <div className="space-y-4 text-sm bg-gray-50 p-4 rounded-lg print:bg-transparent print:p-0">
               <p className="font-semibold">It is the responsibility of the contractor to ensure all the regulations, policies and deadlines outlined in the contractor's regulations during the show are observed carefully and performed by contractor involved in Exhibition.</p>
               
               <h4 className="font-semibold text-blue-700 mt-4">Kuala Lumpur Convention Centre - Information & Rules for the Exhibitor's Appointed Contractor (EAC) When Working in the Centre:</h4>
@@ -268,7 +268,7 @@ export default function IndemnityLetterForm({ userData }: IndemnityLetterFormPro
             </div>
 
             {/* Authorization Section */}
-            <div className="mb-8">
+            <div className="mb-8 print:break-before-avoid">
               <div className="border border-gray-200 rounded-lg p-6 shadow-sm">
                 <h5 className="font-bold mb-4 text-blue-600">Authorized Representative Applying:</h5>
                 <div className="grid grid-cols-1 gap-4">
@@ -379,8 +379,8 @@ export default function IndemnityLetterForm({ userData }: IndemnityLetterFormPro
               </div>
             </div>
 
-            {/* Form Actions */}
-            <div className="flex justify-center space-x-6">
+            {/* Form Actions - Hide in PDF */}
+            <div className="flex justify-center space-x-6 print:hidden">
               <button
                 type="button"
                 onClick={() => router.back()}
@@ -395,6 +395,17 @@ export default function IndemnityLetterForm({ userData }: IndemnityLetterFormPro
               >
                 {isSubmitting ? 'Submitting...' : 'Submit Form'}
               </button>
+            </div>
+
+            {/* Footer - Only show in PDF */}
+            <div className="hidden print:block mt-8 pt-4 border-t border-gray-200">
+              <div className="text-center text-sm text-gray-600">
+                <p className="font-semibold mb-2">BLUE CIRCLE PLUS SDN BHD</p>
+                <p>Attn: Mr. Francis Chan / Ms. YJ Hoh</p>
+                <p>Email: francis@bcpgroup.com.my / yj@bcpgroup.com.my</p>
+                <p>Tel: +601-3257 9795 / +6016-263 1150</p>
+                <p className="mt-2">This form was generated on {new Date().toLocaleDateString()}</p>
+              </div>
             </div>
           </form>
         )}
