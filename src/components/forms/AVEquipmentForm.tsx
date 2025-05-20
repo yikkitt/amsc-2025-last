@@ -30,6 +30,7 @@ interface AVEquipmentFormProps {
     tel?: string
     tax_identification_number?: string
     email?: string
+    designation?: string
   } | null
 }
 
@@ -158,7 +159,7 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
         subtotal: calculateSubtotal(),
         auth_details: {
           name: formData.get('auth_name')?.toString() || userData?.contact_person || '',
-          designation: formData.get('auth_designation')?.toString() || '',
+          designation: formData.get('auth_designation')?.toString() || userData?.designation || '',
           company: formData.get('auth_company')?.toString() || userData?.company_name || '',
           booth_number: formData.get('auth_booth')?.toString() || userData?.booth_number || '',
           address: formData.get('auth_address')?.toString() || userData?.address || '',
@@ -396,6 +397,7 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
                         type="text" 
                         name="auth_designation"
                         className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        defaultValue={userData?.designation || ''}
                         required
                       />
                     </div>
