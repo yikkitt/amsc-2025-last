@@ -238,7 +238,7 @@ export default function AdminFeesForm({ userData }: AdminFeesFormProps) {
                 className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
               />
               <Link
-                href="/dashboard"
+                href="/"
                 className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
               >
                 Return to Dashboard
@@ -305,6 +305,118 @@ export default function AdminFeesForm({ userData }: AdminFeesFormProps) {
                 <li>Bank Account No: 800 984924</li>
                 <li>Bank Swift Code: CIBBMYKL</li>
               </ol>
+            </div>
+
+            {/* Authorization Section */}
+            <div className="mb-8">
+              <div className="border border-gray-200 rounded-lg p-6 shadow-sm">
+                <h5 className="font-bold mb-4 text-blue-600">Authorized Representative Applying:</h5>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Name</label>
+                      <input 
+                        type="text" 
+                        name="auth_name"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        defaultValue={userData?.contact_person || ''}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Designation</label>
+                      <input 
+                        type="text" 
+                        name="auth_designation"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Company</label>
+                    <input 
+                      type="text" 
+                      name="auth_company"
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      defaultValue={userData?.company_name || ''}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Booth No</label>
+                    <input 
+                      type="text" 
+                      name="auth_booth"
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      defaultValue={userData?.booth_number || ''}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Address</label>
+                    <textarea 
+                      name="auth_address"
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      rows={3}
+                      defaultValue={userData?.address || ''}
+                      required
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Tel</label>
+                      <input 
+                        type="tel" 
+                        name="auth_tel"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        defaultValue={userData?.tel || ''}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Tax Identification Number</label>
+                      <input 
+                        type="text" 
+                        name="auth_tax_identification_number"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        defaultValue={userData?.tax_identification_number || ''}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Email</label>
+                    <input 
+                      type="email" 
+                      name="auth_email"
+                      className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      defaultValue={userData?.email || ''}
+                      required
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Signature</label>
+                      <input 
+                        type="text" 
+                        name="auth_signature"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Date</label>
+                      <input 
+                        type="date" 
+                        name="auth_date"
+                        className="w-full border border-gray-300 rounded p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        defaultValue={new Date().toISOString().split('T')[0]}
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Form Actions */}

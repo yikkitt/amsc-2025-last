@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, CheckCircle, XCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Calendar, Clock, CheckCircle, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
@@ -43,7 +43,47 @@ interface FormDeadline {
 export default function DeadlineReminders() {
   const [forms, setForms] = useState<FormDeadline[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const supabase = createClientComponentClient();
+
+  // Add scroll handler to update arrow visibility
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setShowLeftArrow(scrollLeft > 0);
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10); // 10px buffer
+    }
+  };
+
+  // Add scroll buttons click handlers
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+    }
+  };
+
+  // Add scroll event listener
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll);
+      // Initial check for arrow visibility
+      handleScroll();
+    }
+    return () => {
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [forms]); // Re-run when forms change to update arrow visibility
 
   useEffect(() => {
     async function fetchFormSubmissions() {
@@ -223,76 +263,98 @@ export default function DeadlineReminders() {
   };
   
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className="bg-white rounded-lg shadow overflow-hidden relative">
       <ScrollbarHider />
-      <div className="p-4 bg-gradient-to-r from-blue-600 to-blue-700 flex items-center justify-between">
+      <div className="p-4 bg-gradient-to-r from-blue-600 to-blue-700 flex items-center">
         <div className="flex items-center">
           <Calendar className="text-white mr-2" size={20} />
           <h3 className="text-lg font-semibold text-white">Form Deadlines & Status</h3>
         </div>
-        <Link 
-          href="/dashboard/order-forms" 
-          className="text-xs text-white hover:text-blue-200 underline"
-        >
-          View all forms
-        </Link>
       </div>
       
-      <div className="p-4">
+      <div className="p-4 relative">
         {isLoading ? (
           <div className="flex justify-center items-center h-40">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
             <span className="ml-2 text-gray-600">Loading form status...</span>
           </div>
         ) : (
-          <div className="overflow-x-auto pb-4 hide-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
-            <div className="flex space-x-4 snap-x snap-mandatory w-fit">
-              {forms.map((form) => {
-                const daysLeft = calculateDaysLeft(form.date);
-                
-                return (
-                  <Link
-                    key={form.id}
-                    href={form.href}
-                    className="snap-start shrink-0 w-72 sm:w-80 group"
-                  >
-                    <div 
-                      className={`p-4 rounded-lg border ${getStatusColor(daysLeft, !!form.isSubmitted, 'border')} ${getStatusColor(daysLeft, !!form.isSubmitted, 'bg')} transition-all hover:shadow-md h-full`}
+          <>
+            {/* Left Arrow Button */}
+            {showLeftArrow && (
+              <button
+                onClick={scrollLeft}
+                className="absolute left-6 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white text-gray-800 rounded-full p-2 shadow-md transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Scroll left"
+              >
+                <ChevronLeft size={24} />
+              </button>
+            )}
+
+            {/* Right Arrow Button */}
+            {showRightArrow && (
+              <button
+                onClick={scrollRight}
+                className="absolute right-6 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white text-gray-800 rounded-full p-2 shadow-md transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Scroll right"
+              >
+                <ChevronRight size={24} />
+              </button>
+            )}
+
+            <div 
+              ref={scrollContainerRef}
+              className="overflow-x-auto pb-4 hide-scrollbar" 
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
+              <div className="flex space-x-4 snap-x snap-mandatory w-fit">
+                {forms.map((form) => {
+                  const daysLeft = calculateDaysLeft(form.date);
+                  
+                  return (
+                    <Link
+                      key={form.id}
+                      href={form.href}
+                      className="snap-start shrink-0 w-72 sm:w-80 group"
                     >
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className={`font-medium ${getStatusColor(daysLeft, !!form.isSubmitted, 'text')} text-sm sm:text-base w-3/5`}>
-                          {form.title}
-                        </h4>
-                        {form.isSubmitted ? (
-                          <div className="flex items-center bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs whitespace-nowrap">
-                            <CheckCircle size={14} className="mr-1 flex-shrink-0" />
-                            <span className="font-semibold">Submitted</span>
+                      <div 
+                        className={`p-4 rounded-lg border ${getStatusColor(daysLeft, !!form.isSubmitted, 'border')} ${getStatusColor(daysLeft, !!form.isSubmitted, 'bg')} transition-all hover:shadow-md h-full`}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className={`font-medium ${getStatusColor(daysLeft, !!form.isSubmitted, 'text')} text-sm sm:text-base w-3/5`}>
+                            {form.title}
+                          </h4>
+                          {form.isSubmitted ? (
+                            <div className="flex items-center bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs whitespace-nowrap">
+                              <CheckCircle size={14} className="mr-1 flex-shrink-0" />
+                              <span className="font-semibold">Submitted</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs whitespace-nowrap">
+                              <XCircle size={14} className="mr-1 flex-shrink-0" />
+                              <span className="font-semibold">Not Submitted</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="mt-2 flex justify-between items-center">
+                          <div className="flex items-center">
+                            <Clock size={14} className="text-gray-500 mr-1 flex-shrink-0" />
+                            <span className="text-xs text-gray-600">
+                              {daysLeft > 0 ? `${daysLeft} days remaining` : 'Deadline has passed'}
+                            </span>
                           </div>
-                        ) : (
-                          <div className="flex items-center bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs whitespace-nowrap">
-                            <XCircle size={14} className="mr-1 flex-shrink-0" />
-                            <span className="font-semibold">Not Submitted</span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="mt-2 flex justify-between items-center">
-                        <div className="flex items-center">
-                          <Clock size={14} className="text-gray-500 mr-1 flex-shrink-0" />
-                          <span className="text-xs text-gray-600">
-                            {daysLeft > 0 ? `${daysLeft} days remaining` : 'Deadline has passed'}
+                          <span className="text-xs font-semibold text-gray-500 ml-1">
+                            {form.date}
                           </span>
                         </div>
-                        <span className="text-xs font-semibold text-gray-500 ml-1">
-                          {form.date}
-                        </span>
                       </div>
-                    </div>
-                  </Link>
-                );
-              })}
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>

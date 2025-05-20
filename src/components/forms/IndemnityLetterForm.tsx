@@ -149,7 +149,7 @@ export default function IndemnityLetterForm({ userData }: IndemnityLetterFormPro
         {/* Form Header */}
         <div className="text-center mb-8 border-b border-gray-200 pb-6">
           <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 8</h1>
-          <h2 className="text-xl font-semibold mb-4">INDEMNITY LETTER</h2>
+          <h2 className="text-xl font-semibold mb-4">LETTER OF INDEMNITY FOR NON-OFFICIAL CONTRACTOR</h2>
           <p className="text-gray-600 mb-2">DEADLINE: 30th June 2025</p>
           <h3 className="text-lg font-semibold mb-2">Aesthetic Medicine & Surgery Conference & Exhibition 2025</h3>
           <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
@@ -211,7 +211,7 @@ export default function IndemnityLetterForm({ userData }: IndemnityLetterFormPro
                 className="px-8 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition-colors"
               />
               <Link
-                href="/dashboard"
+                href="/"
                 className="px-8 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
               >
                 Return to Dashboard
@@ -220,31 +220,55 @@ export default function IndemnityLetterForm({ userData }: IndemnityLetterFormPro
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-8" ref={formRef}>
-            {/* Instructions */}
+            {/* Instructions and Rules */}
             <div className="space-y-4 text-sm bg-gray-50 p-4 rounded-lg">
-              <p>This form must be completed and returned by every exhibitor with special design booth.</p>
-              <p>Please read the following carefully before signing:</p>
-              <div className="pl-4">
-                <p>1. We hereby confirm that we have appointed and authorized the following contractor to construct our booth at the above exhibition.</p>
-                <p>2. We confirm that we have read and understood the Exhibition Rules & Regulations as set out in the Exhibitor's Manual and confirm that we will comply with them.</p>
-                <p>3. We further confirm that we have reminded our contractor to read and understand the Rules & Regulations and to comply with them accordingly.</p>
-                <p>4. We agree that we will be fully responsible and will indemnify the Organizer and Official Contractor against any claims arising from any damage to property or injury including death to any person which may in any way be connected with the construction of our booth by our contractor or his servants or agents.</p>
-                <p>5. We also agree that we will be responsible for any damages to the exhibition hall that may occur during construction, fair days and dismantling.</p>
+              <p className="font-semibold">It is the responsibility of the contractor to ensure all the regulations, policies and deadlines outlined in the contractor's regulations during the show are observed carefully and performed by contractor involved in Exhibition.</p>
+              
+              <h4 className="font-semibold text-blue-700 mt-4">Kuala Lumpur Convention Centre - Information & Rules for the Exhibitor's Appointed Contractor (EAC) When Working in the Centre:</h4>
+              <ol className="list-decimal list-inside space-y-2 pl-4">
+                <li>All non-official contractors are required to register with the Official Contractor.</li>
+                <li>The EAC must possess valid business registration license, workmen compensation insurance and public liability and or third-party liability insurance.</li>
+                <li>The EAC must wear a pass supplied by the official contractor all the times when entering to the halls.</li>
+                <li>All Malaysian workers must possess an Identity Card (IC) and all foreign worker must possess a valid work permit in order to obtain a contractor badge.</li>
+                <li>No persons under age 18 years old are permitted to enter or work on the premises.</li>
+                <li>No consumption of food items is allowed either at the back-of-house, loading docks, along Persiaran KLCC or in the public areas.</li>
+                <li>Alcohol is not permitted in the work areas and no one is allowed to work while under the influence of drugs or alcohol.</li>
+                <li>Smoking is not allowed at any time in the Halls and associated work areas.</li>
+                <li>Covered footwear must be worn at all times whilst working on site. No thongs, sandals or open-toed shoes are allowed.</li>
+                <li>Construction materials are not allowed to be piled onto NO FREIGHT AISLE, or obstruct fire exit and firefighting equipment. All materials must be kept within contracted booth space at all times.</li>
+                <li>All contractors and their employees are strictly prohibited from using the guest's toilet facilities or loitering at the lobby and guest's area.</li>
+                <li>Urinating in paint washing room or any unauthorised designation is strictly prohibited.</li>
+                <li>Preparation and cleaning of paints must be conducted in wash room located at ground floor; loading dock 2 and loading dock 4.</li>
+                <li>Contractor caught cleaning and disposing paint, chemical of build-up materials in the toilet bowl and washing basin will be penalised and liable to bear any cost incurred for rectifying the drainage system.</li>
+                <li>All contractors must ensure the removal of all debris, rubbish and packing materials from the premises.</li>
+                <li>Activities which generate dust such as welding, sanding sawing are strictly prohibited. Stand structure shall pre-fabricate off site and no major painting is permitted.</li>
+                <li>Any person working on scaffolding of 2 metres and above must be protected with appropriate personal protective equipment such as safety helmet, body harness, covered or safety shoes. Only competent and experienced personnel shall be allowed to erect and dismantle the scaffolding.</li>
+                <li>Screwing, drilling, nailing or painting on the floor, walls, pillars or any part of the Exhibition Hall are strictly not allowed.</li>
+                <li>Unruly or unacceptable behaviour and violent acts are strictly prohibited. People acting without due care for others or not following directions of Security personnel shall be evicted from site.</li>
+                <li>Any person with using abusive language, violent behaviour or committing unsafe work practices and or non-compliance activities will be prohibited from working in the Centre immediately.</li>
+                <li>The KL Convention Centre's Security Department deals with all reported incidents. Any incidents occur during the build and tear down activity, the contractors should report to the Centre's Security Services which located at the Concourse Level.</li>
+              </ol>
+
+              <h4 className="font-semibold text-blue-700 mt-4">Rules and Regulations:</h4>
+              <ol className="list-decimal list-inside space-y-2 pl-4">
+                <li>The use of multiple socket outlets is strictly prohibited to avoid any overloading as this may lead to a trip in the incoming power supply will result in a re-energisation fee.</li>
+                <li>Deadline for submission of raw space/special stand design with design appraisal checklist attached: September 2, 2024.</li>
+                <li>Deadline for submission of the power, electricity: September 2, 2024.</li>
+                <li>Electrical power supplied is used for running equipment / exhibit only. If used for lighting purposes, lighting connection charges will be applied.</li>
+                <li>Exhibitors and their non-official contractors will have to bear any charges levied by Hall Owners for damages caused to their property, walls and floorings or for debris not cleared away.</li>
+                <li>It is the responsibility of respective vendors to ensure the stability of own stand structures. Vendor is liable for the penalty charges by the Organiser or Official Contractor, should there be any insecure structures found within the stand area.</li>
+                <li>A Warning Notice will be issued to non-official contractors, if found non-compliant to the Rules & Regulations.</li>
+                <li>The Organiser and Official Contractor reserve the right to impose penalty charges to non-official contractors, if found non-compliant to the Rules & Regulations.</li>
+              </ol>
+
+              <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
+                <p className="font-semibold text-yellow-800">Note:</p>
+                <p>The Centre reserves the right to add and change any of the procedures and requirements at any time. Any person caught committing unsafe work practices and or non-compliance activities will be fined or prohibited from working in the Centre.</p>
               </div>
             </div>
 
             {/* Authorization Section */}
             <div className="mb-8">
-              <p className="mb-6 text-center text-gray-700">Please retain a copy for your record & return this form via email to:</p>
-              
-              <div className="mb-8 text-center bg-gray-50 py-4 rounded-lg">
-                <h5 className="font-bold text-blue-600 mb-2">BLUE CIRCLE PLUS SDN BHD</h5>
-                <p className="mb-1">Attn: Mr. Francis Chan / Ms. YJ Hoh</p>
-                <p className="mb-1">Email: francis@bcpgroup.com.my</p>
-                <p className="mb-1">or yijie@bcpgroup.com.my</p>
-                <p>Tel: +6011-2327 9795 / +6016-263 1150</p>
-              </div>
-
               <div className="border border-gray-200 rounded-lg p-6 shadow-sm">
                 <h5 className="font-bold mb-4 text-blue-600">Authorized Representative Applying:</h5>
                 <div className="grid grid-cols-1 gap-4">

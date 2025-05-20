@@ -160,7 +160,7 @@ export const FasciaNameForm: React.FC<FasciaNameFormProps> = ({ userData }) => {
 
   // Handle navigation back to order forms after viewing PDF
   const handleReturnToDashboard = () => {
-    router.push('/dashboard/order-forms');
+    router.push('/');
   }
 
   // Handle form submission

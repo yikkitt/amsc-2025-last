@@ -279,7 +279,7 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
               </div>
               
               <div className="flex justify-between items-center">
-                <Link href="/dashboard" className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md transition-colors">
+                <Link href="/" className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md transition-colors">
                   Return to Dashboard
                 </Link>
                 {/* PDF Download Button */}
