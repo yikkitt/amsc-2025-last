@@ -165,6 +165,50 @@ export default function IndemnityLetterForm({ userData }: IndemnityLetterFormPro
           </div>
         ) : submitted ? (
           <div className="space-y-8 print:space-y-4">
+            {/* Always show instructions/rules after submission */}
+            <div className="space-y-4 text-sm bg-gray-50 p-4 rounded-lg print:bg-transparent print:p-0">
+              <p className="font-semibold">It is the responsibility of the contractor to ensure all the regulations, policies and deadlines outlined in the contractor's regulations during the show are observed carefully and performed by contractor involved in Exhibition.</p>
+              <h4 className="font-semibold text-blue-700 mt-4">Kuala Lumpur Convention Centre - Information & Rules for the Exhibitor's Appointed Contractor (EAC) When Working in the Centre:</h4>
+              <ol className="list-decimal list-inside space-y-2 pl-4">
+                <li>All non-official contractors are required to register with the Official Contractor.</li>
+                <li>The EAC must possess valid business registration license, workmen compensation insurance and public liability and or third-party liability insurance.</li>
+                <li>The EAC must wear a pass supplied by the official contractor all the times when entering to the halls.</li>
+                <li>All Malaysian workers must possess an Identity Card (IC) and all foreign worker must possess a valid work permit in order to obtain a contractor badge.</li>
+                <li>No persons under age 18 years old are permitted to enter or work on the premises.</li>
+                <li>No consumption of food items is allowed either at the back-of-house, loading docks, along Persiaran KLCC or in the public areas.</li>
+                <li>Alcohol is not permitted in the work areas and no one is allowed to work while under the influence of drugs or alcohol.</li>
+                <li>Smoking is not allowed at any time in the Halls and associated work areas.</li>
+                <li>Covered footwear must be worn at all times whilst working on site. No thongs, sandals or open-toed shoes are allowed.</li>
+                <li>Construction materials are not allowed to be piled onto NO FREIGHT AISLE, or obstruct fire exit and firefighting equipment. All materials must be kept within contracted booth space at all times.</li>
+                <li>All contractors and their employees are strictly prohibited from using the guest's toilet facilities or loitering at the lobby and guest's area.</li>
+                <li>Urinating in paint washing room or any unauthorised designation is strictly prohibited.</li>
+                <li>Preparation and cleaning of paints must be conducted in wash room located at ground floor; loading dock 2 and loading dock 4.</li>
+                <li>Contractor caught cleaning and disposing paint, chemical of build-up materials in the toilet bowl and washing basin will be penalised and liable to bear any cost incurred for rectifying the drainage system.</li>
+                <li>All contractors must ensure the removal of all debris, rubbish and packing materials from the premises.</li>
+                <li>Activities which generate dust such as welding, sanding sawing are strictly prohibited. Stand structure shall pre-fabricate off site and no major painting is permitted.</li>
+                <li>Any person working on scaffolding of 2 metres and above must be protected with appropriate personal protective equipment such as safety helmet, body harness, covered or safety shoes. Only competent and experienced personnel shall be allowed to erect and dismantle the scaffolding.</li>
+                <li>Screwing, drilling, nailing or painting on the floor, walls, pillars or any part of the Exhibition Hall are strictly not allowed.</li>
+                <li>Unruly or unacceptable behaviour and violent acts are strictly prohibited. People acting without due care for others or not following directions of Security personnel shall be evicted from site.</li>
+                <li>Any person with using abusive language, violent behaviour or committing unsafe work practices and or non-compliance activities will be prohibited from working in the Centre immediately.</li>
+                <li>The KL Convention Centre's Security Department deals with all reported incidents. Any incidents occur during the build and tear down activity, the contractors should report to the Centre's Security Services which located at the Concourse Level.</li>
+              </ol>
+              <h4 className="font-semibold text-blue-700 mt-4">Rules and Regulations:</h4>
+              <ol className="list-decimal list-inside space-y-2 pl-4">
+                <li>The use of multiple socket outlets is strictly prohibited to avoid any overloading as this may lead to a trip in the incoming power supply will result in a re-energisation fee.</li>
+                <li>Deadline for submission of raw space/special stand design with design appraisal checklist attached: September 2, 2024.</li>
+                <li>Deadline for submission of the power, electricity: September 2, 2024.</li>
+                <li>Electrical power supplied is used for running equipment / exhibit only. If used for lighting purposes, lighting connection charges will be applied.</li>
+                <li>Exhibitors and their non-official contractors will have to bear any charges levied by Hall Owners for damages caused to their property, walls and floorings or for debris not cleared away.</li>
+                <li>It is the responsibility of respective vendors to ensure the stability of own stand structures. Vendor is liable for the penalty charges by the Organiser or Official Contractor, should there be any insecure structures found within the stand area.</li>
+                <li>A Warning Notice will be issued to non-official contractors, if found non-compliant to the Rules & Regulations.</li>
+                <li>The Organiser and Official Contractor reserve the right to impose penalty charges to non-official contractors, if found non-compliant to the Rules & Regulations.</li>
+              </ol>
+              <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
+                <p className="font-semibold text-yellow-800">Note:</p>
+                <p>The Centre reserves the right to add and change any of the procedures and requirements at any time. Any person caught committing unsafe work practices and or non-compliance activities will be fined or prohibited from working in the Centre.</p>
+              </div>
+            </div>
+            {/* End always show instructions/rules after submission */}
             <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
               <div className="text-green-600 font-semibold text-lg mb-2">
                 Form Successfully Submitted
