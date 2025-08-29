@@ -340,264 +340,269 @@ export function SignupForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {serverError && <ErrorMessage message={serverError} />}
-      
-      <p className="text-sm text-gray-500 italic mb-4">Fields marked with an asterisk (*) are required.</p>
-      
-      <h3 className="text-lg font-medium text-gray-900">Company Information</h3>
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="company_name" className="block text-sm font-medium text-gray-700">
-            Company Name *
-          </label>
-          <input
-            id="company_name"
-            type="text"
-            {...register('company_name')}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-          {errors.company_name && (
-            <p className="mt-1 text-sm text-red-600">{errors.company_name.message}</p>
-          )}
-        </div>
-        
-        <div>
-          <label htmlFor="booth_number" className="block text-sm font-medium text-gray-700">
-            Booth Number *
-          </label>
-          <input
-            id="booth_number"
-            type="text"
-            {...register('booth_number')}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-          {errors.booth_number && (
-            <p className="mt-1 text-sm text-red-600">{errors.booth_number.message}</p>
-          )}
-        </div>
-      </div>
-      
-      <h3 className="text-lg font-medium text-gray-900">Contact Details</h3>
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="contact_person" className="block text-sm font-medium text-gray-700">
-            Contact Person *
-          </label>
-          <input
-            id="contact_person"
-            type="text"
-            {...register('contact_person')}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-          {errors.contact_person && (
-            <p className="mt-1 text-sm text-red-600">{errors.contact_person.message}</p>
-          )}
-        </div>
+    <div className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        {serverError && <ErrorMessage message={serverError} />}
+        <h2 className="text-2xl font-bold text-blue-700 mb-6 text-center">Exhibitor Registration</h2>
+        <p className="text-sm text-gray-500 italic mb-4 text-center">Fields marked with an asterisk (*) are required.</p>
+        <div className="space-y-8">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 mb-4">Company Information</h3>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="company_name" className="block text-sm font-medium text-gray-700">
+                  Company Name *
+                </label>
+                <input
+                  id="company_name"
+                  type="text"
+                  {...register('company_name')}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+                {errors.company_name && (
+                  <p className="mt-1 text-sm text-red-600">{errors.company_name.message}</p>
+                )}
+              </div>
+              
+              <div>
+                <label htmlFor="booth_number" className="block text-sm font-medium text-gray-700">
+                  Booth Number *
+                </label>
+                <input
+                  id="booth_number"
+                  type="text"
+                  {...register('booth_number')}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+                {errors.booth_number && (
+                  <p className="mt-1 text-sm text-red-600">{errors.booth_number.message}</p>
+                )}
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 mb-4">Contact Details</h3>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="contact_person" className="block text-sm font-medium text-gray-700">
+                  Contact Person *
+                </label>
+                <input
+                  id="contact_person"
+                  type="text"
+                  {...register('contact_person')}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+                {errors.contact_person && (
+                  <p className="mt-1 text-sm text-red-600">{errors.contact_person.message}</p>
+                )}
+              </div>
 
-        <div>
-          <label htmlFor="designation" className="block text-sm font-medium text-gray-700">
-            Designation *
-          </label>
-          <input
-            id="designation"
-            type="text"
-            {...register('designation')}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-          {errors.designation && (
-            <p className="mt-1 text-sm text-red-600">{errors.designation.message}</p>
-          )}
-        </div>
-        
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email Address *
-          </label>
-          <input
-            id="email"
-            type="email"
-            {...register('email')}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-          {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
-        </div>
-        
-        <div>
-          <label htmlFor="telephone" className="block text-sm font-medium text-gray-700">
-            Telephone *
-          </label>
-          <input
-            id="telephone"
-            type="tel"
-            {...register('telephone')}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-          {errors.telephone && (
-            <p className="mt-1 text-sm text-red-600">{errors.telephone.message}</p>
-          )}
-        </div>
-        
-        <div>
-          <label htmlFor="fax" className="block text-sm font-medium text-gray-700">
-            Fax
-          </label>
-          <input
-            id="fax"
-            type="text"
-            {...register('fax')}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-        </div>
-      </div>
-      
-      <h3 className="text-lg font-medium text-gray-900">Address</h3>
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-            Address *
-          </label>
-          <textarea
-            id="address"
-            {...register('address')}
-            rows={3}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-          {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address.message}</p>}
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="postcode" className="block text-sm font-medium text-gray-700">
-              Postal Code
-            </label>
-            <input
-              id="postcode"
-              type="text"
-              {...register('postcode')}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
+              <div>
+                <label htmlFor="designation" className="block text-sm font-medium text-gray-700">
+                  Designation *
+                </label>
+                <input
+                  id="designation"
+                  type="text"
+                  {...register('designation')}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+                {errors.designation && (
+                  <p className="mt-1 text-sm text-red-600">{errors.designation.message}</p>
+                )}
+              </div>
+              
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  Email Address *
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  {...register('email')}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+                {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
+              </div>
+              
+              <div>
+                <label htmlFor="telephone" className="block text-sm font-medium text-gray-700">
+                  Telephone *
+                </label>
+                <input
+                  id="telephone"
+                  type="tel"
+                  {...register('telephone')}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+                {errors.telephone && (
+                  <p className="mt-1 text-sm text-red-600">{errors.telephone.message}</p>
+                )}
+              </div>
+              
+              <div>
+                <label htmlFor="fax" className="block text-sm font-medium text-gray-700">
+                  Fax
+                </label>
+                <input
+                  id="fax"
+                  type="text"
+                  {...register('fax')}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+            </div>
           </div>
-          
           <div>
-            <label htmlFor="country" className="block text-sm font-medium text-gray-700">
-              Country *
-            </label>
-            <select
-              id="country"
-              {...register('country')}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              onChange={(e) => {
-                setSelectedCountry(e.target.value);
-                if (e.target.value !== 'MY') {
-                  setValue('state', ''); // Clear state when not Malaysia
-                }
-              }}
-            >
-              {COUNTRIES.map((country) => (
-                <option key={country.code} value={country.code}>
-                  {country.name}
-                </option>
-              ))}
-            </select>
-            {errors.country && (
-              <p className="mt-1 text-sm text-red-600">{errors.country.message}</p>
-            )}
-          </div>
-        </div>
+            <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 mb-4">Address</h3>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+                  Address *
+                </label>
+                <textarea
+                  id="address"
+                  {...register('address')}
+                  rows={3}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+                {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address.message}</p>}
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="postcode" className="block text-sm font-medium text-gray-700">
+                    Postal Code
+                  </label>
+                  <input
+                    id="postcode"
+                    type="text"
+                    {...register('postcode')}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="country" className="block text-sm font-medium text-gray-700">
+                    Country *
+                  </label>
+                  <select
+                    id="country"
+                    {...register('country')}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    onChange={(e) => {
+                      setSelectedCountry(e.target.value);
+                      if (e.target.value !== 'MY') {
+                        setValue('state', ''); // Clear state when not Malaysia
+                      }
+                    }}
+                  >
+                    {COUNTRIES.map((country) => (
+                      <option key={country.code} value={country.code}>
+                        {country.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.country && (
+                    <p className="mt-1 text-sm text-red-600">{errors.country.message}</p>
+                  )}
+                </div>
+              </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="state" className="block text-sm font-medium text-gray-700">
-              State {watchCountry === 'MY' && '*'}
-            </label>
-            {watchCountry === 'MY' ? (
-              <select
-                id="state"
-                {...register('state')}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value="">Select a state</option>
-                {MALAYSIA_STATES.map((state) => (
-                  <option key={state} value={state}>
-                    {state}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                id="state"
-                type="text"
-                {...register('state')}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                placeholder="Enter state/province"
-              />
-            )}
-            {errors.state && (
-              <p className="mt-1 text-sm text-red-600">{errors.state.message}</p>
-            )}
-          </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="state" className="block text-sm font-medium text-gray-700">
+                    State {watchCountry === 'MY' && '*'}
+                  </label>
+                  {watchCountry === 'MY' ? (
+                    <select
+                      id="state"
+                      {...register('state')}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    >
+                      <option value="">Select a state</option>
+                      {MALAYSIA_STATES.map((state) => (
+                        <option key={state} value={state}>
+                          {state}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      id="state"
+                      type="text"
+                      {...register('state')}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="Enter state/province"
+                    />
+                  )}
+                  {errors.state && (
+                    <p className="mt-1 text-sm text-red-600">{errors.state.message}</p>
+                  )}
+                </div>
 
+                <div>
+                  <label htmlFor="tax_identification_number" className="block text-sm font-medium text-gray-700">
+                    Tax Identification Number {watchCountry === 'MY' && '*'}
+                  </label>
+                  <input
+                    id="tax_identification_number"
+                    type="text"
+                    {...register('tax_identification_number')}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    placeholder={watchCountry === 'MY' ? 'Enter Malaysian TIN' : 'Enter TIN (if applicable)'}
+                  />
+                  {errors.tax_identification_number && (
+                    <p className="mt-1 text-sm text-red-600">{errors.tax_identification_number.message}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
           <div>
-            <label htmlFor="tax_identification_number" className="block text-sm font-medium text-gray-700">
-              Tax Identification Number {watchCountry === 'MY' && '*'}
-            </label>
-            <input
-              id="tax_identification_number"
-              type="text"
-              {...register('tax_identification_number')}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              placeholder={watchCountry === 'MY' ? 'Enter Malaysian TIN' : 'Enter TIN (if applicable)'}
-            />
-            {errors.tax_identification_number && (
-              <p className="mt-1 text-sm text-red-600">{errors.tax_identification_number.message}</p>
-            )}
+            <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 mb-4">Account Details</h3>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Password *
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  {...register('password')}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+                {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>}
+              </div>
+              
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                  Confirm Password *
+                </label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  {...register('confirmPassword')}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+                {errors.confirmPassword && (
+                  <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-      
-      <h3 className="text-lg font-medium text-gray-900">Account Details</h3>
-      <div className="space-y-4">
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-            Password *
-          </label>
-          <input
-            id="password"
-            type="password"
-            {...register('password')}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-          {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>}
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+          >
+            {isSubmitting ? 'Creating Account...' : 'Create Account'}
+          </button>
         </div>
-        
-        <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-            Confirm Password *
-          </label>
-          <input
-            id="confirmPassword"
-            type="password"
-            {...register('confirmPassword')}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-          {errors.confirmPassword && (
-            <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
-          )}
-        </div>
-      </div>
-      
-      <div>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-            isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
-          }`}
-        >
-          {isSubmitting ? 'Creating Account...' : 'Create Account'}
-        </button>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 } 
