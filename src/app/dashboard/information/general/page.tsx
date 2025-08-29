@@ -58,7 +58,7 @@ export default function GeneralInformationPage() {
           
           <div>
             <h3 className="font-bold text-gray-900 mb-3">VENUE</h3>
-            <p className="text-gray-800 mb-1">Kuala Lumpur Convention Centre</p>
+            <p className="text-gray-800 mb-1">Sime Darby Convention Centre</p>
             <p className="text-gray-700 mb-1">Kuala Lumpur City Centre, 50088 Kuala Lumpur</p>
             <p className="text-gray-700 mb-1">Attn: Exhibition Services</p>
             <p className="text-gray-700 mb-1">Tel: 603-2333 2888            </p>
@@ -67,7 +67,7 @@ export default function GeneralInformationPage() {
           
           <div>
             <h3 className="font-bold text-gray-900 mb-3">EMERGENCY CONTACT</h3>
-            <p className="text-gray-800 mb-1">Kuala Lumpur Convention Centre</p>
+            <p className="text-gray-800 mb-1">Sime Darby Convention Centre</p>
             <p className="text-gray-700 mb-1">Kuala Lumpur City Centre, 50088 Kuala Lumpur</p>
             <p className="text-gray-700 mb-1">Attn: Safety Department</p>
             <p className="text-gray-700 mb-1">Tel: 603–2382 8922</p>

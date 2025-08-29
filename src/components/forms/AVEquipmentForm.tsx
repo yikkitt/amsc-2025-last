@@ -209,8 +209,8 @@ export default function AVEquipmentForm({ userData }: AVEquipmentFormProps) {
           <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 9</h1>
           <h2 className="text-xl font-semibold mb-4">AV EQUIPMENT ORDER FORM</h2>
           <p className="text-gray-600 mb-2">DEADLINE: 30th June 2025</p>
-          <h3 className="text-lg font-semibold mb-2">Aesthetic Medicine & Surgery Conference & Exhibition 2025</h3>
-          <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
+                  <h3 className="text-lg font-semibold mb-2">Disruptive Doctors Conference & Exhibition 2025</h3>
+        <p className="text-gray-600">Sime Darby Convention Centre</p>
         </div>
 
         {/* User Data Container */}

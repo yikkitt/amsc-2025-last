@@ -265,8 +265,8 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
           <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 3</h1>
           <h2 className="text-xl font-semibold mb-4">ELECTRICAL & LIGHTING ORDER FORM</h2>
           <p className="text-gray-600 mb-2">DEADLINE: 30th June 2025</p>
-          <h3 className="text-lg font-semibold mb-2">Aesthetic Medicine & Surgery Conference & Exhibition 2025</h3>
-          <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
+                  <h3 className="text-lg font-semibold mb-2">Disruptive Doctors Conference & Exhibition 2025</h3>
+        <p className="text-gray-600">Sime Darby Convention Centre</p>
         </div>
 
         {/* User Data Container */}
@@ -380,7 +380,7 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
               <p>1. This form must be completed and returned by every exhibitor. If service is not required, please endorse "NOT APPLICABLE" and return this form to the address below.</p>
               <p>2. ORDER ONLY YOUR ADDITIONAL REQUIREMENTS.</p>
               <p>3. For services not listed below, such as step-up/step-down transformers etc, please contact the Official Contractor for a quotation.</p>
-              <p>4. The supply at Aesthetic Medicine & Surgery Conference & Exhibition 2025 is 230V 50Hz AC and 415V TPN 50Hz AC.</p>
+              <p>4. The supply at Disruptive Doctors Conference & Exhibition 2025 is 230V 50Hz AC and 415V TPN 50Hz AC.</p>
             </div>
 
             {/* Order Table */}

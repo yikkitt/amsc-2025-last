@@ -23,7 +23,7 @@ export default function EmergencyEvacuationPage() {
         </p>
         
         <p className="mb-6">
-          Contractors and Exhibitors and their employees must be familiar with the emergency exits and it is crucial that all occupants of the Centre must be aware of the Kuala Lumpur Convention Centre Emergency Procedures Plans.
+          Contractors and Exhibitors and their employees must be familiar with the emergency exits and it is crucial that all occupants of the Centre must be aware of the Sime Darby Convention Centre Emergency Procedures Plans.
         </p>
         
         <div className="mb-6 bg-amber-50 border-l-4 border-amber-400 p-4">
@@ -82,7 +82,7 @@ export default function EmergencyEvacuationPage() {
             Calling for Security/Safety Manager
           </h3>
           <ul className="ml-8 space-y-2">
-            <li>Call Kuala Lumpur Convention Centre's Fire Control Room – Extension 555.</li>
+            <li>Call Sime Darby Convention Centre's Fire Control Room – Extension 555.</li>
             <li>Make the communication clear and brief. "This is ... (state your location). We have a fire at ..."</li>
             <li>Wait for further instructions.</li>
           </ul>

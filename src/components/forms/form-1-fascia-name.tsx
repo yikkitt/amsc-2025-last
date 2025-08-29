@@ -233,8 +233,8 @@ export default function FasciaNameForm({ userData }: FasciaNameFormProps) {
             <h2 className="text-xl font-semibold mb-4">FASCIA NAME</h2>
             <p className="text-gray-600 mb-2">DEADLINE: 30th June 2025</p>
             <p className="text-red-500 font-semibold mb-2">MANDATORY FORM</p>
-            <h3 className="text-lg font-semibold mb-2">Aesthetic Medicine & Surgery Conference & Exhibition 2025</h3>
-            <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
+                    <h3 className="text-lg font-semibold mb-2">Disruptive Doctors Conference & Exhibition 2025</h3>
+        <p className="text-gray-600">Sime Darby Convention Centre</p>
           </div>
 
           {/* User Data Container */}

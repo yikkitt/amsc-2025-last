@@ -39,7 +39,7 @@ export default function KLCCMapTabs() {
           <h2 className="text-xl font-bold mb-6 text-white bg-blue-800 -mx-6 px-6 py-3">Location Map</h2>
           
           <p className="mb-4">
-            The Kuala Lumpur Convention Centre (KLCC) is located in the heart of Kuala Lumpur City Centre, adjacent to the iconic Petronas Twin Towers.
+            The Sime Darby Convention Centre (KLCC) is located in the heart of Kuala Lumpur City Centre, adjacent to the iconic Petronas Twin Towers.
           </p>
           
           <div className="mb-6">
@@ -99,7 +99,7 @@ export default function KLCCMapTabs() {
           <div className="bg-blue-50 p-5 rounded-lg mb-6">
             <h3 className="font-bold text-blue-800 mb-3">Venue Overview</h3>
             <p className="mb-4">
-              The DDCON 2025 exhibition is held on Level 3 of the Kuala Lumpur Convention Centre.
+              The DDCON 2025 exhibition is held on Level 3 of the Sime Darby Convention Centre.
               The venue features multiple conference rooms, banquet hall and ballrooms.
             </p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">

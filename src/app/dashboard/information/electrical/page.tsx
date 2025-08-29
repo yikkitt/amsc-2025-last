@@ -69,7 +69,7 @@ export default function ElectricalRulesPage() {
         <div className="mb-6">
           <h3 className="font-bold text-gray-900 mb-3">Safety Compliance</h3>
           <p className="mb-3">
-            Cables must be routed away from pedestrian traffic and taped down to minimize a trip hazard. Kuala Lumpur Convention Centre SHE 
+            Cables must be routed away from pedestrian traffic and taped down to minimize a trip hazard. Sime Darby Convention Centre SHE 
             charge-man may check electrical equipment on site for compliance at any time.
           </p>
           

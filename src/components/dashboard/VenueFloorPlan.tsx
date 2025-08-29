@@ -64,7 +64,7 @@ export default function VenueFloorPlan() {
                   </div>
                   <div className="mb-2">
                     <dt className="text-sm font-medium text-gray-500">Venue</dt>
-                    <dd className="text-base font-medium">Kuala Lumpur Convention Centre, Malaysia</dd>
+                    <dd className="text-base font-medium">Sime Darby Convention Centre, Malaysia</dd>
                   </div>
                   <div className="mb-2">
                     <dt className="text-sm font-medium text-gray-500">Exhibition Hours</dt>

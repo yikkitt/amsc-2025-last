@@ -98,11 +98,11 @@ export default function VenueRulesPage() {
                   Food & Beverage (F&B) Policy
                 </h3>
                 <ul className="list-disc ml-7 space-y-1">
-                  <li>The Kuala Lumpur Convention Centre is the exclusive supplier of food and beverage. The Centre is the exclusive provider of food and beverage.</li>
+                  <li>The Sime Darby Convention Centre is the exclusive supplier of food and beverage. The Centre is the exclusive provider of food and beverage.</li>
                   <li>Distribution or sale of food and beverage by anyone other than the Centre is strictly prohibited. The Centre reserves the right to exclude exhibitors' service of food or beverage not supplied by the Centre to public or trade visitors with the exception of Food & Beverage or similar shows.</li>
                   <li>Retailers are prohibited from promoting popcorn machines, peanut roasters, cotton candy machines or similar items in their exhibition booths.</li>
                   <li>Sales and distribution of popcorn and cotton candy is also prohibited inside the exhibition booths.</li>
-                  <li>Exhibitors can order on-site stand catering by completing the Stand Catering Menu and Beverage Order Form provided by the Kuala Lumpur Convention Centre.</li>
+                  <li>Exhibitors can order on-site stand catering by completing the Stand Catering Menu and Beverage Order Form provided by the Sime Darby Convention Centre.</li>
                   <li>Exhibitors who wish to use coffee machines would be charge corkage fee accordingly.</li>
                 </ul>
               </div>
@@ -129,7 +129,7 @@ export default function VenueRulesPage() {
                   Smoking Policy
                 </h3>
                 <ul className="list-disc ml-7 space-y-1">
-                  <li>The Kuala Lumpur Convention Centre is a non-smoking venue. Smoking is strictly prohibited within the venue.</li>
+                  <li>The Sime Darby Convention Centre is a non-smoking venue. Smoking is strictly prohibited within the venue.</li>
                   <li>Designated smoking areas are available outside the venue at street level.</li>
                 </ul>
               </div>

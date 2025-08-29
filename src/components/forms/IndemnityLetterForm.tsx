@@ -152,8 +152,8 @@ export default function IndemnityLetterForm({ userData }: IndemnityLetterFormPro
           <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 8</h1>
           <h2 className="text-xl font-semibold mb-4">LETTER OF INDEMNITY FOR NON-OFFICIAL CONTRACTOR</h2>
           <p className="text-gray-600 mb-2">DEADLINE: 30th June 2025</p>
-          <h3 className="text-lg font-semibold mb-2">Aesthetic Medicine & Surgery Conference & Exhibition 2025</h3>
-          <p className="text-gray-600">Kuala Lumpur Convention Centre</p>
+                  <h3 className="text-lg font-semibold mb-2">Disruptive Doctors Conference & Exhibition 2025</h3>
+        <p className="text-gray-600">Sime Darby Convention Centre</p>
         </div>
 
         {/* User Data Container */}
@@ -169,7 +169,7 @@ export default function IndemnityLetterForm({ userData }: IndemnityLetterFormPro
             {/* Always show instructions/rules after submission */}
             <div className="space-y-4 text-sm bg-gray-50 p-4 rounded-lg print:bg-transparent print:p-0">
               <p className="font-semibold">It is the responsibility of the contractor to ensure all the regulations, policies and deadlines outlined in the contractor's regulations during the show are observed carefully and performed by contractor involved in Exhibition.</p>
-              <h4 className="font-semibold text-blue-700 mt-4">Kuala Lumpur Convention Centre - Information & Rules for the Exhibitor's Appointed Contractor (EAC) When Working in the Centre:</h4>
+              <h4 className="font-semibold text-blue-700 mt-4">Sime Darby Convention Centre - Information & Rules for the Exhibitor's Appointed Contractor (EAC) When Working in the Centre:</h4>
               <ol className="list-decimal list-inside space-y-2 pl-4">
                 <li>All non-official contractors are required to register with the Official Contractor.</li>
                 <li>The EAC must possess valid business registration license, workmen compensation insurance and public liability and or third-party liability insurance.</li>
@@ -269,7 +269,7 @@ export default function IndemnityLetterForm({ userData }: IndemnityLetterFormPro
             <div className="space-y-4 text-sm bg-gray-50 p-4 rounded-lg print:bg-transparent print:p-0">
               <p className="font-semibold">It is the responsibility of the contractor to ensure all the regulations, policies and deadlines outlined in the contractor's regulations during the show are observed carefully and performed by contractor involved in Exhibition.</p>
               
-              <h4 className="font-semibold text-blue-700 mt-4">Kuala Lumpur Convention Centre - Information & Rules for the Exhibitor's Appointed Contractor (EAC) When Working in the Centre:</h4>
+              <h4 className="font-semibold text-blue-700 mt-4">Sime Darby Convention Centre - Information & Rules for the Exhibitor's Appointed Contractor (EAC) When Working in the Centre:</h4>
               <ol className="list-decimal list-inside space-y-2 pl-4">
                 <li>All non-official contractors are required to register with the Official Contractor.</li>
                 <li>The EAC must possess valid business registration license, workmen compensation insurance and public liability and or third-party liability insurance.</li>

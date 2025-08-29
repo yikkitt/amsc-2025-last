@@ -10,7 +10,7 @@ export default function ContactContent() {
   return (
     <div className="max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-4 text-blue-900">KLCC Map and Location Guide</h1>
-      <p className="mb-6 text-gray-700">Use the maps below to locate the Kuala Lumpur Convention Centre and navigate the venue.</p>
+              <p className="mb-6 text-gray-700">Use the maps below to locate the Sime Darby Convention Centre and navigate the venue.</p>
       
       <div className="flex mb-6 space-x-4">
         <button 
@@ -37,7 +37,7 @@ export default function ContactContent() {
       
       <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
         <h2 className="text-xl font-bold mb-2 text-blue-900">KLCC Location</h2>
-        <p className="text-gray-700 mb-4">Kuala Lumpur Convention Centre, Kuala Lumpur City Centre, 50088 Kuala Lumpur, Malaysia</p>
+        <p className="text-gray-700 mb-4">Sime Darby Convention Centre, Kuala Lumpur City Centre, 50088 Kuala Lumpur, Malaysia</p>
         
         {activeTab === 'google-map' ? (
           <div className="relative mb-6 h-96 bg-slate-200 rounded-lg overflow-hidden">
@@ -72,7 +72,7 @@ export default function ContactContent() {
         <div>
           <h3 className="font-bold text-gray-800 mb-1">Address:</h3>
           <p className="text-gray-700 mb-4">
-            Kuala Lumpur Convention Centre<br />
+            Sime Darby Convention Centre<br />
             Kuala Lumpur City Centre<br />
             50088 Kuala Lumpur<br />
             Malaysia
