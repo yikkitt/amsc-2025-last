@@ -343,8 +343,8 @@ export default function Sidebar() {
         <div className="flex justify-center mb-6">
           <Link href="/dashboard" onClick={handleCloseMobileMenu}>
             <Image 
-              src="/images/amsc-logo.png" 
-              alt="AMSC Logo" 
+              src="/images/amsc-logo.jpg" 
+              alt="DDCON Logo" 
               width={120} 
               height={60} 
               className="h-16 w-auto" 
