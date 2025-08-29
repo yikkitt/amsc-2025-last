@@ -1,6 +1,6 @@
-# AMSC 2025 Exhibitor Manual
+# DDCON 2025 Exhibitor Manual
 
-This is a Next.js application designed to provide a web portal for exhibitors at the AMSC 2025 conference. Exhibitors can register, log in, and manage their exhibition details through this portal.
+This is a Next.js application designed to provide a web portal for exhibitors at the DDCON 2025 conference. Exhibitors can register, log in, and manage their exhibition details through this portal.
 
 ## Features
 
@@ -63,8 +63,8 @@ See the [VERCEL.md](./VERCEL.md) file for more detailed deployment instructions.
 
 1. Clone the repository
    ```bash
-   git clone https://github.com/your-username/amsc-2025-exhibitor-manual.git
-   cd amsc-2025-exhibitor-manual
+   git clone https://github.com/your-username/ddcon-2025-exhibitor-manual.git
+cd ddcon-2025-exhibitor-manual
    ```
 
 2. Install dependencies

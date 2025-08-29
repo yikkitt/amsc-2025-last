@@ -11,8 +11,8 @@ import Sidebar from '@/components/layout/Sidebar'
 export const dynamic = 'force-dynamic'; // Force dynamic rendering for this layout and its children
 
 export const metadata: Metadata = {
-  title: 'AMSC 2025 | Dashboard',
-  description: 'Exhibitor Manual Dashboard for AMSC 2025',
+  title: 'DDCON 2025 | Dashboard',
+  description: 'Exhibitor Manual Dashboard for DDCON 2025',
 }
 
 // Server component to check auth at the layout level

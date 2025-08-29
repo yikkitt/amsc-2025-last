@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Venue Rules & Regulations - AMSC 2025',
-  description: 'Venue rules and regulations for AMSC 2025 at Kuala Lumpur Convention Centre',
+  title: 'Venue Rules & Regulations - DDCON 2025',
+  description: 'Venue rules and regulations for DDCON 2025 at Kuala Lumpur Convention Centre',
 } 

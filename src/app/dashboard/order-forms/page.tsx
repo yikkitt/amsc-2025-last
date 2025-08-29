@@ -3,8 +3,8 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Order Forms - AMSC 2025',
-  description: 'Submit your exhibition order forms for AMSC 2025',
+  title: 'Order Forms - DDCON 2025',
+  description: 'Submit your exhibition order forms for DDCON 2025',
 }
 
 const forms = [

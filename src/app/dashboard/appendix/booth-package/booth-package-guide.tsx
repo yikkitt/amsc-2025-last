@@ -21,7 +21,7 @@ export default function BoothPackageGuide() {
       
       <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
         <p className="mb-4 text-sm text-gray-600">
-          Standard booth specifications and other technical booth package information available for AMSC 2025.
+          Standard booth specifications and other technical booth package information available for DDCON 2025.
         </p>
 
         <div className="mb-4">

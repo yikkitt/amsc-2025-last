@@ -1,7 +1,7 @@
-# AMSC 2025 Exhibitor Manual Website - Technology Stack
+# DDCON 2025 Exhibitor Manual Website - Technology Stack
 *Version: 1.1 (Updated 2025-04-11)*
 
-This document outlines the core technologies, libraries, services, and key configurations for the AMSC 2025 Exhibitor Manual Website.
+This document outlines the core technologies, libraries, services, and key configurations for the DDCON 2025 Exhibitor Manual Website.
 
 * **Framework:** **Next.js** (v13+ with App Router recommended)
     * Handles UI rendering (React), routing, server-side logic, API routes.

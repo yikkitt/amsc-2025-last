@@ -56,7 +56,7 @@ export default function VenueFloorPlan() {
                 <dl>
                   <div className="mb-2">
                     <dt className="text-sm font-medium text-gray-500">Event Name</dt>
-                    <dd className="text-base font-medium">AMSC 2025</dd>
+                    <dd className="text-base font-medium">DDCON 2025</dd>
                   </div>
                   <div className="mb-2">
                     <dt className="text-sm font-medium text-gray-500">Date</dt>

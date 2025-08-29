@@ -37,7 +37,7 @@ export default function SignupPage() {
             Create your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Register as an exhibitor for AMSC 2025
+            Register as an exhibitor for DDCON 2025
           </p>
         </div>
         <SignupForm />

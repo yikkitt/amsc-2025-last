@@ -32,8 +32,8 @@ function SignInContent() {
       <div className="flex flex-col items-center">
         <div className="relative w-full h-40 mb-2">
           <Image 
-            src="/images/amsc-2025-banner.png" 
-            alt="AMSC 2025 Banner"
+                          src="/images/ddcon-2025-banner.png" 
+            alt="DDCON 2025 Banner"
             fill
             className="object-contain"
             priority

@@ -27,14 +27,14 @@ export const PageHeader = () => {
           {/* Mobile centered title with proper width constraints */}
           <div className="lg:hidden text-center max-w-[60%] truncate">
             <h1 className="text-lg font-semibold text-gray-900">
-              AMSC 2025 Exhibitor Manual
+              DDCON 2025 Exhibitor Manual
             </h1>
           </div>
           
           {/* Desktop left-aligned title - hidden on mobile */}
           <div className="hidden lg:flex items-center">
             <h1 className="text-xl font-semibold text-gray-900">
-              AMSC 2025 Exhibitor Manual
+              DDCON 2025 Exhibitor Manual
             </h1>
           </div>
           

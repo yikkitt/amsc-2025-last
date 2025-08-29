@@ -16,8 +16,8 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: 'AMSC 2025 Exhibitor Manual',
-  description: 'Manage your AMSC 2025 exhibition forms and information',
+  title: 'DDCON 2025 Exhibitor Manual',
+  description: 'Manage your DDCON 2025 exhibition forms and information',
   viewport: 'width=device-width, initial-scale=1, shrink-to-fit=no',
   themeColor: '#ffffff',
 };

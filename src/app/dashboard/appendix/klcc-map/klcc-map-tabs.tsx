@@ -99,7 +99,7 @@ export default function KLCCMapTabs() {
           <div className="bg-blue-50 p-5 rounded-lg mb-6">
             <h3 className="font-bold text-blue-800 mb-3">Venue Overview</h3>
             <p className="mb-4">
-              The AMSC 2025 exhibition is held on Level 3 of the Kuala Lumpur Convention Centre.
+              The DDCON 2025 exhibition is held on Level 3 of the Kuala Lumpur Convention Centre.
               The venue features multiple conference rooms, banquet hall and ballrooms.
             </p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">

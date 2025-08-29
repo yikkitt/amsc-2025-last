@@ -17,13 +17,13 @@ export default function Banner() {
         {imageError ? (
           <div className="text-center p-4 text-gray-500">
             Banner image not found. Please ensure the image is placed at:<br/>
-            <code className="bg-gray-100 px-2 py-1 rounded text-sm">public/images/amsc-2025-banner.png</code>
+            <code className="bg-gray-100 px-2 py-1 rounded text-sm">public/images/ddcon-2025-banner.png</code>
           </div>
         ) : (
           <div className={`transition-opacity duration-700 ${loaded ? 'opacity-100' : 'opacity-0'}`}>
             <Image 
-              src="/images/amsc-2025-banner.png"
-              alt="AMSC 2025 Malaysia - 6-7 August"
+              src="/images/ddcon-2025-banner.png"
+              alt="DDCON 2025 Malaysia - 6-7 August"
               width={600}
               height={160}
               priority

@@ -1,10 +1,10 @@
-# AMSC 2025 Exhibitor Manual Website - Design Document
+# DDCON 2025 Exhibitor Manual Website - Design Document
 *Version: 1.1 (Updated 2025-04-11)*
 
 ## 1. Overview
 
-* **Goal:** Develop a secure, dedicated web application for AMSC 2025 exhibitors. The application requires login for access and provides a dashboard with event information, order form submission capabilities (limited to one submission per form type per exhibitor), PDF downloads of submitted forms, and contact details. Admin email notifications are triggered upon form submission. User account creation and management are handled manually outside the application.
-* **Target Audience:** Registered Exhibitors participating in the AMSC 2025 event.
+* **Goal:** Develop a secure, dedicated web application for DDCON 2025 exhibitors. The application requires login for access and provides a dashboard with event information, order form submission capabilities (limited to one submission per form type per exhibitor), PDF downloads of submitted forms, and contact details. Admin email notifications are triggered upon form submission. User account creation and management are handled manually outside the application.
+* **Target Audience:** Registered Exhibitors participating in the DDCON 2025 event.
 
 ## 2. Core Features (Exhibitor Experience)
 

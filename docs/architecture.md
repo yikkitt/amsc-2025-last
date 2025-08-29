@@ -1,4 +1,4 @@
-# AMSC 2025 Exhibitor Manual Website - Architecture Documentation
+# DDCON 2025 Exhibitor Manual Website - Architecture Documentation
 
 ## Project Structure
 

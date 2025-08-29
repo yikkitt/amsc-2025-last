@@ -3,7 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 export const metadata: Metadata = {
-  title: "Vehicle Pass - AMSC 2025",
+  title: "Vehicle Pass - DDCON 2025",
   description: 'Download and complete the vehicle pass forms for exhibitor move-in and move-out.',
 }
 

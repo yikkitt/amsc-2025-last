@@ -2,8 +2,8 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: "KLCC's Emergency Response Plan - AMSC 2025",
-  description: 'Emergency procedures for all exhibitors and attendees at AMSC 2025.',
+  title: "KLCC's Emergency Response Plan - DDCON 2025",
+  description: 'Emergency procedures for all exhibitors and attendees at DDCON 2025.',
 }
 
 export default function EmergencyResponsePlanPage() {
@@ -21,7 +21,7 @@ export default function EmergencyResponsePlanPage() {
       
       <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
         <div className="mb-6">
-          <p className="text-base">Important procedures for all exhibitors and attendees to follow during emergency situations at AMSC 2025.</p>
+          <p className="text-base">Important procedures for all exhibitors and attendees to follow during emergency situations at DDCON 2025.</p>
         </div>
         
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 flex items-start">

@@ -1,8 +1,8 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'General Information - AMSC 2025',
-  description: 'General information for AMSC 2025 exhibitors',
+  title: 'General Information - DDCON 2025',
+  description: 'General information for DDCON 2025 exhibitors',
 }
 
 export default function GeneralInformationPage() {
@@ -12,7 +12,7 @@ export default function GeneralInformationPage() {
       
       <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
         <p className="mb-6">
-          This handbook acts as a guide to aid exhibitor's planning for the AMSC 2025. It contains important information and details which will need your attention leading up 
+          This handbook acts as a guide to aid exhibitor's planning for the DDCON 2025. It contains important information and details which will need your attention leading up 
           to this fair. Please pay special attention to the forms and submission deadlines. Should you have any queries relating to your participation at this fair, please do 
           not hesitate to contact the relevant party directly.
         </p>

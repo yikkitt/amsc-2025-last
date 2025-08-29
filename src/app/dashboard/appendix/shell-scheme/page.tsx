@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: "Do's & Don'ts of Shell Scheme - AMSC 2025",
+  title: "Do's & Don'ts of Shell Scheme - DDCON 2025",
   description: 'Guidelines for shell scheme booth setup and regulations',
 }
 

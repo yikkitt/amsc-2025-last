@@ -34,7 +34,7 @@ export default function TabSystem() {
           
           <div className="mb-4">
             <h3 className="font-bold mb-1">Visual Impact</h3>
-            <p>Custom booths should align with the aesthetic medicine theme of AMSC 2025. Designs should be professional, elegant, and project a premium medical image.</p>
+            <p>Custom booths should align with the aesthetic medicine theme of DDCON 2025. Designs should be professional, elegant, and project a premium medical image.</p>
           </div>
           
           <div className="mb-4">
@@ -122,7 +122,7 @@ export default function TabSystem() {
           
           <div className="mb-4">
             <h3 className="font-bold mb-1">Sustainability Guidelines</h3>
-            <p>AMSC 2025 encourages sustainable booth design. Consider using:</p>
+            <p>DDCON 2025 encourages sustainable booth design. Consider using:</p>
             <ul className="list-disc pl-5 space-y-1">
               <li>Reusable or recyclable materials</li>
               <li>LED lighting instead of halogen</li>

@@ -1,12 +1,12 @@
 # Supabase Database Setup
 
-This directory contains SQL migrations for setting up the Supabase database schema for the AMSC 2025 Exhibition Management System.
+This directory contains SQL migrations for setting up the Supabase database schema for the DDCON 2025 Exhibition Management System.
 
 ## Database Schema
 
 The application uses the following main tables:
 
-1. **amsc_2025_user**: Stores exhibitor information linked to Supabase Auth users
+1. **ddcon_2025_user**: Stores exhibitor information linked to Supabase Auth users
 2. **form_submissions**: Stores all form submissions from exhibitors
 3. **form_configs**: Stores configuration for each form type, including deadlines and late fees
 

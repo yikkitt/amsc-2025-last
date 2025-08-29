@@ -2,8 +2,8 @@ import { Metadata } from 'next'
 import Image from 'next/image'
 
 export const metadata: Metadata = {
-  title: 'Emergency Evacuation - AMSC 2025',
-  description: 'Emergency evacuation procedures for AMSC 2025',
+  title: 'Emergency Evacuation - DDCON 2025',
+  description: 'Emergency evacuation procedures for DDCON 2025',
 }
 
 export default function EmergencyEvacuationPage() {

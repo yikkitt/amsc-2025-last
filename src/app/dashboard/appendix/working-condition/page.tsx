@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: "Working Conditions - AMSC 2025",
+  title: "Working Conditions - DDCON 2025",
   description: 'Safety regulations and working conditions for all contractors and exhibitors during build-up and tear-down.',
 }
 

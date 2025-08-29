@@ -1,8 +1,8 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Exhibition Schedule - AMSC 2025',
-  description: 'Exhibition schedule for AMSC 2025',
+  title: 'Exhibition Schedule - DDCON 2025',
+  description: 'Exhibition schedule for DDCON 2025',
 }
 
 export default function ExhibitionSchedulePage() {
@@ -14,7 +14,7 @@ export default function ExhibitionSchedulePage() {
         <h2 className="text-xl font-bold mb-6 text-white bg-blue-800 -mx-6 px-6 py-3">Exhibition Schedule</h2>
         
         <p className="mb-6">
-          Please take note of the following schedule for the AMSC 2025 exhibition. All exhibitors must adhere to these timelines.
+          Please take note of the following schedule for the DDCON 2025 exhibition. All exhibitors must adhere to these timelines.
         </p>
         
         <div className="mb-8">

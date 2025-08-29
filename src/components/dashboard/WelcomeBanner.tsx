@@ -34,7 +34,7 @@ export default function WelcomeBanner({
           <h1 className="text-xl sm:text-2xl font-bold text-white mb-1">{greeting}, {firstName}!</h1>
           <p className="text-blue-100">{companyName}</p>
           <p className="text-blue-100 mt-2 max-w-xl text-sm sm:text-base">
-            Welcome to your AMSC dashboard. Here you can access venue information and updates for the upcoming event.
+            Welcome to your DDCON dashboard. Here you can access venue information and updates for the upcoming event.
           </p>
         </div>
         

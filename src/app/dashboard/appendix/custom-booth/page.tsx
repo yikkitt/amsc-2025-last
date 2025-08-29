@@ -3,8 +3,8 @@ import Link from 'next/link'
 import TabSystem from './TabSystem'
 
 export const metadata: Metadata = {
-  title: "Customized Booth Design Guidelines - AMSC 2025",
-  description: 'Guidelines for exhibitors planning to build custom booths at AMSC 2025.',
+  title: "Customized Booth Design Guidelines - DDCON 2025",
+  description: 'Guidelines for exhibitors planning to build custom booths at DDCON 2025.',
 }
 
 export default function CustomizedBoothDesignPage() {
@@ -21,7 +21,7 @@ export default function CustomizedBoothDesignPage() {
       </div>
       
       <div className="bg-white rounded-lg shadow mb-6 overflow-hidden">
-        <p className="px-6 pt-6">Guidelines for exhibitors planning to build custom booths at AMSC 2025.</p>
+        <p className="px-6 pt-6">Guidelines for exhibitors planning to build custom booths at DDCON 2025.</p>
         
         <TabSystem />
       </div>

@@ -13,7 +13,7 @@ const newsItems: NewsItem[] = [
   {
     id: '1',
     title: 'Exhibitor Manual Released',
-    content: 'The complete exhibitor manual for AMSC 2025 is now available for download.',
+            content: 'The complete exhibitor manual for DDCON 2025 is now available for download.',
     date: 'May 15, 2025'
   },
   {

@@ -1,4 +1,4 @@
-# AMSC 2025 Exhibitor Manual Website - Implementation Plan
+# DDCON 2025 Exhibitor Manual Website - Implementation Plan
 *Version: 1.1 (Updated 2025-04-11)*
 
 This document details the phased development approach and coding guidelines for building the AMSC 2025 Exhibitor Manual Website.

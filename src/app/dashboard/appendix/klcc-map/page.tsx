@@ -2,8 +2,8 @@ import { Metadata } from 'next'
 import KLCCMapTabs from './klcc-map-tabs'
 
 export const metadata: Metadata = {
-  title: 'KLCC Map - AMSC 2025',
-  description: 'Map of Kuala Lumpur Convention Centre for AMSC 2025',
+  title: 'KLCC Map - DDCON 2025',
+  description: 'Map of Kuala Lumpur Convention Centre for DDCON 2025',
 }
 
 export default function KLCCMapPage() {

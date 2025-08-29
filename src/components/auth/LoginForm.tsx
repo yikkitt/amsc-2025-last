@@ -74,7 +74,7 @@ export function LoginForm() {
   return (
     <div className="w-full max-w-xl mx-auto p-4">
       <h2 className="text-2xl font-bold mb-1 text-center">
-        AMSC 2025 Exhibitor Manual Portal
+        DDCON 2025 Exhibitor Manual Portal
       </h2>
       <p className="text-center text-[#002059] text-xs mb-6">
         <a 

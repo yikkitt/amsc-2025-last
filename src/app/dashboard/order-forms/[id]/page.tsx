@@ -12,7 +12,7 @@ import AdminFeesForm from '@/components/forms/AdminFeesForm'
 import IndemnityLetterForm from '@/components/forms/IndemnityLetterForm'
 
 export const metadata: Metadata = {
-  title: 'Order Form - AMSC 2025',
+  title: 'Order Form - DDCON 2025',
   description: 'Submit your exhibition order form',
 }
 

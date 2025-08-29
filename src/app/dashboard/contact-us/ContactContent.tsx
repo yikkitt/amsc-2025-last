@@ -51,7 +51,7 @@ export default function ContactContent() {
                 <div className="grid grid-cols-4 h-full">
                   <div className="border-r border-gray-200 p-2 text-xs text-center text-gray-500">Hall A</div>
                   <div className="border-r border-gray-200 p-2 text-xs text-center text-gray-500">Hall B</div>
-                  <div className="border-r border-gray-200 p-2 text-xs text-center text-gray-500 bg-blue-50">Hall C (AMSC 2025)</div>
+                  <div className="border-r border-gray-200 p-2 text-xs text-center text-gray-500 bg-blue-50">Hall C (DDCON 2025)</div>
                   <div className="p-2 text-xs text-center text-gray-500">Hall D</div>
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center">

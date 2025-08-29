@@ -2,8 +2,8 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Special Design Rules & Regulations - AMSC 2025',
-  description: 'Special design rules and regulations for custom booths at AMSC 2025',
+  title: 'Special Design Rules & Regulations - DDCON 2025',
+  description: 'Special design rules and regulations for custom booths at DDCON 2025',
 }
 
 export default function SpecialDesignRulesPage() {

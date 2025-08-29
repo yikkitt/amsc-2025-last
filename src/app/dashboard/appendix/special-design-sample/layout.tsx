@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Sample of Special Design Stand Submission - AMSC 2025',
+  title: 'Sample of Special Design Stand Submission - DDCON 2025',
   description: 'Sample plans and layouts for special design stand submissions',
 }
 

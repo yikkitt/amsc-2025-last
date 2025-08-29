@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import React from 'react'
 
 export const metadata: Metadata = {
-  title: 'AMSC 2025 | Authentication',
-  description: 'Authentication for AMSC 2025 Exhibitor Portal',
+  title: 'DDCON 2025 | Authentication',
+  description: 'Authentication for DDCON 2025 Exhibitor Portal',
 }
 
 export default function AuthLayout({

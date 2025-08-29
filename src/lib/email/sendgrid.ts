@@ -16,7 +16,7 @@ export interface SendGridEmailConfig {
 // Default sender information
 export const EMAIL_SENDER = {
   email: 'noreply@example.com',
-  name: 'AMSC 2025 Exhibitor Manual',
+        name: 'DDCON 2025 Exhibitor Manual',
 };
 
 /**

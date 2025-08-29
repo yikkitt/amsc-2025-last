@@ -2,8 +2,8 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Design Submission Guidelines - AMSC 2025',
-  description: 'Guidelines for submitting booth designs for AMSC 2025',
+  title: 'Design Submission Guidelines - DDCON 2025',
+  description: 'Guidelines for submitting booth designs for DDCON 2025',
 }
 
 export default function DesignSubmissionPage() {

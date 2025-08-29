@@ -2,8 +2,8 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Appendix - AMSC 2025',
-  description: 'Appendix documents for AMSC 2025 exhibition',
+  title: 'Appendix - DDCON 2025',
+  description: 'Appendix documents for DDCON 2025 exhibition',
 }
 
 const appendixItems = [

@@ -1,8 +1,8 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Electrical Rules & Regulations - AMSC 2025',
-  description: 'Electrical rules and regulations for exhibitors at AMSC 2025',
+  title: 'Electrical Rules & Regulations - DDCON 2025',
+  description: 'Electrical rules and regulations for exhibitors at DDCON 2025',
 }
 
 export default function ElectricalRulesPage() {

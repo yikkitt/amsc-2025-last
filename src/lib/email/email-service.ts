@@ -12,7 +12,7 @@ export interface EmailConfig {
 // Default sender information
 export const EMAIL_SENDER = {
   email: 'noreply@example.com',
-  name: 'AMSC 2025 Exhibitor Manual',
+        name: 'DDCON 2025 Exhibitor Manual',
 };
 
 export class EmailService {
