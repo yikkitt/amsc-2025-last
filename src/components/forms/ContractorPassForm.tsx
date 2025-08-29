@@ -184,7 +184,7 @@ export default function ContractorPassForm({ userData }: ContractorPassFormProps
         <div className="text-center mb-8 border-b border-gray-200 pb-6">
           <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 2</h1>
           <h2 className="text-xl font-semibold mb-4">CONTRACTOR PASS APPLICATION FORM</h2>
-          <p className="text-gray-600 mb-2">DEADLINE: 30th June 2025</p>
+          <p className="text-gray-600 mb-2">DEADLINE: 9th September 2025</p>
                   <h3 className="text-lg font-semibold mb-2">Disruptive Doctors Conference & Exhibition 2025</h3>
         <p className="text-gray-600">Sime Darby Convention Centre</p>
         </div>
@@ -360,7 +360,7 @@ export default function ContractorPassForm({ userData }: ContractorPassFormProps
             <div className="mb-8 bg-blue-50 p-4 rounded-lg">
               <h4 className="font-semibold text-blue-700 mb-4">Important Notes:</h4>
               <ol className="list-decimal list-inside space-y-2 text-gray-700">
-                <li>Each contractor pass is priced at RM 25.00 after the deadline of 30th June 2025.</li>
+                <li>Each contractor pass is priced at RM 25.00 after the deadline of 9th September 2025.</li>
                 <li>Official Contractor will not issue any contractor badges during tear-down, therefore please ensure that you have ordered in advance the sufficient number of badges to be used during build-up as well as the tear-down.</li>
                 <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be received with this Order Form. All bank charges must be borne by remitter. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-3, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 800 984924. Bank Swift Code: CIBBMYKL</li>
               </ol>

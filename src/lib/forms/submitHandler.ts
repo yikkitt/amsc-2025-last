@@ -45,7 +45,7 @@ export const getSupabaseClient = (): SupabaseClient => {
  * @returns Boolean indicating if current date is past the deadline
  */
 export function isPastDeadline(): boolean {
-  const deadlineDate = new Date('2025-07-02T23:59:59');
+  const deadlineDate = new Date('2025-09-09T23:59:59');
   const currentDate = new Date();
   return currentDate > deadlineDate;
 }

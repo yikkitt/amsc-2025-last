@@ -19,7 +19,7 @@ const newsItems: NewsItem[] = [
   {
     id: '2',
     title: 'Early Bird Registration Deadline Approaching',
-    content: 'Don\'t miss the early bird rates for additional passes. Deadline is 30th June.',
+    content: 'Don\'t miss the early bird rates for additional passes. Deadline is 9th September.',
     date: 'May 10, 2025'
   },
   {

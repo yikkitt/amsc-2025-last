@@ -125,14 +125,14 @@ BEGIN
 
     -- Insert initial form configurations
     INSERT INTO form_configs (id, name, late_charge_type, late_charge_value, deadline) VALUES
-      (1, 'Fascia Name Form for Shell Scheme', 'lumpsum', 150, '2025-06-30 23:59:59+00'),
-      (2, 'Contractor Pass Application Form', 'lumpsum', 100, '2025-06-30 23:59:59+00'),
-      (3, 'Electrical & Lighting Order Form', 'percentage', 10, '2025-06-30 23:59:59+00'),
-      (4, 'Furniture Order Form', 'percentage', 30, '2025-06-30 23:59:59+00'),
-      (5, 'Printing Order Form', 'percentage', 30, '2025-06-30 23:59:59+00'),
-      (6, 'Performance Bond Form', 'lumpsum', 100, '2025-06-30 23:59:59+00'),
-      (7, 'Admin Fees Form', 'lumpsum', 100, '2025-06-30 23:59:59+00'),
-      (8, 'Letter of Indemnity', 'none', 0, '2025-06-30 23:59:59+00');
+      (1, 'Fascia Name Form for Shell Scheme', 'lumpsum', 150, '2025-09-09 23:59:59+00'),
+      (2, 'Contractor Pass Application Form', 'lumpsum', 100, '2025-09-09 23:59:59+00'),
+      (3, 'Electrical & Lighting Order Form', 'percentage', 10, '2025-09-09 23:59:59+00'),
+      (4, 'Furniture Order Form', 'percentage', 30, '2025-09-09 23:59:59+00'),
+      (5, 'Printing Order Form', 'percentage', 30, '2025-09-12 23:59:59+00'),
+      (6, 'Performance Bond Form', 'lumpsum', 100, '2025-09-09 23:59:59+00'),
+      (7, 'Admin Fees Form', 'lumpsum', 100, '2025-09-09 23:59:59+00'),
+      (8, 'Letter of Indemnity', 'none', 0, '2025-09-09 23:59:59+00');
   END IF;
 END
 $$;

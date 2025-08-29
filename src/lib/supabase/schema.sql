@@ -84,14 +84,14 @@ CREATE POLICY "Authenticated users can view form configs"
 
 -- Insert initial form configurations
 INSERT INTO form_configs (id, name, late_charge_type, late_charge_value, deadline) VALUES
-  (1, 'Fascia Name Form for Shell Scheme', 'none', 0, '2025-06-30 23:59:59+00'),
-  (2, 'Contractor Pass Application Form', 'lumpsum', 100, '2025-06-30 23:59:59+00'),
-  (3, 'Electrical & Lighting Order Form', 'percentage', 10, '2025-06-30 23:59:59+00'),
-  (4, 'Furniture Order Form', 'percentage', 30, '2025-06-30 23:59:59+00'),
-  (5, 'Printing Order Form', 'percentage', 30, '2025-06-30 23:59:59+00'),
-  (6, 'Non-Official Contractor Form', 'none', 0, '2025-06-30 23:59:59+00'),
-  (7, 'Non-Official Contractor Form (Admin Fees)', 'none', 0, '2025-06-30 23:59:59+00'),
-  (8, 'Letter of Indemnity for Non-Official Contractor', 'none', 0, '2025-06-30 23:59:59+00');
+  (1, 'Fascia Name Form for Shell Scheme', 'none', 0, '2025-09-09 23:59:59+00'),
+  (2, 'Contractor Pass Application Form', 'lumpsum', 100, '2025-09-09 23:59:59+00'),
+  (3, 'Electrical & Lighting Order Form', 'percentage', 10, '2025-09-09 23:59:59+00'),
+  (4, 'Furniture Order Form', 'percentage', 30, '2025-09-09 23:59:59+00'),
+  (5, 'Printing Order Form', 'percentage', 30, '2025-09-12 23:59:59+00'),
+  (6, 'Non-Official Contractor Form', 'none', 0, '2025-09-09 23:59:59+00'),
+  (7, 'Non-Official Contractor Form (Admin Fees)', 'none', 0, '2025-09-09 23:59:59+00'),
+  (8, 'Letter of Indemnity for Non-Official Contractor', 'none', 0, '2025-09-09 23:59:59+00');
 
 -- Example: Insert a test user (replace UUID with actual auth.users id)
 -- First create the user in Supabase Auth:

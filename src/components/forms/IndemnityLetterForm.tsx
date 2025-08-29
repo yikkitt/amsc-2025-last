@@ -151,7 +151,7 @@ export default function IndemnityLetterForm({ userData }: IndemnityLetterFormPro
         <div className="text-center mb-8 border-b border-gray-200 pb-6 print:break-after-avoid">
           <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 8</h1>
           <h2 className="text-xl font-semibold mb-4">LETTER OF INDEMNITY FOR NON-OFFICIAL CONTRACTOR</h2>
-          <p className="text-gray-600 mb-2">DEADLINE: 30th June 2025</p>
+          <p className="text-gray-600 mb-2">DEADLINE: 9th September 2025</p>
                   <h3 className="text-lg font-semibold mb-2">Disruptive Doctors Conference & Exhibition 2025</h3>
         <p className="text-gray-600">Sime Darby Convention Centre</p>
         </div>

@@ -80,12 +80,7 @@ export default function VenueFloorPlan() {
               <div className="space-y-3">
                 <div className="mb-2">
                   <p className="text-sm font-medium text-gray-700">Exhibition Area</p>
-                  <p className="text-sm text-gray-600">Ballroom 1 & 2, Level 3</p>
-                  <p className="text-sm text-gray-600">Banquet Hall, Level 3</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-700">Conference Room</p>
-                  <p className="text-sm text-gray-600">Conference Hall 1, 2 & 3, Level 3</p>
+                  <p className="text-sm text-gray-600">1st Floor</p>
                 </div>
               </div>
             </div>

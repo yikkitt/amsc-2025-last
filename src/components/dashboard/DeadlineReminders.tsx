@@ -95,7 +95,7 @@ export default function DeadlineReminders() {
           id: 'form1',
           title: 'Form 1: Fascia Name Form',
           description: 'Submit your company name as it should appear on the fascia board.',
-          date: '30th June 2025',
+          date: '9th September 2025',
           formType: '1',
           href: '/dashboard/order-forms/form1',
           isSubmitted: false
@@ -104,7 +104,7 @@ export default function DeadlineReminders() {
           id: 'form2',
           title: 'Form 2: Contractor Pass Application Form',
           description: 'Apply for a contractor pass for the exhibition.',
-          date: '30th June 2025',
+          date: '9th September 2025',
           formType: '2',
           href: '/dashboard/order-forms/form2',
           isSubmitted: false
@@ -113,7 +113,7 @@ export default function DeadlineReminders() {
           id: 'form3',
           title: 'Form 3: Electrical & Lighting Order Form',
           description: 'Order electrical points and additional lighting.',
-          date: '30th June 2025',
+          date: '9th September 2025',
           formType: '3',
           href: '/dashboard/order-forms/form3',
           isSubmitted: false
@@ -122,7 +122,7 @@ export default function DeadlineReminders() {
           id: 'form4',
           title: 'Form 4: Furniture Order Form',
           description: 'Order furniture for your booth.',
-          date: '30th June 2025',
+          date: '9th September 2025',
           formType: '4',
           href: '/dashboard/order-forms/form4',
           isSubmitted: false
@@ -131,7 +131,7 @@ export default function DeadlineReminders() {
           id: 'form5',
           title: 'Form 5: Printing Order Form',
           description: 'Order printing services for your booth.',
-          date: '30th June 2025',
+          date: '12th September 2025',
           formType: '5',
           href: '/dashboard/order-forms/form5',
           isSubmitted: false
@@ -140,7 +140,7 @@ export default function DeadlineReminders() {
           id: 'form6',
           title: 'Form 6: Non-Official Contractor Form (Performance Bond)',
           description: 'Apply for a non-official contractor (Performance Bond) for the exhibition.',
-          date: '30th June 2025',
+          date: '9th September 2025',
           formType: '6',
           href: '/dashboard/order-forms/form6',
           isSubmitted: false
@@ -149,7 +149,7 @@ export default function DeadlineReminders() {
           id: 'form7',
           title: 'Form 7: Non-Official Contractor Form (Admin Fees)',
           description: 'Apply for a non-official contractor (Admin Fees) for the exhibition.',
-          date: '30th June 2025',
+          date: '9th September 2025',
           formType: '7',
           href: '/dashboard/order-forms/form7',
           isSubmitted: false
@@ -158,7 +158,7 @@ export default function DeadlineReminders() {
           id: 'form8',
           title: 'Form 8: Letter Of Indemnity For Non-Official Contractor',
           description: 'Apply for a letter of Indemnity for a non-official contractor.',
-          date: '30th June 2025',
+          date: '9th September 2025',
           formType: '8',
           href: '/dashboard/order-forms/indemnity-letter',
           isSubmitted: false
@@ -167,7 +167,7 @@ export default function DeadlineReminders() {
           id: 'form9',
           title: 'Form 9: Audio Visual Equipment',
           description: 'Order audio visual equipment like LED TVs and stands.',
-          date: '30th June 2025',
+          date: '9th September 2025',
           formType: '9',
           href: '/dashboard/order-forms/form9',
           isSubmitted: false
@@ -215,7 +215,7 @@ export default function DeadlineReminders() {
   
   // Function to calculate days left until deadline
   const calculateDaysLeft = (deadlineDate: string): number => {
-    const deadline = new Date('2025-06-30'); // Hardcoded for all forms with deadline 30th June 2025
+    const deadline = new Date('2025-09-09'); // Hardcoded for all forms with deadline 9th September 2025
     const today = new Date();
     const diffTime = deadline.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));

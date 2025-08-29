@@ -46,7 +46,7 @@ export default function SpecialDesignRulesPage() {
             <li>The maximum height of display wall must not exceed 3m height.</li>
             <li>When its achieved that branding wall can be to the edge of the neighboring stand.</li>
             <li>Please note the following is required for approval, these must be submitted to the Official Contractor, according to the booth 
-               submission format of Appendix A no later than <strong>30th June 2025</strong>
+               submission format of Appendix A no later than <strong>9th September 2025</strong>
               <ul className="list-disc ml-6 mt-2 space-y-2">
                 <li>3D view with full Stand Dimension</li>
                 <li>Please make sure you attach as one PDF document showing all 4 sides of the stand;</li>
@@ -75,7 +75,7 @@ export default function SpecialDesignRulesPage() {
             <li>Stands should not be fabricated without the Official Contractor approval.</li>
             <li>Documentation required for stands with double decker stands, please refer to the below:
               <ul className="list-disc ml-6 mt-2 space-y-2">
-                <li>These must be submitted to Official Contractor no later than <strong>30th June 2025</strong></li>
+                <li>These must be submitted to Official Contractor no later than <strong>9th September 2025</strong></li>
                 <li>3D view with full Stand Dimension</li>
                 <li>Include double stand proof the 3D view showing the all 4 sides of the ground floor / first floor along with the staircase;</li>
                 <li>Working drawings, Structure Material Detail and Support Details of the stand (the construction material shall be non-flammable or fire-retardant);</li>

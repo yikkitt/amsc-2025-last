@@ -123,7 +123,7 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
   }
 
   const subtotal = calculateSubtotal()
-  const isLateOrder = new Date() > new Date('2025-06-30')
+  const isLateOrder = new Date() > new Date('2025-09-09')
   const lateCharge = isLateOrder ? subtotal * 0.3 : 0
   const grandTotal = subtotal + lateCharge
 
@@ -231,7 +231,7 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
         <div className="text-center mb-8 border-b border-gray-200 pb-6">
           <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 4</h1>
           <h2 className="text-xl font-semibold mb-4">FURNITURE ORDER FORM</h2>
-          <p className="text-gray-600 mb-2">DEADLINE: 30th June 2025</p>
+          <p className="text-gray-600 mb-2">DEADLINE: 9th September 2025</p>
                   <h3 className="text-lg font-semibold mb-2">Disruptive Doctors Conference & Exhibition 2025</h3>
         <p className="text-gray-600">Sime Darby Convention Centre</p>
         </div>
@@ -304,11 +304,11 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
                     <td className="border border-gray-300 p-2 text-right">{subtotal.toFixed(2)}</td>
                   </tr>
                   {lateCharge > 0 && (
-                    <tr>
-                      <td colSpan={5} className="border border-gray-300 p-2 text-center italic text-sm text-gray-600">
-                        A SURCHARGE OF 30% will be imposed for orders received after 30th June 2025.
-                      </td>
-                      <td className="border border-gray-300 p-2 text-right font-medium">Late Charge (30%):</td>
+                                          <tr>
+                        <td colSpan={5} className="border border-gray-300 p-2 text-center italic text-sm text-gray-600">
+                         A SURCHARGE OF 30% will be imposed for orders received after 9th September 2025.
+                        </td>
+                        <td className="border border-gray-300 p-2 text-right font-medium">Late Charge (30%):</td>
                       <td className="border border-gray-300 p-2 text-right">{lateCharge.toFixed(2)}</td>
                     </tr>
                   )}
@@ -421,11 +421,11 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
                     <td className="border border-gray-300 p-2 text-right font-medium">Subtotal:</td>
                     <td className="border border-gray-300 p-2 text-right">{subtotal.toFixed(2)}</td>
                   </tr>
-                  <tr>
-                    <td colSpan={5} className="border border-gray-300 p-2 text-center italic">
-                      A SURCHARGE OF 30% will be imposed for orders received after 30th June 2025.
-                    </td>
-                    <td className="border border-gray-300 p-2 text-right font-medium">Late Charge (30%):</td>
+                                      <tr>
+                      <td colSpan={5} className="border border-gray-300 p-2 text-center italic">
+                       A SURCHARGE OF 30% will be imposed for orders received after 9th September 2025.
+                      </td>
+                      <td className="border border-gray-300 p-2 text-right font-medium">Late Charge (30%):</td>
                     <td className="border border-gray-300 p-2 text-right">{lateCharge.toFixed(2)}</td>
                   </tr>
                   <tr className="font-bold">
@@ -442,7 +442,7 @@ export default function FurnitureOrderForm({ userData }: FurnitureOrderFormProps
               <h4 className="font-semibold text-blue-700 mb-4">PLEASE NOTE:</h4>
               <ol className="list-decimal list-inside space-y-2 text-gray-700">
                 <li>All items are on rental basis.</li>
-                <li>A <strong>SURCHARGE OF 30%</strong> will be imposed for orders received after 30th June 2025.</li>
+                                  <li>A <strong>SURCHARGE OF 30%</strong> will be imposed for orders received after 9th September 2025.</li>
                 <li>A <strong>SURCHARGE OF 50%</strong> will be imposed for orders received on site or on-site alteration/relocation, and is subject to availability.</li>
                 <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be accompanied by this Order Form. All bank charges must be borne by remitter. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-3, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 800 984924. Bank Swift Code: CIBBMYKL</li>
               </ol>

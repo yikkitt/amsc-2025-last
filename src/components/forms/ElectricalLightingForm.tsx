@@ -155,7 +155,7 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
   }
 
   // Calculate late charge (10% of subtotal) if applicable
-  const isLateOrder = new Date() > new Date('2025-06-30')
+  const isLateOrder = new Date() > new Date('2025-09-09')
   const subtotal = calculateTotal()
   const lateCharge = isLateOrder ? subtotal * 0.1 : 0
   const grandTotal = subtotal + lateCharge
@@ -264,7 +264,7 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
         <div className="text-center mb-8 border-b border-gray-200 pb-6">
           <h1 className="text-2xl font-bold mb-2 text-blue-600">FORM 3</h1>
           <h2 className="text-xl font-semibold mb-4">ELECTRICAL & LIGHTING ORDER FORM</h2>
-          <p className="text-gray-600 mb-2">DEADLINE: 30th June 2025</p>
+          <p className="text-gray-600 mb-2">DEADLINE: 9th September 2025</p>
                   <h3 className="text-lg font-semibold mb-2">Disruptive Doctors Conference & Exhibition 2025</h3>
         <p className="text-gray-600">Sime Darby Convention Centre</p>
         </div>
@@ -457,7 +457,7 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
                   </tr>
                   <tr>
                     <td colSpan={4} className="border border-gray-300 p-2 text-center italic">
-                      A SURCHARGE OF 10% will be imposed for orders received after 30th June 2025.
+                      A SURCHARGE OF 10% will be imposed for orders received after 9th September 2025.
                     </td>
                     <td className="border border-gray-300 p-2 text-right font-medium">Late Charge (10%):</td>
                     <td className="border border-gray-300 p-2 text-center">{lateCharge.toFixed(2)}</td>
@@ -478,7 +478,7 @@ export default function ElectricalLightingForm({ userData }: ElectricalLightingF
                 <li>All items are on rental basis.</li>
                 <li>Exhibitors/Contractors who are bringing in their own light fittings are required to order lighting connections from the Official Electrical Contractor. Power outlets are not to be used for lighting purposes.</li>
                 <li>Exhibitors with very sensitive equipment are advised to bring their own stabilizer or UPS for protection of frequency fluctuations as the Organiser shall not be responsible for any damage to the exhibitors' equipment. One socket is for one exhibit only. Multi-point connection is not allowed to prevent the risk of power overload.</li>
-                <li>A <strong>SURCHARGE OF 10%</strong> will be imposed for orders received after 30th June 2025.</li>
+                                        <li>A <strong>SURCHARGE OF 10%</strong> will be imposed for orders received after 9th September 2025.</li>
                 <li>A <strong>SURCHARGE OF 50%</strong> will be imposed for orders received on site or on-site alteration/relocation, and is subject to availability.</li>
                 <li>All electrical installations must be undertaken by the Official Contractor.</li>
                 <li>All payments are to be in favour of BLUE CIRCLE PLUS SDN. BHD. and must be accompanied by this Order Form. All bank charges must be borne by remitter. Bank Details: CIMB BANK BERHAD (Sri Damansara Branch) B-G-3, Blok B, Plaza Ativo, Persiaran Perdana, Bandar Sri Damansara, 52200 Kuala Lumpur, Malaysia. Bank Account No: 800 984924. Bank Swift Code: CIBBMYKL</li>

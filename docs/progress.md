@@ -122,7 +122,7 @@
    - Email notification system
 
 ## Notes
-- All form deadlines initially set to June 30, 2025
+- All form deadlines initially set to September 9, 2025
 - Late charge configurations:
   - Forms 1, 6, 7, 8: No late charges
   - Form 2: Lump sum (RM 100)
@@ -218,7 +218,7 @@
    - E2E form submission tests
 
 ## Notes
-- All form deadlines initially set to June 30, 2025
+- All form deadlines initially set to September 9, 2025
 - Late charge configurations:
   - Forms 1, 6, 7, 8: No late charges
   - Form 2: Lump sum (RM 100)
@@ -286,7 +286,7 @@
 21. Monitor system performance
 
 ## Notes
-- All form deadlines initially set to June 30, 2025
+- All form deadlines initially set to September 9, 2025
 - Late charge configurations:
   - Forms 1, 6, 7, 8: No late charges
   - Form 2: Lump sum (RM 100)
